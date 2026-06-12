@@ -90,6 +90,30 @@
     #code-submit:hover{background:rgba(0,255,65,.08)}
     #code-error{font-size:11px;color:#ff0024;letter-spacing:.15em;min-height:15px;text-transform:uppercase}
 
+    /* ── MESSAGE PHASE extras ── */
+    #skip-btn{position:absolute;top:6px;right:8px;background:transparent;border:none;color:#002a08;font-family:inherit;font-size:9px;letter-spacing:.15em;cursor:pointer;text-transform:uppercase;padding:.3rem .5rem;z-index:10;opacity:.35;transition:opacity .2s}
+    #skip-btn:hover{opacity:.8;color:#006818}
+    #autodestruct-bar-wrap{width:100%;display:none;flex-direction:column;gap:.4rem}
+    #autodestruct-bar-wrap.visible{display:flex}
+    #autodestruct-label{font-size:10px;letter-spacing:.22em;color:#ff0024;text-transform:uppercase;animation:blink2 .8s step-end infinite}
+    #autodestruct-track{width:100%;height:4px;background:#1a0000;border:1px solid #3a0000}
+    #autodestruct-fill{height:100%;background:#ff0024;width:100%;transition:width 1s linear;box-shadow:0 0 6px rgba(255,0,36,.4)}
+    /* autodestruct overlay */
+    #autodestruct-overlay{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;background:#000;flex-direction:column;gap:1.5rem}
+    #autodestruct-overlay.active{display:flex}
+    #ad-glitch{font-size:clamp(18px,4vw,28px);letter-spacing:.2em;text-transform:uppercase;color:#ff0024;text-align:center;animation:glitch 0.15s infinite}
+    @keyframes glitch{
+      0%{transform:translate(0);color:#ff0024}
+      20%{transform:translate(-3px,1px);color:#ff6b00}
+      40%{transform:translate(2px,-2px);color:#ff0024}
+      60%{transform:translate(-1px,2px);color:#ffcc00}
+      80%{transform:translate(3px,-1px);color:#ff0024}
+      100%{transform:translate(0);color:#ff0024}
+    }
+    #ad-static{font-size:clamp(9px,1.5vw,12px);line-height:1.3;color:#ff0024;text-align:center;white-space:pre;opacity:.6}
+    #ad-progress{width:60%;height:2px;background:#1a0000}
+    #ad-progress-fill{height:100%;background:#ff0024;width:100%;transition:width .08s linear}
+
     /* ── INDICE ── */
     #hint-zone{width:100%;display:none;flex-direction:column;gap:.5rem}
     #hint-zone.visible{display:flex}
@@ -171,10 +195,22 @@
   <button class="btn" id="launch-btn" onclick="launchMission()" style="display:none;margin-top:.5rem">▶ Lancer la mission</button>
 </div>
 
+<!-- ══ AUTODESTRUCT OVERLAY ════════════════════════════ -->
+<div id="autodestruct-overlay">
+  <pre id="ad-static"></pre>
+  <div id="ad-glitch">⚠ AUTODESTRUCTION ⚠</div>
+  <div id="ad-progress"><div id="ad-progress-fill"></div></div>
+</div>
+
 <!-- ══ MESSAGE ═════════════════════════════════════════ -->
-<div id="phase-message" class="phase">
+<div id="phase-message" class="phase" style="position:relative">
+  <button id="skip-btn" onclick="skipTypewriter()" title="Passer">⏭ passer</button>
   <div class="label">⬛ Transmission chiffrée — priorité absolue</div>
   <div id="typewriter-text"><span id="cursor"></span></div>
+  <div id="autodestruct-bar-wrap">
+    <div id="autodestruct-label">⚠ autodestruction dans <span id="ad-countdown">30</span>s</div>
+    <div id="autodestruct-track"><div id="autodestruct-fill"></div></div>
+  </div>
 </div>
 
 <!-- ══ ÉPREUVE ═════════════════════════════════════════ -->
@@ -399,6 +435,7 @@ function launchMission() {
   showPhase('phase-message');
   typewriterIdx = 0;
   document.getElementById('typewriter-text').innerHTML = '<span id="cursor"></span>';
+  document.getElementById('autodestruct-bar-wrap').classList.remove('visible');
   secondsLeft  = cfg.duration;
   totalSeconds = cfg.duration;
   missionStart = Date.now();
@@ -420,9 +457,104 @@ function typeNext() {
     const d=ch==='.'||ch==='…'?220:ch===','?140:ch==='\n'?100:28;
     typewriterTmr=setTimeout(typeNext,d);
   } else {
+    // Texte terminé → afficher curseur fixe puis lancer la barre
     el.innerHTML=esc(msg).replace(/\n/g,'<br>');
-    setTimeout(startChallenges,1800);
+    setTimeout(startAutodestruct, 800);
   }
+}
+
+// Bouton discret pour passer la machine à écrire
+function skipTypewriter() {
+  clearTimeout(typewriterTmr);
+  typewriterIdx = cfg.message.length;
+  const el = document.getElementById('typewriter-text');
+  el.innerHTML = esc(cfg.message).replace(/\n/g,'<br>');
+  startAutodestruct();
+}
+
+// ══════════════════════════════════════════════════════
+// AUTODESTRUCTION
+// ══════════════════════════════════════════════════════
+let adTimer=null, adSeconds=30;
+
+function startAutodestruct() {
+  adSeconds = 30;
+  const wrap  = document.getElementById('autodestruct-bar-wrap');
+  const fill  = document.getElementById('autodestruct-fill');
+  const cd    = document.getElementById('ad-countdown');
+  wrap.classList.add('visible');
+  fill.style.transition = 'none';
+  fill.style.width = '100%';
+
+  // Force reflow then animate
+  requestAnimationFrame(()=>{
+    requestAnimationFrame(()=>{
+      fill.style.transition = 'width 1s linear';
+      fill.style.width = ((adSeconds-1)/30*100)+'%';
+    });
+  });
+
+  cd.textContent = adSeconds;
+  clearInterval(adTimer);
+  adTimer = setInterval(()=>{
+    adSeconds--;
+    cd.textContent = Math.max(0, adSeconds);
+    fill.style.width = (adSeconds/30*100)+'%';
+    if (adSeconds <= 0) {
+      clearInterval(adTimer);
+      launchAutodestructAnimation();
+    }
+  }, 1000);
+}
+
+const AD_FRAMES = [
+`████████████████████
+█  AUTODESTRUCTION  █
+█  EN COURS...      █
+████████████████████`,
+`▓▓▓▒▒▒░░░▒▒▒▓▓▓▒▒▒░
+░  MESSAGE DÉTRUIT  ░
+▒▒▒▓▓▓░░░▓▓▓▒▒▒░░░▓`,
+`///  \\\\\\  ///  \\\\\\
+   EFFACEMENT      
+\\\\\\  ///  \\\\\\  ///`,
+`* * * * * * * * * *
+  TRANSMISSION     
+  TERMINÉE...      
+* * * * * * * * * *`,
+`░░░░░░░░░░░░░░░░░░░░`,
+];
+
+function launchAutodestructAnimation() {
+  const overlay = document.getElementById('autodestruct-overlay');
+  const staticEl = document.getElementById('ad-static');
+  const progFill = document.getElementById('ad-progress-fill');
+  overlay.classList.add('active');
+  progFill.style.transition='none'; progFill.style.width='100%';
+
+  let frame=0, elapsed=0;
+  const totalMs = 2800;
+  const frameInterval = setInterval(()=>{
+    staticEl.textContent = AD_FRAMES[frame % AD_FRAMES.length];
+    frame++;
+    elapsed += 220;
+    progFill.style.width = Math.max(0, (1-elapsed/totalMs)*100)+'%';
+  }, 220);
+
+  // Screen flickers via background
+  let flicker=0;
+  const flickerInterval = setInterval(()=>{
+    overlay.style.background = flicker%2===0 ? '#0a0000' : '#000';
+    flicker++;
+  }, 90);
+
+  setTimeout(()=>{
+    clearInterval(frameInterval);
+    clearInterval(flickerInterval);
+    overlay.classList.remove('active');
+    overlay.style.background='#000';
+    startChallenges();
+  }, totalMs);
 }
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
@@ -721,8 +853,11 @@ function spawnBurst(){
 // ══════════════════════════════════════════════════════
 function resetApp(){
   clearInterval(countdownTimer); clearInterval(particleLoop);
-  clearInterval(hintTimer); stopAmbientMusic(); stopPoisonAnimation();
+  clearInterval(hintTimer); clearInterval(adTimer);
+  stopAmbientMusic(); stopPoisonAnimation();
   document.getElementById('particles').innerHTML='';
+  document.getElementById('autodestruct-overlay').classList.remove('active');
+  document.getElementById('autodestruct-bar-wrap').classList.remove('visible');
   agentNames=[]; revealedDigits=[]; currentChallenge=0; pinInput='';
   secondsLeft=cfg.duration; totalSeconds=cfg.duration;
   renderNames(); showPhase('phase-splash');
