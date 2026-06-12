@@ -4,137 +4,282 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Backoffice — Mission Secrète</title>
-  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    html,body{background:#000;color:#00ff41;font-family:'Share Tech Mono','Courier New',monospace;min-height:100vh}
-    .crt{position:fixed;inset:0;pointer-events:none;background-image:repeating-linear-gradient(transparent,transparent 2px,rgba(0,255,65,.012) 2px,rgba(0,255,65,.012) 4px)}
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box }
 
-    /* AUTH */
-    #auth-screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.2rem;position:relative;z-index:1}
-    #main-screen{display:none;position:relative;z-index:1;max-width:800px;margin:0 auto;padding:2.5rem 1.5rem 5rem;flex-direction:column;gap:2rem}
-    #main-screen.active{display:flex}
+    :root {
+      --bg:       #f8f7f4;
+      --surface:  #ffffff;
+      --border:   #e2e0db;
+      --border2:  #ccc9c2;
+      --text:     #1a1a18;
+      --muted:    #6b6860;
+      --accent:   #1a6b3a;
+      --accent-l: #e8f5ee;
+      --accent-b: #2d9d58;
+      --red:      #c0392b;
+      --red-l:    #fdf0ef;
+      --tag-bg:   #111;
+      --tag-fg:   #00ff41;
+      --mono:     'Share Tech Mono', 'Courier New', monospace;
+    }
 
-    .page-title{font-size:10px;letter-spacing:.32em;color:#004d12;text-transform:uppercase;border-bottom:1px solid #002a08;padding-bottom:.6rem}
-    .back-link{font-size:10px;letter-spacing:.2em;color:#006818;text-decoration:none;text-transform:uppercase}
-    .back-link:hover{color:#00ff41}
+    html, body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; min-height: 100vh; font-size: 14px; line-height: 1.5 }
 
-    .card{border:1px solid #002a08;padding:1.3rem;display:flex;flex-direction:column;gap:.9rem}
-    .card-title{font-size:10px;letter-spacing:.25em;color:#006818;text-transform:uppercase;border-bottom:1px solid #002a08;padding-bottom:.4rem;display:flex;align-items:center;justify-content:space-between}
+    /* ── AUTH ── */
+    #auth-screen {
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 1rem;
+      background: var(--bg);
+    }
+    .auth-logo {
+      font-family: var(--mono); font-size: 11px; letter-spacing: .3em;
+      color: var(--muted); text-transform: uppercase; margin-bottom: .5rem;
+    }
+    .auth-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; padding: 2rem; width: 320px;
+      display: flex; flex-direction: column; gap: 1rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,.06);
+    }
+    .auth-title { font-size: 16px; font-weight: 600; color: var(--text); }
+    .auth-sub   { font-size: 12px; color: var(--muted); }
+    #auth-err   { font-size: 12px; color: var(--red); min-height: 16px; }
 
-    label{font-size:10px;letter-spacing:.18em;color:#004d12;text-transform:uppercase;display:block;margin-bottom:.3rem}
-    input[type=text],input[type=number],input[type=password],textarea{width:100%;background:#020f04;border:1px solid #003a0d;color:#00ff41;font-family:inherit;font-size:13px;padding:.5rem .7rem;outline:none;resize:vertical;line-height:1.7}
-    input:focus,textarea:focus{border-color:#00ff41;box-shadow:0 0 0 1px rgba(0,255,65,.2)}
-    .hint{font-size:10px;color:#004d12;letter-spacing:.1em;margin-top:.2rem}
-    .row{display:flex;gap:.8rem}
-    .row>div{flex:1}
+    /* ── MAIN ── */
+    #main-screen { display: none }
+    #main-screen.active { display: block }
 
-    .btn{background:transparent;border:1px solid #00ff41;color:#00ff41;font-family:inherit;font-size:10px;letter-spacing:.2em;padding:.6rem 1.5rem;cursor:pointer;text-transform:uppercase;transition:background .15s}
-    .btn:hover{background:rgba(0,255,65,.08)}
-    .btn.sm{padding:.4rem .9rem;font-size:9px}
-    .btn.ghost{border-color:#003a0d;color:#003a0d}
-    .btn.ghost:hover{border-color:#006818;color:#006818;background:transparent}
-    .btn.danger{border-color:#ff0024;color:#ff0024}
-    .btn.danger:hover{background:rgba(255,0,36,.08)}
+    .topbar {
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      padding: .75rem 1.5rem; display: flex; align-items: center;
+      gap: 1rem; position: sticky; top: 0; z-index: 100;
+      box-shadow: 0 1px 4px rgba(0,0,0,.05);
+    }
+    .topbar-title {
+      font-family: var(--mono); font-size: 11px; letter-spacing: .2em;
+      color: var(--muted); text-transform: uppercase; flex: 1;
+    }
+    .topbar-badge {
+      background: var(--tag-bg); color: var(--tag-fg);
+      font-family: var(--mono); font-size: 10px; letter-spacing: .15em;
+      padding: .2rem .6rem; border-radius: 3px; text-transform: uppercase;
+    }
 
-    .btn-row{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
-    #save-fb{font-size:10px;letter-spacing:.15em;color:#00ff41;opacity:0;transition:opacity .3s}
-    #save-fb.show{opacity:1}
+    .main-wrap {
+      max-width: 860px; margin: 0 auto;
+      padding: 2rem 1.5rem 5rem;
+      display: flex; flex-direction: column; gap: 1.5rem;
+    }
 
-    /* ÉPREUVES TABS */
-    .ch-tabs{display:flex;gap:.4rem;flex-wrap:wrap}
-    .ch-tab{background:transparent;border:1px solid #003a0d;color:#004d12;font-family:inherit;font-size:10px;letter-spacing:.15em;padding:.4rem .8rem;cursor:pointer;text-transform:uppercase;transition:all .15s}
-    .ch-tab.active{border-color:#00ff41;color:#00ff41}
-    .ch-tab:hover{border-color:#006818;color:#006818}
+    /* ── CARDS ── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 8px; overflow: hidden;
+      box-shadow: 0 1px 4px rgba(0,0,0,.04);
+    }
+    .card-head {
+      padding: .85rem 1.25rem; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      background: #fafaf8;
+    }
+    .card-head-title {
+      font-size: 12px; font-weight: 600; color: var(--text);
+      letter-spacing: .02em; text-transform: uppercase;
+    }
+    .card-body { padding: 1.25rem; display: flex; flex-direction: column; gap: 1.1rem }
 
-    .ch-panel{display:none;flex-direction:column;gap:.8rem}
-    .ch-panel.active{display:flex}
+    /* ── FORM ── */
+    .field { display: flex; flex-direction: column; gap: .35rem }
+    .field label { font-size: 11px; font-weight: 500; color: var(--muted); letter-spacing: .03em; text-transform: uppercase }
+    .field input, .field textarea, .field select {
+      border: 1px solid var(--border2); border-radius: 5px;
+      padding: .5rem .75rem; font-family: inherit; font-size: 13px;
+      color: var(--text); background: #fff; outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .field input:focus, .field textarea:focus {
+      border-color: var(--accent-b);
+      box-shadow: 0 0 0 3px rgba(45,157,88,.12);
+    }
+    .field textarea { resize: vertical; line-height: 1.7 }
+    .field .hint { font-size: 11px; color: var(--muted) }
 
-    /* CODE BADGE */
-    .code-badge{display:inline-block;background:#010d03;border:1px solid #00ff41;color:#00ff41;font-size:14px;letter-spacing:.25em;padding:.3rem .8rem;text-transform:uppercase}
-    .digit-badge{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border:1px solid #006818;color:#006818;font-size:18px}
-    .digit-badge.set{border-color:#00ff41;color:#00ff41}
+    .field input.mono, .field textarea.mono {
+      font-family: var(--mono); font-size: 13px; letter-spacing: .05em;
+    }
 
-    /* AUTH elements */
-    .auth-title{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:#006818}
-    .auth-input{background:transparent;border:1px solid #00ff41;color:#00ff41;font-family:inherit;font-size:16px;letter-spacing:.2em;padding:.55rem 1rem;text-align:center;width:220px;outline:none}
-    #auth-err{font-size:11px;color:#ff0024;letter-spacing:.15em;min-height:16px}
+    .row { display: flex; gap: 1rem }
+    .row > .field { flex: 1 }
 
-    /* timing indicator on challenge cards */
-    .time-row{display:flex;gap:.8rem}
-    .time-row>div{flex:1}
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex; align-items: center; gap: .4rem;
+      border-radius: 5px; font-family: inherit; font-size: 12px;
+      font-weight: 500; padding: .5rem 1.1rem; cursor: pointer;
+      transition: background .15s, border-color .15s; border: 1px solid transparent;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { background: #155c30 }
+    .btn-secondary { background: var(--surface); color: var(--text); border-color: var(--border2) }
+    .btn-secondary:hover { background: var(--bg) }
+    .btn-danger { background: var(--red-l); color: var(--red); border-color: #e8c5c2 }
+    .btn-danger:hover { background: #f9e0de }
+    .btn-sm { padding: .3rem .7rem; font-size: 11px }
+    .btn-ghost { background: transparent; color: var(--muted); border-color: var(--border) }
+    .btn-ghost:hover { background: var(--bg); color: var(--text) }
 
-    /* scrollable challenge list */
-    .ch-edit-list{display:flex;flex-direction:column;gap:1rem}
+    .action-bar { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap }
+    #save-fb {
+      font-size: 12px; color: var(--accent); font-weight: 500;
+      opacity: 0; transition: opacity .3s; display: flex; align-items: center; gap: .3rem;
+    }
+    #save-fb.show { opacity: 1 }
 
-    /* mobile friendly */
-    @media(max-width:600px){.row{flex-direction:column}.time-row{flex-direction:column}}
+    /* ── PIN PREVIEW ── */
+    .pin-preview { display: flex; gap: .5rem; align-items: center; margin-top: .2rem }
+    .pin-slot {
+      width: 38px; height: 38px; border-radius: 6px; border: 2px solid var(--border2);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--mono); font-size: 20px; color: var(--muted);
+      transition: all .2s;
+    }
+    .pin-slot.set { border-color: var(--accent-b); color: var(--accent); background: var(--accent-l) }
+
+    /* ── CHALLENGE TABS ── */
+    .ch-tabs { display: flex; gap: .4rem; flex-wrap: wrap; padding: 0 1.25rem 0; margin-top: 1rem }
+    .ch-tab {
+      padding: .4rem 1rem; border-radius: 5px 5px 0 0;
+      font-size: 12px; font-weight: 500; cursor: pointer;
+      border: 1px solid var(--border); border-bottom: none;
+      background: var(--bg); color: var(--muted);
+      transition: all .15s; font-family: inherit;
+    }
+    .ch-tab.active { background: var(--surface); color: var(--text); border-color: var(--border2) }
+    .ch-tab:hover:not(.active) { background: #eeecea; color: var(--text) }
+
+    .ch-panels { border-top: 1px solid var(--border2); margin-top: -1px }
+    .ch-panel { display: none; padding: 1.25rem; flex-direction: column; gap: 1.1rem }
+    .ch-panel.active { display: flex }
+
+    /* ── CODE SUMMARY BOX ── */
+    .summary-box {
+      background: #f5f4f0; border: 1px solid var(--border);
+      border-radius: 6px; padding: .75rem 1rem;
+      display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+    }
+    .summary-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .05em }
+    .code-tag {
+      font-family: var(--mono); font-size: 13px; letter-spacing: .2em;
+      background: var(--tag-bg); color: var(--tag-fg);
+      padding: .25rem .7rem; border-radius: 4px; text-transform: uppercase;
+    }
+    .digit-tag {
+      width: 36px; height: 36px; border-radius: 6px;
+      border: 2px solid var(--border2); color: var(--muted);
+      display: inline-flex; align-items: center; justify-content: center;
+      font-family: var(--mono); font-size: 20px; transition: all .2s;
+    }
+    .digit-tag.set { border-color: var(--accent-b); color: var(--accent); background: var(--accent-l) }
+
+    /* ── DUR HINT ── */
+    #dur-hint { font-size: 12px; color: var(--accent); font-weight: 500 }
+
+    /* ── SECTION DIVIDER ── */
+    .section-label {
+      font-size: 11px; font-weight: 600; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .06em;
+      display: flex; align-items: center; gap: .5rem;
+    }
+    .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border) }
+
+    @media(max-width:600px) { .row{flex-direction:column} }
   </style>
 </head>
 <body>
-<div class="crt"></div>
 
-<!-- AUTH -->
+<!-- ── AUTH ──────────────────────────────────── -->
 <div id="auth-screen">
-  <div class="auth-title">⬛ Backoffice — identification requise</div>
-  <input type="password" class="auth-input" id="admin-pass" placeholder="mot de passe"
-         autocomplete="off" onkeydown="if(event.key==='Enter')checkAdmin()">
-  <button class="btn" onclick="checkAdmin()">▶ Connexion</button>
-  <div id="auth-err"></div>
+  <div class="auth-logo">⬛ Mission Secrète — Backoffice</div>
+  <div class="auth-card">
+    <div class="auth-title">Connexion</div>
+    <div class="auth-sub">Accès réservé à l'organisateur</div>
+    <div class="field">
+      <label>Mot de passe</label>
+      <input type="password" id="admin-pass" autocomplete="off" placeholder="••••••••"
+             onkeydown="if(event.key==='Enter')checkAdmin()">
+    </div>
+    <button class="btn btn-primary" onclick="checkAdmin()">Se connecter</button>
+    <div id="auth-err"></div>
+  </div>
 </div>
 
-<!-- MAIN -->
+<!-- ── MAIN ──────────────────────────────────── -->
 <div id="main-screen">
-  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem">
-    <div class="page-title">⬛ Backoffice — Configuration de la mission</div>
-    <a href="/" class="back-link">← Voir l'app</a>
+  <div class="topbar">
+    <div class="topbar-title">⬛ Backoffice Mission Secrète</div>
+    <div class="topbar-badge">Helie10</div>
+    <a href="/" style="font-size:12px;color:var(--muted);text-decoration:none">← App</a>
   </div>
 
-  <!-- GLOBAL -->
-  <div class="card">
-    <div class="card-title">Paramètres globaux</div>
-    <div class="row">
-      <div>
-        <label>Durée totale de la mission (minutes)</label>
-        <input type="number" id="f-dur" min="5" max="180" placeholder="60">
-        <div class="hint" id="dur-hint"></div>
-      </div>
-      <div>
-        <label>Code PIN final (4 chiffres)</label>
-        <div style="display:flex;gap:.5rem;align-items:center;margin-top:.1rem" id="pin-preview"></div>
-        <div class="hint">Généré automatiquement depuis les chiffres des épreuves</div>
-      </div>
-    </div>
-  </div>
+  <div class="main-wrap">
 
-  <!-- MESSAGE -->
-  <div class="card">
-    <div class="card-title">Message d'introduction (machine à écrire)</div>
-    <textarea id="f-msg" rows="10" spellcheck="false"></textarea>
-    <div class="hint">Sauts de ligne et ponctuation créent les pauses dramatiques</div>
-  </div>
-
-  <!-- ÉPREUVES -->
-  <div class="card">
-    <div class="card-title">
-      <span>Épreuves</span>
-      <div style="display:flex;gap:.5rem">
-        <button class="btn sm" onclick="addChallenge()">+ Ajouter</button>
-        <button class="btn sm ghost" onclick="removeLastChallenge()">− Supprimer</button>
+    <!-- GLOBAL -->
+    <div class="section-label">Paramètres généraux</div>
+    <div class="card">
+      <div class="card-head"><div class="card-head-title">Mission</div></div>
+      <div class="card-body">
+        <div class="row">
+          <div class="field">
+            <label>Durée totale (minutes)</label>
+            <input type="number" id="f-dur" min="5" max="180" placeholder="60" oninput="updateDurHint()">
+            <div class="hint" id="dur-hint"></div>
+          </div>
+          <div class="field">
+            <label>Code PIN final (auto-généré)</label>
+            <div class="pin-preview" id="pin-preview"></div>
+            <div class="hint">Construit depuis les chiffres de chaque épreuve</div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="ch-tabs" id="ch-tabs"></div>
-    <div class="ch-edit-list" id="ch-panels"></div>
-  </div>
+    <!-- MESSAGE -->
+    <div class="card">
+      <div class="card-head"><div class="card-head-title">Message d'introduction</div></div>
+      <div class="card-body">
+        <div class="field">
+          <label>Texte (machine à écrire)</label>
+          <textarea id="f-msg" rows="10" class="mono" spellcheck="false"></textarea>
+          <div class="hint">Les points et virgules créent des pauses dramatiques · Les sauts de ligne sont conservés</div>
+        </div>
+      </div>
+    </div>
 
-  <!-- SAVE -->
-  <div class="btn-row">
-    <button class="btn" onclick="saveConfig()">▶ Enregistrer</button>
-    <button class="btn ghost" onclick="resetDefault()">↺ Valeurs par défaut</button>
-    <span id="save-fb">✓ Enregistré</span>
-  </div>
-</div>
+    <!-- ÉPREUVES -->
+    <div class="section-label">Épreuves</div>
+    <div class="card">
+      <div class="card-head">
+        <div class="card-head-title">Configuration des épreuves</div>
+        <div style="display:flex;gap:.5rem">
+          <button class="btn btn-secondary btn-sm" onclick="addChallenge()">+ Ajouter</button>
+          <button class="btn btn-danger btn-sm" onclick="removeLastChallenge()">− Supprimer</button>
+        </div>
+      </div>
+      <div class="ch-tabs" id="ch-tabs"></div>
+      <div class="ch-panels" id="ch-panels"></div>
+    </div>
+
+    <!-- SAVE -->
+    <div class="action-bar">
+      <button class="btn btn-primary" onclick="saveConfig()">💾 Enregistrer la mission</button>
+      <button class="btn btn-ghost" onclick="resetDefault()">↺ Valeurs par défaut</button>
+      <div id="save-fb">✓ Configuration enregistrée</div>
+    </div>
+
+  </div><!-- /main-wrap -->
+</div><!-- /main-screen -->
 
 <script>
 const ADMIN_PASS = "admin007";
@@ -161,10 +306,10 @@ Bonne chance. Ce message s'autodétruira.`,
       title: "ÉPREUVE 1 — La scène de crime",
       brief: `Un agent a été éliminé. Son corps est marqué au sol.
 
-Examinez la scène de crime à la lampe UV.
+Examinez la scène avec votre lampe UV.
 Un message invisible a été laissé sur le scotch.
 
-Déchiffrez ce message et entrez le code découvert.`,
+Déchiffrez-le et entrez le code découvert.`,
       code: "TRAHISON",
       digit: "3"
     },
@@ -173,32 +318,33 @@ Déchiffrez ce message et entrez le code découvert.`,
       brief: `Un couloir est protégé par un système laser.
 
 Traversez sans déclencher l'alarme.
-À l'autre bout, une enveloppe contient votre prochain code.
+Une enveloppe vous attend de l'autre côté.
 
-Récupérez-la et entrez le code.`,
+Récupérez le code et entrez-le ici.`,
       code: "COBRA",
       digit: "7"
     },
     {
-      title: "ÉPREUVE 3 — Le message codé",
-      brief: `Un message chiffré a été intercepté.
+      title: "ÉPREUVE 3 — L'agent de liaison",
+      brief: `Un contact vous attend dans le jardin.
 
-Utilisez la grille de déchiffrement
-dans votre carnet pour décoder le message.
+Il a caché un message quelque part dehors.
+Trouvez-le, déchiffrez-le avec votre carnet.
 
-La solution est votre prochain code.`,
-      code: "LUNE",
+Entrez le code obtenu pour continuer.`,
+      code: "JARDIN",
       digit: "1"
     },
     {
-      title: "ÉPREUVE 4 — Le témoin",
-      brief: `Une micro-photo a été cachée quelque part dans la pièce.
+      title: "ÉPREUVE 4 — Le poison",
+      brief: `L'ennemi a élaboré un poison pour neutraliser nos agents.
 
-Trouvez-la. Examinez-la à la loupe.
-Elle contient le dernier indice.
+Vous devez en créer l'antidote en mélangeant
+les ingrédients dans le bon ordre.
 
-Entrez le code caché dans l'image.`,
-      code: "88",
+La recette secrète est cachée dans votre sachet.
+Mélangez, goûtez, et entrez le code de validation.`,
+      code: "ANTIDOTE",
       digit: "9"
     }
   ]
@@ -207,7 +353,7 @@ Entrez le code caché dans l'image.`,
 let cfg = JSON.parse(JSON.stringify(DEFAULT_CFG));
 let activeTab = 0;
 
-// ── AUTH ──────────────────────────────────────────────
+// ── AUTH ──────────────────────────────────────
 function checkAdmin() {
   if (document.getElementById('admin-pass').value === ADMIN_PASS) {
     document.getElementById('auth-screen').style.display = 'none';
@@ -221,13 +367,12 @@ function checkAdmin() {
   }
 }
 
-// ── LOAD ──────────────────────────────────────────────
+// ── LOAD ──────────────────────────────────────
 function loadConfig() {
   try {
     const s = localStorage.getItem('agent_config');
     if (s) cfg = { ...DEFAULT_CFG, ...JSON.parse(s) };
   } catch(e) {}
-
   document.getElementById('f-dur').value = Math.round(cfg.duration / 60);
   document.getElementById('f-msg').value = cfg.message;
   updateDurHint();
@@ -235,48 +380,44 @@ function loadConfig() {
   updatePinPreview();
 }
 
-// ── TABS ──────────────────────────────────────────────
+// ── TABS ──────────────────────────────────────
 function renderTabs() {
-  const tabs   = document.getElementById('ch-tabs');
-  const panels = document.getElementById('ch-panels');
-
-  tabs.innerHTML = cfg.challenges.map((ch, i) =>
+  document.getElementById('ch-tabs').innerHTML = cfg.challenges.map((ch,i) =>
     `<button class="ch-tab${i===activeTab?' active':''}" onclick="switchTab(${i})">Épreuve ${i+1}</button>`
   ).join('');
 
-  panels.innerHTML = cfg.challenges.map((ch, i) => `
+  document.getElementById('ch-panels').innerHTML = cfg.challenges.map((ch,i) => `
     <div class="ch-panel${i===activeTab?' active':''}" id="panel-${i}">
-      <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap">
-        <div style="flex:1">
-          <label>Titre de l'épreuve</label>
-          <input type="text" id="ch-title-${i}" value="${esc(ch.title)}" oninput="syncCh(${i})">
-        </div>
+      <div class="field">
+        <label>Titre affiché sur l'app</label>
+        <input type="text" id="ch-title-${i}" value="${esc(ch.title)}" oninput="syncCh(${i})">
       </div>
-      <div>
-        <label>Texte affiché aux enfants (briefing)</label>
-        <textarea id="ch-brief-${i}" rows="7" spellcheck="false" oninput="syncCh(${i})">${esc(ch.brief)}</textarea>
+      <div class="field">
+        <label>Briefing — texte affiché aux enfants</label>
+        <textarea id="ch-brief-${i}" rows="7" class="mono" spellcheck="false" oninput="syncCh(${i})">${esc(ch.brief)}</textarea>
       </div>
       <div class="row">
-        <div>
+        <div class="field">
           <label>Code de déblocage (ce que les enfants trouvent et tapent)</label>
           <input type="text" id="ch-code-${i}" value="${esc(ch.code)}"
-                 style="text-transform:uppercase;letter-spacing:.2em"
-                 oninput="syncCh(${i})" autocomplete="off" autocorrect="off" spellcheck="false">
-          <div class="hint">Lettres et/ou chiffres — insensible à la casse</div>
+            class="mono" style="text-transform:uppercase;letter-spacing:.15em"
+            oninput="syncCh(${i})" autocomplete="off" autocorrect="off" spellcheck="false">
+          <div class="hint">Lettres et/ou chiffres · insensible à la casse</div>
         </div>
-        <div>
-          <label>Chiffre révélé si réussi (1 chiffre du PIN final)</label>
+        <div class="field" style="max-width:140px">
+          <label>Chiffre révélé (0–9)</label>
           <input type="text" id="ch-digit-${i}" value="${esc(ch.digit)}"
-                 maxlength="1" style="width:60px;font-size:20px;text-align:center"
-                 oninput="syncCh(${i});updatePinPreview()">
-          <div class="hint">Un seul chiffre (0–9)</div>
+            class="mono" maxlength="1"
+            style="font-size:24px;text-align:center;width:60px"
+            oninput="syncCh(${i});updatePinPreview()">
+          <div class="hint">Un seul chiffre du PIN final</div>
         </div>
       </div>
-      <div style="background:#010d03;border:1px solid #002a08;padding:.7rem;display:flex;gap:1rem;align-items:center;flex-wrap:wrap">
-        <div class="hint" style="color:#006818">Code :</div>
-        <div class="code-badge" id="cb-${i}">${esc(ch.code)||'—'}</div>
-        <div class="hint" style="color:#006818;margin-left:auto">Révèle le chiffre :</div>
-        <div class="digit-badge${ch.digit?' set':''}" id="db-${i}">${ch.digit||'?'}</div>
+      <div class="summary-box">
+        <span class="summary-label">Code :</span>
+        <span class="code-tag" id="cb-${i}">${esc(ch.code)||'—'}</span>
+        <span class="summary-label" style="margin-left:auto">Révèle :</span>
+        <div class="digit-tag${ch.digit?' set':''}" id="db-${i}">${ch.digit||'?'}</div>
       </div>
     </div>
   `).join('');
@@ -284,8 +425,8 @@ function renderTabs() {
 
 function switchTab(i) {
   activeTab = i;
-  document.querySelectorAll('.ch-tab').forEach((t,j) => t.className='ch-tab'+(j===i?' active':''));
-  document.querySelectorAll('.ch-panel').forEach((p,j) => p.className='ch-panel'+(j===i?' active':''));
+  document.querySelectorAll('.ch-tab').forEach((t,j)=>t.className='ch-tab'+(j===i?' active':''));
+  document.querySelectorAll('.ch-panel').forEach((p,j)=>p.className='ch-panel'+(j===i?' active':''));
 }
 
 function syncCh(i) {
@@ -293,82 +434,64 @@ function syncCh(i) {
   cfg.challenges[i].brief  = document.getElementById(`ch-brief-${i}`).value;
   cfg.challenges[i].code   = document.getElementById(`ch-code-${i}`).value.toUpperCase();
   cfg.challenges[i].digit  = document.getElementById(`ch-digit-${i}`).value.replace(/\D/g,'').slice(0,1);
-
-  const cb = document.getElementById(`cb-${i}`);
-  const db = document.getElementById(`db-${i}`);
-  if(cb) cb.textContent = cfg.challenges[i].code || '—';
-  if(db){ db.textContent = cfg.challenges[i].digit||'?'; db.className='digit-badge'+(cfg.challenges[i].digit?' set':''); }
+  const cb=document.getElementById(`cb-${i}`); if(cb) cb.textContent=cfg.challenges[i].code||'—';
+  const db=document.getElementById(`db-${i}`); if(db){db.textContent=cfg.challenges[i].digit||'?';db.className='digit-tag'+(cfg.challenges[i].digit?' set':'');}
   updatePinPreview();
 }
 
 function addChallenge() {
-  cfg.challenges.push({
-    title: `ÉPREUVE ${cfg.challenges.length+1} — Nouvelle épreuve`,
-    brief: `Description de l'épreuve…`,
-    code: "CODE",
-    digit: "0"
-  });
-  activeTab = cfg.challenges.length - 1;
-  renderTabs();
-  updatePinPreview();
+  cfg.challenges.push({ title:`ÉPREUVE ${cfg.challenges.length+1} — Nouvelle épreuve`, brief:`Description…`, code:"CODE", digit:"0" });
+  activeTab = cfg.challenges.length-1;
+  renderTabs(); updatePinPreview();
 }
 
 function removeLastChallenge() {
-  if (cfg.challenges.length <= 1) return;
-  if (!confirm(`Supprimer l'épreuve ${cfg.challenges.length} ?`)) return;
+  if(cfg.challenges.length<=1) return;
+  if(!confirm(`Supprimer l'épreuve ${cfg.challenges.length} ?`)) return;
   cfg.challenges.pop();
-  activeTab = Math.min(activeTab, cfg.challenges.length-1);
-  renderTabs();
-  updatePinPreview();
+  activeTab=Math.min(activeTab,cfg.challenges.length-1);
+  renderTabs(); updatePinPreview();
 }
 
 function updatePinPreview() {
-  const digits = cfg.challenges.map(c => c.digit || '?');
-  document.getElementById('pin-preview').innerHTML =
-    digits.map(d => `<div style="border:1px solid ${d!='?'?'#00ff41':'#003a0d'};color:${d!='?'?'#00ff41':'#003a0d'};width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;font-size:18px">${d}</div>`).join('');
+  document.getElementById('pin-preview').innerHTML = cfg.challenges.map(c=>
+    `<div class="pin-slot${c.digit?' set':''}">${c.digit||'?'}</div>`
+  ).join('');
 }
 
 function updateDurHint() {
-  const v = parseInt(document.getElementById('f-dur').value, 10);
-  const h = document.getElementById('dur-hint');
-  if (isNaN(v)) { h.textContent=''; return; }
-  h.textContent = v>=60 ? `= ${Math.floor(v/60)}h${v%60?String(v%60).padStart(2,'0')+'min':''}` : `= ${v} minute${v>1?'s':''}`;
+  const v=parseInt(document.getElementById('f-dur').value,10);
+  const h=document.getElementById('dur-hint');
+  if(isNaN(v)){h.textContent='';return;}
+  h.textContent=v>=60?`= ${Math.floor(v/60)}h${v%60?String(v%60).padStart(2,'0')+'min':''}`:`= ${v} minute${v>1?'s':''}`;
 }
 
-function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
-// ── SAVE ──────────────────────────────────────────────
 function saveConfig() {
-  const mins = parseInt(document.getElementById('f-dur').value, 10);
-  if (isNaN(mins)||mins<1||mins>180) { alert('Durée invalide (1–180 min)'); return; }
-
-  // collect current challenge field values
-  cfg.challenges.forEach((ch, i) => {
-    ch.title  = document.getElementById(`ch-title-${i}`)?.value || ch.title;
-    ch.brief  = document.getElementById(`ch-brief-${i}`)?.value || ch.brief;
-    ch.code   = (document.getElementById(`ch-code-${i}`)?.value || ch.code).toUpperCase();
-    ch.digit  = (document.getElementById(`ch-digit-${i}`)?.value || ch.digit).replace(/\D/g,'').slice(0,1);
+  const mins=parseInt(document.getElementById('f-dur').value,10);
+  if(isNaN(mins)||mins<1||mins>180){alert('Durée invalide (1–180 min)');return;}
+  cfg.challenges.forEach((ch,i)=>{
+    ch.title  = document.getElementById(`ch-title-${i}`)?.value||ch.title;
+    ch.brief  = document.getElementById(`ch-brief-${i}`)?.value||ch.brief;
+    ch.code   = (document.getElementById(`ch-code-${i}`)?.value||ch.code).toUpperCase();
+    ch.digit  = (document.getElementById(`ch-digit-${i}`)?.value||ch.digit).replace(/\D/g,'').slice(0,1);
   });
-
-  cfg.duration = mins * 60;
-  cfg.message  = document.getElementById('f-msg').value;
-
-  localStorage.setItem('agent_config', JSON.stringify(cfg));
-  const fb = document.getElementById('save-fb');
+  cfg.duration=mins*60;
+  cfg.message=document.getElementById('f-msg').value;
+  localStorage.setItem('agent_config',JSON.stringify(cfg));
+  const fb=document.getElementById('save-fb');
   fb.classList.add('show');
-  setTimeout(()=>fb.classList.remove('show'), 2500);
+  setTimeout(()=>fb.classList.remove('show'),2500);
   updatePinPreview();
 }
 
 function resetDefault() {
-  if (!confirm('Rétablir tous les réglages par défaut ?')) return;
+  if(!confirm('Rétablir tous les réglages par défaut ?')) return;
   localStorage.removeItem('agent_config');
-  cfg = JSON.parse(JSON.stringify(DEFAULT_CFG));
-  activeTab = 0;
-  loadConfig();
+  cfg=JSON.parse(JSON.stringify(DEFAULT_CFG));
+  activeTab=0; loadConfig();
 }
-
-document.getElementById('f-dur').addEventListener('input', updateDurHint);
 </script>
 </body>
 </html>
