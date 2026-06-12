@@ -41,11 +41,17 @@
     #cursor{display:inline-block;width:9px;height:15px;background:#00ff41;animation:blink .8s step-end infinite;vertical-align:middle;margin-left:2px}
     @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
 
+    /* ── ARTEFACTS FOND ── */
+    #bg-artefacts{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+    .bg-art{position:absolute;font-family:'Share Tech Mono','Courier New',monospace;white-space:pre;color:#00ff41;opacity:0;font-size:clamp(6px,1.1vw,9px);line-height:1.25;text-align:center;will-change:transform,opacity}
+
     /* ── SPLASH ── */
-    #ascii-hat{font-size:clamp(7px,1.5vw,12px);line-height:1.3;color:#00ff41;text-align:center;white-space:pre;text-shadow:0 0 8px rgba(0,255,65,.4)}
-    #splash-name{font-size:clamp(24px,6vw,40px);letter-spacing:.35em;text-transform:uppercase;animation:glow 2s ease-in-out infinite}
-    @keyframes glow{0%,100%{text-shadow:0 0 10px rgba(0,255,65,.5)}50%{text-shadow:0 0 30px rgba(0,255,65,.9)}}
-    #splash-tap{font-size:12px;letter-spacing:.2em;color:#004d12;text-transform:uppercase;animation:blink2 1.4s step-end infinite;margin-top:1rem}
+    #splash-center{display:flex;flex-direction:column;align-items:center;gap:.6rem;position:relative;z-index:3}
+    #splash-artefact{font-size:clamp(7px,1.4vw,11px);line-height:1.28;color:#00ff41;text-align:center;white-space:pre;min-height:10em;display:flex;align-items:center;justify-content:center}
+    #splash-name{font-size:clamp(28px,7vw,44px);letter-spacing:.4em;text-transform:uppercase;animation:glow 2s ease-in-out infinite;margin-top:.2rem}
+    @keyframes glow{0%,100%{text-shadow:0 0 10px rgba(0,255,65,.5)}50%{text-shadow:0 0 32px rgba(0,255,65,.95)}}
+    #splash-sub2{font-size:10px;letter-spacing:.22em;color:#004d12;text-transform:uppercase}
+    #splash-tap{font-size:11px;letter-spacing:.2em;color:#003a0d;text-transform:uppercase;animation:blink2 1.4s step-end infinite;margin-top:.8rem}
     @keyframes blink2{0%,100%{opacity:1}50%{opacity:0}}
 
     /* ── NAME GENERATOR ── */
@@ -125,23 +131,16 @@
 <div id="crt"></div>
 <div id="scan"></div>
 <div id="particles"></div>
+<div id="bg-artefacts"></div>
 
 <!-- ══ PHASE 0 : SPLASH ══════════════════════════════ -->
 <div id="phase-splash" class="phase active" onclick="onSplashTap()">
-<pre id="ascii-hat">        ___________
-       /           \
-      /  ~  ~  ~   \
-     /_______________\
-     |   ___________  |
-     |  |     |     | |
-      \_|_____|_____| /
-        \_____________/
-             | |
-           __|_|__
-          |_______|</pre>
-  <div id="splash-name">Helie10</div>
-  <div class="sub">Dossier classifié — accès restreint</div>
-  <div id="splash-tap">▶ appuyer pour commencer</div>
+  <div id="splash-center">
+    <pre id="splash-artefact"></pre>
+    <div id="splash-name">Helie10</div>
+    <div id="splash-sub2">Dossier classifié — accès restreint</div>
+    <div id="splash-tap">▶ appuyer pour commencer</div>
+  </div>
 </div>
 
 <!-- ══ PHASE 1 : NOMS D'AGENTS ═══════════════════════ -->
@@ -295,25 +294,26 @@ Récupérez-la et entrez le code.`,
       digit: "7"
     },
     {
-      title: "ÉPREUVE 3 — Le message codé",
-      brief: `Un message chiffré a été intercepté.
+      title: "ÉPREUVE 3 — L\'agent de liaison",
+      brief: `Un contact vous attend dans le jardin.
 
-Utilisez la grille de déchiffrement
-dans votre carnet pour décoder le message.
+Il a caché un message quelque part dehors.
+Trouvez-le, déchiffrez-le avec votre carnet.
 
-La solution est votre prochain code.`,
-      code: "LUNE",
+Entrez le code obtenu pour continuer.`,
+      code: "JARDIN",
       digit: "1"
     },
     {
-      title: "ÉPREUVE 4 — Le témoin",
-      brief: `Une micro-photo a été cachée quelque part dans la pièce.
+      title: "ÉPREUVE 4 — Le poison",
+      brief: `L\'ennemi a élaboré un poison pour neutraliser nos agents.
 
-Trouvez-la. Examinez-la à la loupe.
-Elle contient le dernier indice.
+Vous devez en créer l\'antidote en mélangeant
+les ingrédients dans le bon ordre.
 
-Entrez le code caché dans l'image.`,
-      code: "88",
+La recette secrète est cachée dans votre sachet.
+Mélangez, goûtez, et entrez le code de validation.`,
+      code: "ANTIDOTE",
       digit: "9"
     }
   ]
@@ -788,6 +788,232 @@ function playFanfare(){
 }
 
 if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
+
+// ══════════════════════════════════════════════════════
+// ARTEFACTS ASCII — splash rotation + fond animé
+// ══════════════════════════════════════════════════════
+const ARTEFACTS = [
+  { name:'chapeau', art:
+`      _.---,._
+    /' _.--.<
+        o |
+       --.--'
+    ___| |___
+   /   | |   \\
+  /    | |    \\
+ /_____|_|_____\\` },
+
+  { name:'valise', art:
+`   _________
+  | .------. |
+  | |URGENT| |
+  | '------' |
+  |   _____  |
+  |  |     | |
+  |  |_____| |
+  |___________|
+  '-----------'` },
+
+  { name:'dossier', art:
+`  .-----------.
+  |  _________ |
+  | | TOP     ||
+  | | SECRET  ||
+  | |_________||
+  |   _______  |
+  |  |_______|  |
+  |   _______  |
+  |  |_______| |
+  '-----------'` },
+
+  { name:'talkie', art:
+`    .-------.
+    |[=====]|
+    | .---. |
+    | |   | |
+    | '---' |
+    |  ___  |
+    | |   | |
+    | |___| |
+    '-------'
+      |   |
+    __|   |__` },
+
+  { name:'camera', art:
+`   .---------.
+  /  .------.  \\
+ /  /        \\  \\
+|  |   (  )   | |
+|  |    --    | |
+ \\  \\        /  /
+  \\  '------'  /
+   '-----------'
+       | |
+     __|_|__` },
+
+  { name:'bombe', art:
+` .-----------.
+ | 00:47:23  |
+ |  ~~~~~~~~ |
+ | [=======] |
+ |   ARMED   |
+ '-----------'
+  /  |   |  \\
+ /###|   |###\\
+|____|   |____|` },
+
+  { name:'message', art:
+`  .----------.
+  |.---------.|
+  ||  - - -  ||
+  ||  - - -  ||
+  ||  - - -  ||
+  |'---...---'|
+  '----...----'
+      |||||
+   ...........` },
+
+  { name:'agent', art:
+`      ___
+     /   \\
+    | ( ) |
+     \\___/
+   .--|_|--.
+  /   | |   \\
+ / .--' '--, \\
+|_/         \\_|
+     |   |
+    _|   |_
+   |_______|` },
+
+  { name:'laser', art:
+`----*     *----
+    |     |
+    |     |
+*---'     '---*
+|             |
+*---,     ,---*
+    |     |
+    |     |
+----*     *----` },
+];
+
+// ── Splash : rotation des artefacts ─────────────────
+let splashArtIdx  = 0;
+let splashArtTmr  = null;
+
+function startSplashRotation() {
+  const el = document.getElementById('splash-artefact');
+  if (!el) return;
+  function show() {
+    const art = ARTEFACTS[splashArtIdx % ARTEFACTS.length];
+    // fade out
+    el.style.transition = 'opacity .4s';
+    el.style.opacity = '0';
+    setTimeout(() => {
+      el.textContent = art.art;
+      el.style.opacity = '1';
+    }, 420);
+    splashArtIdx++;
+    splashArtTmr = setTimeout(show, 2800);
+  }
+  el.textContent = ARTEFACTS[0].art;
+  el.style.opacity = '1';
+  splashArtIdx = 1;
+  splashArtTmr = setTimeout(show, 2800);
+}
+
+// ── Background artefacts : dérive lente ─────────────
+const BG_COUNT = 6;
+let bgArts = [];
+let bgAnimFrame = null;
+
+function initBgArtefacts() {
+  const container = document.getElementById('bg-artefacts');
+  if (!container) return;
+  container.innerHTML = '';
+  bgArts = [];
+
+  // pick 6 random artefacts (no duplicates)
+  const pool = [...ARTEFACTS].sort(() => Math.random() - .5).slice(0, BG_COUNT);
+
+  pool.forEach((art, i) => {
+    const el = document.createElement('pre');
+    el.className = 'bg-art';
+    el.textContent = art.art;
+    container.appendChild(el);
+
+    // random initial position (avoid dead-center)
+    const zones = [
+      { x:[2,25],  y:[2,35]  },
+      { x:[70,95], y:[2,35]  },
+      { x:[2,25],  y:[60,95] },
+      { x:[70,95], y:[60,95] },
+      { x:[35,65], y:[2,20]  },
+      { x:[35,65], y:[75,95] },
+    ];
+    const z = zones[i];
+    const state = {
+      el,
+      x:    z.x[0] + Math.random() * (z.x[1] - z.x[0]),
+      y:    z.y[0] + Math.random() * (z.y[1] - z.y[0]),
+      vx:   (Math.random() - .5) * .018,  // drift speed %/s
+      vy:   (Math.random() - .5) * .012,
+      baseOpacity: .055 + Math.random() * .04,
+      phase: Math.random() * Math.PI * 2,
+      freq:  .0004 + Math.random() * .0003,
+    };
+    bgArts.push(state);
+  });
+
+  tickBgArts(performance.now());
+}
+
+function tickBgArts(now) {
+  bgArts.forEach(s => {
+    // slow drift
+    s.x += s.vx;
+    s.y += s.vy;
+
+    // soft bounce at edges
+    if (s.x < -5 || s.x > 95) s.vx *= -1;
+    if (s.y < -5 || s.y > 95) s.vy *= -1;
+
+    // breathing opacity
+    const op = s.baseOpacity + Math.sin(now * s.freq + s.phase) * .018;
+    s.el.style.opacity = op.toFixed(3);
+    s.el.style.left    = s.x.toFixed(2) + 'vw';
+    s.el.style.top     = s.y.toFixed(2) + 'vh';
+  });
+  bgAnimFrame = requestAnimationFrame(tickBgArts);
+}
+
+function stopBgArts() {
+  if (bgAnimFrame) { cancelAnimationFrame(bgAnimFrame); bgAnimFrame = null; }
+}
+
+// ── Hook into app flow ───────────────────────────────
+// Start splash rotation immediately
+document.addEventListener('DOMContentLoaded', () => {
+  startSplashRotation();
+  initBgArtefacts();
+});
+
+// Stop splash rotation when tapping
+const _origOnSplash = onSplashTap;
+window.onSplashTap = function() {
+  clearTimeout(splashArtTmr);
+  _origOnSplash();
+};
+
+// Reinit bg artefacts on reset
+const _origReset2 = resetApp;
+window.resetApp = function() {
+  _origReset2();
+  stopBgArts();
+  initBgArtefacts();
+  startSplashRotation();
+};
 </script>
 </body>
 </html>
