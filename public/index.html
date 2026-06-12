@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Mission">
+  <meta name="theme-color" content="#000000">
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <title>MISSION CLASSIFIÉE</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+    html,body{width:100%;height:100%;background:#000;overflow:hidden}
+    body{font-family:'Share Tech Mono','Courier New',monospace;color:#00ff41;display:flex;flex-direction:column;align-items:center;justify-content:center}
+
+    #crt{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:repeating-linear-gradient(transparent,transparent 2px,rgba(0,255,65,.015) 2px,rgba(0,255,65,.015) 4px)}
+    #scan{position:fixed;left:0;right:0;height:2px;background:rgba(0,255,65,.07);animation:scan 10s linear infinite;pointer-events:none;z-index:1}
+    @keyframes scan{0%{top:0}100%{top:100vh}}
+
+    .phase{position:relative;z-index:2;width:100%;max-width:700px;padding:1.5rem 2rem;display:none;flex-direction:column;align-items:center;gap:1.2rem;max-height:100vh;overflow-y:auto}
+    .phase.active{display:flex}
+
+    /* ── typography ── */
+    .label{font-size:10px;letter-spacing:.28em;color:#006818;text-transform:uppercase;border-bottom:1px solid #002a08;padding-bottom:.4rem;width:100%}
+    .big{font-size:clamp(48px,14vw,88px);letter-spacing:.06em;color:#00ff41;text-shadow:0 0 20px rgba(0,255,65,.35);font-variant-numeric:tabular-nums;line-height:1}
+    .title{font-size:clamp(18px,4vw,26px);letter-spacing:.2em;text-transform:uppercase;text-align:center}
+    .sub{font-size:11px;letter-spacing:.2em;color:#006818;text-transform:uppercase;text-align:center}
+    .body-txt{font-size:clamp(12px,1.8vw,14px);line-height:1.9;color:#00cc35;width:100%;white-space:pre-wrap}
+
+    /* ── buttons ── */
+    .btn{background:transparent;border:1px solid #00ff41;color:#00ff41;font-family:inherit;font-size:11px;letter-spacing:.2em;padding:.7rem 1.8rem;cursor:pointer;text-transform:uppercase;transition:background .15s}
+    .btn:hover,.btn:active{background:rgba(0,255,65,.1)}
+    .btn.red{border-color:#ff0024;color:#ff0024}
+    .btn.red:hover{background:rgba(255,0,36,.08)}
+    .btn.dim{border-color:#004d12;color:#004d12}
+
+    /* ── cursor ── */
+    #cursor{display:inline-block;width:9px;height:15px;background:#00ff41;animation:blink .8s step-end infinite;vertical-align:middle;margin-left:2px}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
+
+    /* ── SPLASH ── */
+    #ascii-hat{font-size:clamp(7px,1.5vw,12px);line-height:1.3;color:#00ff41;text-align:center;white-space:pre;text-shadow:0 0 8px rgba(0,255,65,.4)}
+    #splash-name{font-size:clamp(24px,6vw,40px);letter-spacing:.35em;text-transform:uppercase;animation:glow 2s ease-in-out infinite}
+    @keyframes glow{0%,100%{text-shadow:0 0 10px rgba(0,255,65,.5)}50%{text-shadow:0 0 30px rgba(0,255,65,.9)}}
+    #splash-tap{font-size:12px;letter-spacing:.2em;color:#004d12;text-transform:uppercase;animation:blink2 1.4s step-end infinite;margin-top:1rem}
+    @keyframes blink2{0%,100%{opacity:1}50%{opacity:0}}
+
+    /* ── NAME GENERATOR ── */
+    #names-grid{display:flex;flex-wrap:wrap;gap:.6rem;justify-content:center;width:100%}
+    .name-badge{background:#010d03;border:1px solid #003a0d;padding:.4rem .9rem;font-size:12px;letter-spacing:.12em;color:#00ff41;text-transform:uppercase;animation:fadein .4s ease}
+    @keyframes fadein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+    #gen-btn{font-size:14px;padding:.8rem 2rem}
+
+    /* ── TIMER BAR ── */
+    .timer-row{width:100%;display:flex;align-items:center;gap:.8rem}
+    .progress-wrap{flex:1;height:3px;background:#001a05;border:1px solid #002a08}
+    #progress-bar{height:100%;background:#00ff41;width:100%;transition:width 1s linear,background .3s}
+    #progress-bar.warn{background:#ff6b00}
+    #progress-bar.danger{background:#ff0024}
+    #timer-sm{font-size:13px;letter-spacing:.1em;color:#006818;min-width:52px;text-align:right;font-variant-numeric:tabular-nums}
+    #timer-sm.warn{color:#ff6b00}
+    #timer-sm.danger{color:#ff0024;animation:shake .25s linear infinite}
+
+    /* ── ÉPREUVES ── */
+    .step-header{width:100%;display:flex;align-items:center;gap:.8rem}
+    .step-num{font-size:10px;letter-spacing:.25em;color:#003a0d;border:1px solid #003a0d;padding:.2rem .5rem}
+    .step-dots{display:flex;gap:6px;margin-left:auto}
+    .step-dot{width:8px;height:8px;border-radius:50%;border:1px solid #003a0d;background:transparent}
+    .step-dot.done{background:#00ff41;border-color:#00ff41;box-shadow:0 0 6px rgba(0,255,65,.5)}
+    .step-dot.active{border-color:#00ff41}
+
+    /* code input */
+    .code-wrap{width:100%;display:flex;flex-direction:column;gap:.6rem}
+    .code-label{font-size:10px;letter-spacing:.22em;color:#006818;text-transform:uppercase}
+    .code-field-row{display:flex;gap:.5rem;width:100%}
+    #code-input{flex:1;background:#010d03;border:1px solid #003a0d;color:#00ff41;font-family:inherit;font-size:16px;letter-spacing:.2em;padding:.55rem .8rem;outline:none;text-transform:uppercase}
+    #code-input:focus{border-color:#00ff41;box-shadow:0 0 0 1px rgba(0,255,65,.2)}
+    #code-submit{background:transparent;border:1px solid #00ff41;color:#00ff41;font-family:inherit;font-size:11px;letter-spacing:.15em;padding:.55rem 1.2rem;cursor:pointer;text-transform:uppercase;white-space:nowrap}
+    #code-submit:hover{background:rgba(0,255,65,.08)}
+    #code-error{font-size:11px;color:#ff0024;letter-spacing:.15em;min-height:15px;text-transform:uppercase}
+
+    /* ── REVEAL ── */
+    #reveal-digit{font-size:clamp(80px,22vw,130px);letter-spacing:.05em;color:#00ff41;text-shadow:0 0 40px rgba(0,255,65,.6);animation:pop .5s ease-out}
+    @keyframes pop{0%{transform:scale(.3);opacity:0}70%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+    #partial-code{display:flex;gap:1rem;margin-top:.5rem}
+    .code-slot{font-size:clamp(28px,7vw,44px);letter-spacing:.05em;min-width:38px;text-align:center;border-bottom:2px solid #003a0d;color:#003a0d}
+    .code-slot.revealed{color:#00ff41;border-color:#00ff41;text-shadow:0 0 12px rgba(0,255,65,.5);animation:pop .4s ease-out}
+
+    /* ── COUNTDOWN PHASE ── */
+    #big-timer{font-size:clamp(64px,18vw,110px);letter-spacing:.06em;color:#00ff41;text-shadow:0 0 24px rgba(0,255,65,.35);font-variant-numeric:tabular-nums;line-height:1}
+    #big-timer.warn{color:#ff6b00;text-shadow:0 0 20px rgba(255,107,0,.4)}
+    #big-timer.danger{color:#ff0024;text-shadow:0 0 24px rgba(255,0,36,.5);animation:shake .25s linear infinite}
+    @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+
+    /* PIN */
+    .pin-dots{display:flex;gap:16px}
+    .pin-dot{width:18px;height:18px;border:1px solid #00ff41;border-radius:50%;background:transparent;transition:background .1s}
+    .pin-dot.filled{background:#00ff41;box-shadow:0 0 8px rgba(0,255,65,.5)}
+    .pin-dot.error{border-color:#ff0024;background:#ff0024}
+    .numpad{display:grid;grid-template-columns:repeat(3,68px);gap:9px}
+    .num-btn{background:transparent;border:1px solid #003a0d;color:#00ff41;font-family:inherit;font-size:20px;height:58px;cursor:pointer;transition:background .1s,border-color .1s;border-radius:2px;user-select:none}
+    .num-btn:hover,.num-btn:active{background:rgba(0,255,65,.1);border-color:#00ff41}
+    .num-btn.del{font-size:16px;color:#006818}
+    .num-btn.ghost{border-color:transparent;pointer-events:none}
+    #pin-error{font-size:11px;color:#ff0024;letter-spacing:.15em;min-height:15px;text-align:center;text-transform:uppercase}
+
+    /* ── SUCCESS / EXPLOSION ── */
+    #phase-success{text-align:center}
+    #phase-explosion{text-align:center}
+    #expl-title{font-size:clamp(20px,5vw,34px);letter-spacing:.15em;text-transform:uppercase;color:#ff0024;animation:flashr .18s step-end infinite}
+    @keyframes flashr{0%,100%{opacity:1;color:#ff0024}50%{opacity:.5;color:#ff6b00}}
+    #particles{position:fixed;inset:0;pointer-events:none;z-index:5;overflow:hidden}
+    .particle{position:absolute;border-radius:50%;animation:fly var(--dur) ease-out forwards}
+    @keyframes fly{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--tx),var(--ty)) scale(.1);opacity:0}}
+
+    /* ── COUNTDOWN HEADER (during challenges) ── */
+    .mini-timer-bar{width:100%;display:flex;align-items:center;gap:.6rem;padding:.3rem 0}
+    .mini-timer-label{font-size:9px;letter-spacing:.2em;color:#003a0d;text-transform:uppercase}
+  </style>
+</head>
+<body>
+<div id="crt"></div>
+<div id="scan"></div>
+<div id="particles"></div>
+
+<!-- ══ PHASE 0 : SPLASH ══════════════════════════════ -->
+<div id="phase-splash" class="phase active" onclick="onSplashTap()">
+<pre id="ascii-hat">        ___________
+       /           \
+      /  ~  ~  ~   \
+     /_______________\
+     |   ___________  |
+     |  |     |     | |
+      \_|_____|_____| /
+        \_____________/
+             | |
+           __|_|__
+          |_______|</pre>
+  <div id="splash-name">Helie10</div>
+  <div class="sub">Dossier classifié — accès restreint</div>
+  <div id="splash-tap">▶ appuyer pour commencer</div>
+</div>
+
+<!-- ══ PHASE 1 : NOMS D'AGENTS ═══════════════════════ -->
+<div id="phase-names" class="phase">
+  <div class="label">⬛ Recrutement — attribution des noms de code</div>
+  <div id="names-grid"></div>
+  <div style="display:flex;gap:.8rem;flex-wrap:wrap;justify-content:center">
+    <button class="btn gen-btn" id="gen-btn" onclick="generateName()">+ Générer un agent</button>
+    <button class="btn dim" onclick="removeLast()" id="remove-btn" style="display:none">− Supprimer le dernier</button>
+  </div>
+  <div class="sub" id="names-hint">Générez un nom par enfant, puis lancez la mission.</div>
+  <button class="btn" id="launch-btn" onclick="launchMission()" style="display:none;margin-top:.5rem">▶ Lancer la mission</button>
+</div>
+
+<!-- ══ PHASE 2 : MESSAGE ═════════════════════════════ -->
+<div id="phase-message" class="phase">
+  <div class="label" id="msg-label">⬛ Transmission chiffrée — priorité absolue</div>
+  <div id="typewriter-text"><span id="cursor"></span></div>
+</div>
+
+<!-- ══ PHASE 3–6 : ÉPREUVES ══════════════════════════ -->
+<div id="phase-challenge" class="phase">
+  <!-- mini timer bar -->
+  <div class="mini-timer-bar">
+    <div class="mini-timer-label">temps restant</div>
+    <div class="progress-wrap" style="flex:1"><div id="progress-bar"></div></div>
+    <div id="timer-sm">--:--</div>
+  </div>
+
+  <!-- step header -->
+  <div class="step-header">
+    <div class="step-num" id="ch-num">ÉPREUVE 1 / 4</div>
+    <div class="step-dots" id="step-dots"></div>
+  </div>
+
+  <div class="label" id="ch-title">—</div>
+  <div class="body-txt" id="ch-brief">—</div>
+
+  <!-- code entry -->
+  <div class="code-wrap">
+    <div class="code-label">Entrez le code découvert</div>
+    <div class="code-field-row">
+      <input id="code-input" type="text" autocomplete="off" autocorrect="off" spellcheck="false"
+             placeholder="CODE..." maxlength="12"
+             onkeydown="if(event.key==='Enter') submitCode()">
+      <button id="code-submit" onclick="submitCode()">Valider ▶</button>
+    </div>
+    <div id="code-error"></div>
+  </div>
+</div>
+
+<!-- ══ PHASE 7 : RÉVÉLATION DU CODE ═════════════════ -->
+<div id="phase-reveal" class="phase">
+  <div class="mini-timer-bar">
+    <div class="mini-timer-label">temps restant</div>
+    <div class="progress-wrap" style="flex:1"><div id="progress-bar-rev"></div></div>
+    <div id="timer-sm-rev">--:--</div>
+  </div>
+  <div class="label">⬛ Code de désarmement — révélation</div>
+  <div class="sub">Tous les chiffres ont été récupérés.</div>
+  <div id="partial-code"></div>
+  <div class="sub" style="margin-top:.5rem;animation:glow 1.5s ease-in-out infinite">Mémorisez ce code. Le dispositif s'active dans 5 secondes…</div>
+</div>
+
+<!-- ══ PHASE 8 : COMPTE À REBOURS FINAL ════════════ -->
+<div id="phase-countdown" class="phase">
+  <div style="font-size:10px;letter-spacing:.25em;color:#ff6b00;text-transform:uppercase;animation:blink2 1s step-end infinite">⚠ dispositif actif — désarmez maintenant ⚠</div>
+  <div id="big-timer">60:00</div>
+  <div class="timer-row">
+    <div class="progress-wrap"><div id="progress-bar-cd"></div></div>
+  </div>
+  <div class="pin-dots">
+    <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div>
+    <div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
+  </div>
+  <div class="numpad">
+    <button class="num-btn" onclick="pressPin('1')">1</button>
+    <button class="num-btn" onclick="pressPin('2')">2</button>
+    <button class="num-btn" onclick="pressPin('3')">3</button>
+    <button class="num-btn" onclick="pressPin('4')">4</button>
+    <button class="num-btn" onclick="pressPin('5')">5</button>
+    <button class="num-btn" onclick="pressPin('6')">6</button>
+    <button class="num-btn" onclick="pressPin('7')">7</button>
+    <button class="num-btn" onclick="pressPin('8')">8</button>
+    <button class="num-btn" onclick="pressPin('9')">9</button>
+    <button class="num-btn ghost"></button>
+    <button class="num-btn" onclick="pressPin('0')">0</button>
+    <button class="num-btn del" onclick="delPin()">⌫</button>
+  </div>
+  <div id="pin-error"></div>
+</div>
+
+<!-- ══ PHASE 9 : SUCCÈS ══════════════════════════════ -->
+<div id="phase-success" class="phase">
+  <div class="title" style="color:#00ff41;animation:glow 1.5s ease-in-out infinite">✓ Mission accomplie</div>
+  <div class="sub">Dispositif désarmé — félicitations, agents.</div>
+  <div style="font-size:12px;color:#004d12;letter-spacing:.1em;margin-top:.5rem">Ce message s'autodétruira dans quelques instants.</div>
+  <button class="btn" onclick="resetApp()" style="margin-top:1rem">↺ Nouvelle mission</button>
+</div>
+
+<!-- ══ PHASE 10 : EXPLOSION ══════════════════════════ -->
+<div id="phase-explosion" class="phase">
+  <div id="expl-title">💥 Mission échouée 💥</div>
+  <div class="sub" style="color:#ff6b00;margin-top:.8rem">Le dispositif a été déclenché.</div>
+  <div class="sub" style="color:#ff6b00;margin-top:.3rem">L'organisation nie toute connaissance de ces agents.</div>
+  <button class="btn red" onclick="resetApp()" style="margin-top:1.5rem">↺ Recommencer</button>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════
+// CONFIG PAR DÉFAUT
+// ══════════════════════════════════════════════════════
+const DEFAULT_CFG = {
+  duration: 3600,
+  message: `AGENTS, VOUS RECEVEZ UNE TRANSMISSION D'URGENCE.
+
+Un des nôtres a été éliminé dans le QG.
+Le corps a été retrouvé. La scène est intacte.
+
+Un dispositif explosif a été activé par les
+ennemis. Vous disposez d'une heure pour
+résoudre l'affaire et le désamorcer.
+
+Chaque épreuve vous révèlera un chiffre
+du code de désarmement.
+
+Ne perdez pas de temps, agents.
+
+Bonne chance. Ce message s'autodétruira.`,
+  challenges: [
+    {
+      title: "ÉPREUVE 1 — La scène de crime",
+      brief: `Un agent a été éliminé. Son corps est marqué au sol.
+
+Examinez la scène de crime à la lampe UV.
+Un message invisible a été laissé sur le scotch.
+
+Déchiffrez ce message et entrez le code découvert.`,
+      code: "TRAHISON",
+      digit: "3"
+    },
+    {
+      title: "ÉPREUVE 2 — Le couloir laser",
+      brief: `Un couloir est protégé par un système laser.
+
+Traversez sans déclencher l'alarme.
+À l'autre bout, une enveloppe contient votre prochain code.
+
+Récupérez-la et entrez le code.`,
+      code: "COBRA",
+      digit: "7"
+    },
+    {
+      title: "ÉPREUVE 3 — Le message codé",
+      brief: `Un message chiffré a été intercepté.
+
+Utilisez la grille de déchiffrement
+dans votre carnet pour décoder le message.
+
+La solution est votre prochain code.`,
+      code: "LUNE",
+      digit: "1"
+    },
+    {
+      title: "ÉPREUVE 4 — Le témoin",
+      brief: `Une micro-photo a été cachée quelque part dans la pièce.
+
+Trouvez-la. Examinez-la à la loupe.
+Elle contient le dernier indice.
+
+Entrez le code caché dans l'image.`,
+      code: "88",
+      digit: "9"
+    }
+  ]
+};
+
+function getCfg() {
+  try {
+    const s = localStorage.getItem('agent_config');
+    if (!s) return DEFAULT_CFG;
+    const stored = JSON.parse(s);
+    return {
+      duration:    stored.duration    || DEFAULT_CFG.duration,
+      message:     stored.message     || DEFAULT_CFG.message,
+      challenges:  stored.challenges  || DEFAULT_CFG.challenges
+    };
+  } catch(e) { return DEFAULT_CFG; }
+}
+
+const cfg = getCfg();
+
+// ══════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════
+let agentNames     = [];
+let currentChallenge = 0;
+let revealedDigits = [];
+let countdownTimer = null;
+let secondsLeft    = cfg.duration;
+let totalSeconds   = cfg.duration;
+let pinInput       = "";
+let particleLoop   = null;
+let typewriterIdx  = 0;
+let typewriterTmr  = null;
+
+// ══════════════════════════════════════════════════════
+// NAME GENERATOR
+// ══════════════════════════════════════════════════════
+const ADJ = ["OMBRE","ACIER","NOIR","ROUGE","SILENCIEUX","RAPIDE","GLACIAL","FANTÔME","FURTIF","COBRA","JADE","ARGENT","BRONZE","ÉCLAIR","VIPÈRE","LOUP","RENARD","LYNX","AIGLE","SPECTRE"];
+const NOM = ["DELTA","SIGMA","ZÉRO","ALPHA","BRAVO","OMEGA","KILO","VICTOR","ZULU","FOXTROT","SIERRA","TANGO","ROMEO","LIMA","INDIA","NOVEMBRE","PAPA","OSCAR","WHISKY","GOLF"];
+
+function generateName() {
+  const a = ADJ[Math.floor(Math.random()*ADJ.length)];
+  const n = NOM[Math.floor(Math.random()*NOM.length)];
+  const name = `AGENT ${a} ${n}`;
+  // avoid duplicates
+  if (agentNames.includes(name)) { generateName(); return; }
+  agentNames.push(name);
+  renderNames();
+  playTypeSound();
+}
+
+function removeLast() {
+  agentNames.pop();
+  renderNames();
+}
+
+function renderNames() {
+  const grid = document.getElementById('names-grid');
+  grid.innerHTML = agentNames.map(n =>
+    `<div class="name-badge">${n}</div>`
+  ).join('');
+  document.getElementById('launch-btn').style.display   = agentNames.length > 0 ? 'inline-block' : 'none';
+  document.getElementById('remove-btn').style.display   = agentNames.length > 0 ? 'inline-block' : 'none';
+  document.getElementById('names-hint').textContent     = agentNames.length === 0
+    ? 'Générez un nom par enfant, puis lancez la mission.'
+    : `${agentNames.length} agent${agentNames.length>1?'s':''} recruté${agentNames.length>1?'s':''}.`;
+}
+
+// ══════════════════════════════════════════════════════
+// PHASES
+// ══════════════════════════════════════════════════════
+function showPhase(id) {
+  document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function onSplashTap() {
+  getAudioCtx();
+  showPhase('phase-names');
+}
+
+function launchMission() {
+  showPhase('phase-message');
+  typewriterIdx = 0;
+  document.getElementById('typewriter-text').innerHTML = '<span id="cursor"></span>';
+  // start global countdown silently (timer shown only during challenges)
+  secondsLeft  = cfg.duration;
+  totalSeconds = cfg.duration;
+  countdownTimer = setInterval(globalTick, 1000);
+  startAmbientMusic();
+  setTimeout(typeNext, 400);
+}
+
+// ══════════════════════════════════════════════════════
+// TYPEWRITER
+// ══════════════════════════════════════════════════════
+function typeNext() {
+  const el  = document.getElementById('typewriter-text');
+  const msg = cfg.message;
+  if (typewriterIdx < msg.length) {
+    const ch = msg[typewriterIdx];
+    el.innerHTML = esc(msg.slice(0, typewriterIdx+1)).replace(/\n/g,'<br>') + '<span id="cursor"></span>';
+    typewriterIdx++;
+    if (ch !== '\n' && ch !== ' ') playTypeSound();
+    const delay = ch==='.'||ch==='…'?220:ch===','?140:ch==='\n'?100:28;
+    typewriterTmr = setTimeout(typeNext, delay);
+  } else {
+    el.innerHTML = esc(msg).replace(/\n/g,'<br>');
+    setTimeout(startChallenges, 1800);
+  }
+}
+
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ══════════════════════════════════════════════════════
+// CHALLENGES
+// ══════════════════════════════════════════════════════
+function buildStepDots(active) {
+  const n = cfg.challenges.length;
+  return Array.from({length:n}, (_,i)=>
+    `<div class="step-dot${i<active?' done':i===active?' active':''}"></div>`
+  ).join('');
+}
+
+function startChallenges() {
+  currentChallenge = 0;
+  revealedDigits   = [];
+  showChallenge(0);
+}
+
+function showChallenge(idx) {
+  const ch = cfg.challenges[idx];
+  document.getElementById('ch-num').textContent   = `ÉPREUVE ${idx+1} / ${cfg.challenges.length}`;
+  document.getElementById('ch-title').textContent = ch.title;
+  document.getElementById('ch-brief').textContent = ch.brief;
+  document.getElementById('step-dots').innerHTML  = buildStepDots(idx);
+  document.getElementById('code-input').value     = '';
+  document.getElementById('code-error').textContent = '';
+  updateMiniTimer();
+  showPhase('phase-challenge');
+}
+
+function submitCode() {
+  const val = document.getElementById('code-input').value.trim().toUpperCase();
+  const ch  = cfg.challenges[currentChallenge];
+  if (val === ch.code.toUpperCase()) {
+    revealedDigits.push(ch.digit);
+    playRevealSound();
+    showReveal(currentChallenge);
+  } else {
+    document.getElementById('code-error').textContent = '✗ Code incorrect — réessayez';
+    document.getElementById('code-input').value = '';
+    playErrorSound();
+    setTimeout(() => { document.getElementById('code-error').textContent = ''; }, 2000);
+  }
+}
+
+function showReveal(idx) {
+  // build partial code slots
+  const n   = cfg.challenges.length;
+  const box = document.getElementById('partial-code');
+  box.innerHTML = Array.from({length:n}, (_,i) => {
+    const revealed = i <= idx;
+    return `<div class="code-slot${revealed?' revealed':''}">${revealed ? revealedDigits[i] : '?'}</div>`;
+  }).join('');
+
+  // sync secondary progress bars
+  syncRevealTimer();
+  showPhase('phase-reveal');
+
+  const isLast = idx === cfg.challenges.length - 1;
+  setTimeout(() => {
+    if (isLast) {
+      startFinalCountdown();
+    } else {
+      currentChallenge++;
+      showChallenge(currentChallenge);
+    }
+  }, isLast ? 5000 : 3500);
+}
+
+// ══════════════════════════════════════════════════════
+// GLOBAL TICK (runs throughout message + challenges)
+// ══════════════════════════════════════════════════════
+function globalTick() {
+  secondsLeft = Math.max(0, secondsLeft - 1);
+  updateMiniTimer();
+  syncRevealTimer();
+  if (secondsLeft <= 30 && secondsLeft > 0) playTick(secondsLeft <= 10);
+  if (secondsLeft === 0) {
+    clearInterval(countdownTimer);
+    stopAmbientMusic();
+    triggerExplosion();
+  }
+}
+
+function timerText(s) {
+  const h = Math.floor(s/3600);
+  const m = Math.floor((s%3600)/60);
+  const sec = s%60;
+  return h>0 ? `${pad(h)}:${pad(m)}:${pad(sec)}` : `${pad(m)}:${pad(sec)}`;
+}
+
+function timerClass(s) {
+  const r = s/totalSeconds;
+  return r<0.1?'danger':r<0.25?'warn':'';
+}
+
+function updateMiniTimer() {
+  const t  = document.getElementById('timer-sm');
+  const pb = document.getElementById('progress-bar');
+  if (!t) return;
+  t.textContent = timerText(secondsLeft);
+  t.className   = timerClass(secondsLeft);
+  pb.style.width = (secondsLeft/totalSeconds*100)+'%';
+  pb.className   = timerClass(secondsLeft);
+}
+
+function syncRevealTimer() {
+  const t  = document.getElementById('timer-sm-rev');
+  const pb = document.getElementById('progress-bar-rev');
+  if (!t) return;
+  t.textContent = timerText(secondsLeft);
+  t.className   = timerClass(secondsLeft);
+  pb.style.width = (secondsLeft/totalSeconds*100)+'%';
+  pb.className   = timerClass(secondsLeft);
+}
+
+// ══════════════════════════════════════════════════════
+// FINAL COUNTDOWN
+// ══════════════════════════════════════════════════════
+function startFinalCountdown() {
+  // Switch timer display to big countdown — reuse secondsLeft
+  clearInterval(countdownTimer);
+  showPhase('phase-countdown');
+  updateBigTimer();
+  countdownTimer = setInterval(finalTick, 1000);
+}
+
+function finalTick() {
+  secondsLeft = Math.max(0, secondsLeft - 1);
+  updateBigTimer();
+  if (secondsLeft <= 30 && secondsLeft > 0) playTick(secondsLeft <= 10);
+  if (secondsLeft === 0) {
+    clearInterval(countdownTimer);
+    stopAmbientMusic();
+    triggerExplosion();
+  }
+}
+
+function updateBigTimer() {
+  const el = document.getElementById('big-timer');
+  const pb = document.getElementById('progress-bar-cd');
+  el.textContent = timerText(secondsLeft);
+  el.className   = timerClass(secondsLeft);
+  pb.style.width = (secondsLeft/totalSeconds*100)+'%';
+  pb.className   = timerClass(secondsLeft);
+}
+
+// ══════════════════════════════════════════════════════
+// PIN
+// ══════════════════════════════════════════════════════
+function pressPin(n) {
+  if (pinInput.length >= 4) return;
+  pinInput += n;
+  updatePinDots();
+  if (pinInput.length === 4) setTimeout(checkPin, 150);
+}
+
+function delPin() {
+  pinInput = pinInput.slice(0,-1);
+  updatePinDots();
+  document.getElementById('pin-error').textContent = '';
+  for(let i=0;i<4;i++) document.getElementById('d'+i).className='pin-dot'+(i<pinInput.length?' filled':'');
+}
+
+function updatePinDots() {
+  for(let i=0;i<4;i++){
+    document.getElementById('d'+i).className='pin-dot'+(i<pinInput.length?' filled':'');
+  }
+}
+
+function checkPin() {
+  const correct = revealedDigits.join('');
+  if (pinInput === correct) {
+    clearInterval(countdownTimer);
+    stopAmbientMusic();
+    showPhase('phase-success');
+    playFanfare();
+  } else {
+    document.getElementById('pin-error').textContent = '✗ Code incorrect — accès refusé';
+    for(let i=0;i<4;i++) document.getElementById('d'+i).className='pin-dot error';
+    playErrorSound();
+    setTimeout(()=>{
+      pinInput='';updatePinDots();
+      document.getElementById('pin-error').textContent='';
+    },900);
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// EXPLOSION
+// ══════════════════════════════════════════════════════
+function triggerExplosion() {
+  showPhase('phase-explosion');
+  spawnBurst();
+  particleLoop = setInterval(spawnBurst,1600);
+  playExplosion();
+}
+
+function spawnBurst() {
+  const c=document.getElementById('particles');
+  const cols=['#ff0024','#ff6b00','#ffcc00','#ff3300','#ff9900'];
+  const cx=window.innerWidth/2,cy=window.innerHeight/2;
+  for(let i=0;i<55;i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    const sz=4+Math.random()*12,ang=Math.random()*Math.PI*2,dist=150+Math.random()*350;
+    p.style.cssText=`width:${sz}px;height:${sz}px;background:${cols[Math.floor(Math.random()*cols.length)]};left:${cx}px;top:${cy}px;--tx:${Math.cos(ang)*dist}px;--ty:${Math.sin(ang)*dist}px;--dur:${(.7+Math.random()*.9).toFixed(2)}s;animation-delay:${(Math.random()*.25).toFixed(2)}s`;
+    c.appendChild(p);setTimeout(()=>p.remove(),2200);
+  }
+}
+
+// ══════════════════════════════════════════════════════
+// RESET
+// ══════════════════════════════════════════════════════
+function resetApp() {
+  clearInterval(countdownTimer);
+  clearInterval(particleLoop);
+  stopAmbientMusic();
+  document.getElementById('particles').innerHTML='';
+  agentNames=[]; revealedDigits=[]; currentChallenge=0; pinInput='';
+  secondsLeft=cfg.duration; totalSeconds=cfg.duration;
+  renderNames();
+  showPhase('phase-splash');
+}
+
+function pad(n){return String(n).padStart(2,'0')}
+
+// ══════════════════════════════════════════════════════
+// AUDIO ENGINE
+// ══════════════════════════════════════════════════════
+let audioCtx=null,ambientGain=null,_ambStop=true;
+
+function getAudioCtx(){
+  if(!audioCtx) audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==='suspended') audioCtx.resume();
+  return audioCtx;
+}
+
+function playTypeSound(){
+  try{
+    const ctx=getAudioCtx();
+    const buf=ctx.createBuffer(1,ctx.sampleRate*.04,ctx.sampleRate);
+    const d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,3);
+    const src=ctx.createBufferSource(); src.buffer=buf;
+    const f=ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=1200+Math.random()*400; f.Q.value=.8;
+    const g=ctx.createGain(); g.gain.value=.15;
+    src.connect(f);f.connect(g);g.connect(ctx.destination);src.start();
+  }catch(e){}
+}
+
+function playRevealSound(){
+  try{
+    const ctx=getAudioCtx();
+    [440,554,659].forEach((freq,i)=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.type='triangle'; o.frequency.value=freq;
+      const t=ctx.currentTime+i*.12;
+      g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.25,t+.02); g.gain.exponentialRampToValueAtTime(.001,t+.5);
+      o.connect(g);g.connect(ctx.destination);o.start(t);o.stop(t+.55);
+    });
+  }catch(e){}
+}
+
+function playErrorSound(){
+  try{
+    const ctx=getAudioCtx();
+    [220,196].forEach((freq,i)=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.type='square'; o.frequency.value=freq;
+      const t=ctx.currentTime+i*.18;
+      g.gain.setValueAtTime(.15,t); g.gain.exponentialRampToValueAtTime(.001,t+.25);
+      o.connect(g);g.connect(ctx.destination);o.start(t);o.stop(t+.3);
+    });
+  }catch(e){}
+}
+
+function playTick(urgent){
+  try{
+    const ctx=getAudioCtx();
+    const o=ctx.createOscillator(),g=ctx.createGain();
+    o.type=urgent?'square':'sine'; o.frequency.value=urgent?880:440;
+    g.gain.setValueAtTime(.15,ctx.currentTime); g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.08);
+    o.connect(g);g.connect(ctx.destination);o.start();o.stop(ctx.currentTime+.1);
+  }catch(e){}
+}
+
+function startAmbientMusic(){
+  stopAmbientMusic();
+  try{
+    const ctx=getAudioCtx();
+    const master=ctx.createGain(); master.gain.value=0; master.connect(ctx.destination);
+    ambientGain=master; master.gain.setTargetAtTime(.28,ctx.currentTime,1.5);
+    [55,82.4,110].forEach((freq,i)=>{
+      const o=ctx.createOscillator(),g=ctx.createGain(),f=ctx.createBiquadFilter();
+      o.type='sawtooth'; o.frequency.value=freq; g.gain.value=.08/(i+1);
+      f.type='lowpass'; f.frequency.value=200+i*80;
+      const lfo=ctx.createOscillator(),lfoG=ctx.createGain();
+      lfo.frequency.value=.08+i*.03; lfoG.gain.value=1.5;
+      lfo.connect(lfoG);lfoG.connect(o.frequency);lfo.start();
+      o.connect(f);f.connect(g);g.connect(master);o.start();
+    });
+    const notes=[220,233,220,196,185,196,207,220];
+    let ni=0; _ambStop=false;
+    const step=60/160;
+    function sched(t){
+      const o=ctx.createOscillator(),g=ctx.createGain(),f=ctx.createBiquadFilter();
+      o.type='square'; o.frequency.value=notes[ni++%notes.length];
+      f.type='lowpass'; f.frequency.value=800;
+      g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(.04,t+.01); g.gain.exponentialRampToValueAtTime(.001,t+step*.7);
+      o.connect(f);f.connect(g);g.connect(master);o.start(t);o.stop(t+step);
+      if(!_ambStop) setTimeout(()=>sched(ctx.currentTime+.01),step*1000-30);
+    }
+    sched(ctx.currentTime+.5);
+  }catch(e){}
+}
+
+function stopAmbientMusic(){
+  _ambStop=true;
+  if(ambientGain&&audioCtx){try{ambientGain.gain.setTargetAtTime(0,audioCtx.currentTime,.5);}catch(e){}}
+  ambientGain=null;
+}
+
+function playExplosion(){
+  try{
+    const ctx=getAudioCtx(),dur=2.5;
+    const buf=ctx.createBuffer(1,ctx.sampleRate*dur,ctx.sampleRate);
+    const d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++){const t=i/ctx.sampleRate; d[i]=(Math.random()*2-1)*Math.exp(-t*2.5)*1.2;}
+    const src=ctx.createBufferSource(); src.buffer=buf;
+    const f=ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=600; f.frequency.exponentialRampToValueAtTime(80,ctx.currentTime+dur);
+    const g=ctx.createGain(); g.gain.value=1;
+    const sub=ctx.createOscillator(),subG=ctx.createGain();
+    sub.type='sine'; sub.frequency.setValueAtTime(80,ctx.currentTime); sub.frequency.exponentialRampToValueAtTime(20,ctx.currentTime+1.2);
+    subG.gain.setValueAtTime(.8,ctx.currentTime); subG.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+1.4);
+    sub.connect(subG);subG.connect(ctx.destination);sub.start();sub.stop(ctx.currentTime+1.5);
+    src.connect(f);f.connect(g);g.connect(ctx.destination);src.start();src.stop(ctx.currentTime+dur);
+    setTimeout(()=>{for(let i=0;i<6;i++) setTimeout(()=>{try{const a=getAudioCtx(),o=a.createOscillator(),gv=a.createGain();o.type='sawtooth';o.frequency.value=i%2?800:960;gv.gain.setValueAtTime(.2,a.currentTime);gv.gain.exponentialRampToValueAtTime(.001,a.currentTime+.3);o.connect(gv);gv.connect(a.destination);o.start();o.stop(a.currentTime+.35);}catch(e){}},i*380);},600);
+  }catch(e){}
+}
+
+function playFanfare(){
+  try{
+    const ctx=getAudioCtx();
+    [{f:523.25,t:0,d:.18},{f:659.25,t:.18,d:.18},{f:783.99,t:.36,d:.18},{f:1046.5,t:.54,d:.45},{f:783.99,t:.72,d:.12},{f:1046.5,t:.84,d:.7}]
+    .forEach(({f,t,d})=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.type='triangle'; o.frequency.value=f;
+      const s=ctx.currentTime+t;
+      g.gain.setValueAtTime(0,s);g.gain.linearRampToValueAtTime(.25,s+.02);g.gain.exponentialRampToValueAtTime(.001,s+d);
+      o.connect(g);g.connect(ctx.destination);o.start(s);o.stop(s+d+.05);
+    });
+    [523.25,659.25,783.99].forEach(f=>{
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.type='sine'; o.frequency.value=f;
+      g.gain.setValueAtTime(.06,ctx.currentTime+.54); g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+1.6);
+      o.connect(g);g.connect(ctx.destination);o.start(ctx.currentTime+.54);o.stop(ctx.currentTime+1.7);
+    });
+  }catch(e){}
+}
+
+if('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(()=>{});
+</script>
+</body>
+</html>

@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backoffice — Mission Secrète</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{background:#000;color:#00ff41;font-family:'Share Tech Mono','Courier New',monospace;min-height:100vh}
+    .crt{position:fixed;inset:0;pointer-events:none;background-image:repeating-linear-gradient(transparent,transparent 2px,rgba(0,255,65,.012) 2px,rgba(0,255,65,.012) 4px)}
+
+    /* AUTH */
+    #auth-screen{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.2rem;position:relative;z-index:1}
+    #main-screen{display:none;position:relative;z-index:1;max-width:800px;margin:0 auto;padding:2.5rem 1.5rem 5rem;flex-direction:column;gap:2rem}
+    #main-screen.active{display:flex}
+
+    .page-title{font-size:10px;letter-spacing:.32em;color:#004d12;text-transform:uppercase;border-bottom:1px solid #002a08;padding-bottom:.6rem}
+    .back-link{font-size:10px;letter-spacing:.2em;color:#006818;text-decoration:none;text-transform:uppercase}
+    .back-link:hover{color:#00ff41}
+
+    .card{border:1px solid #002a08;padding:1.3rem;display:flex;flex-direction:column;gap:.9rem}
+    .card-title{font-size:10px;letter-spacing:.25em;color:#006818;text-transform:uppercase;border-bottom:1px solid #002a08;padding-bottom:.4rem;display:flex;align-items:center;justify-content:space-between}
+
+    label{font-size:10px;letter-spacing:.18em;color:#004d12;text-transform:uppercase;display:block;margin-bottom:.3rem}
+    input[type=text],input[type=number],input[type=password],textarea{width:100%;background:#020f04;border:1px solid #003a0d;color:#00ff41;font-family:inherit;font-size:13px;padding:.5rem .7rem;outline:none;resize:vertical;line-height:1.7}
+    input:focus,textarea:focus{border-color:#00ff41;box-shadow:0 0 0 1px rgba(0,255,65,.2)}
+    .hint{font-size:10px;color:#004d12;letter-spacing:.1em;margin-top:.2rem}
+    .row{display:flex;gap:.8rem}
+    .row>div{flex:1}
+
+    .btn{background:transparent;border:1px solid #00ff41;color:#00ff41;font-family:inherit;font-size:10px;letter-spacing:.2em;padding:.6rem 1.5rem;cursor:pointer;text-transform:uppercase;transition:background .15s}
+    .btn:hover{background:rgba(0,255,65,.08)}
+    .btn.sm{padding:.4rem .9rem;font-size:9px}
+    .btn.ghost{border-color:#003a0d;color:#003a0d}
+    .btn.ghost:hover{border-color:#006818;color:#006818;background:transparent}
+    .btn.danger{border-color:#ff0024;color:#ff0024}
+    .btn.danger:hover{background:rgba(255,0,36,.08)}
+
+    .btn-row{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
+    #save-fb{font-size:10px;letter-spacing:.15em;color:#00ff41;opacity:0;transition:opacity .3s}
+    #save-fb.show{opacity:1}
+
+    /* ÉPREUVES TABS */
+    .ch-tabs{display:flex;gap:.4rem;flex-wrap:wrap}
+    .ch-tab{background:transparent;border:1px solid #003a0d;color:#004d12;font-family:inherit;font-size:10px;letter-spacing:.15em;padding:.4rem .8rem;cursor:pointer;text-transform:uppercase;transition:all .15s}
+    .ch-tab.active{border-color:#00ff41;color:#00ff41}
+    .ch-tab:hover{border-color:#006818;color:#006818}
+
+    .ch-panel{display:none;flex-direction:column;gap:.8rem}
+    .ch-panel.active{display:flex}
+
+    /* CODE BADGE */
+    .code-badge{display:inline-block;background:#010d03;border:1px solid #00ff41;color:#00ff41;font-size:14px;letter-spacing:.25em;padding:.3rem .8rem;text-transform:uppercase}
+    .digit-badge{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border:1px solid #006818;color:#006818;font-size:18px}
+    .digit-badge.set{border-color:#00ff41;color:#00ff41}
+
+    /* AUTH elements */
+    .auth-title{font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:#006818}
+    .auth-input{background:transparent;border:1px solid #00ff41;color:#00ff41;font-family:inherit;font-size:16px;letter-spacing:.2em;padding:.55rem 1rem;text-align:center;width:220px;outline:none}
+    #auth-err{font-size:11px;color:#ff0024;letter-spacing:.15em;min-height:16px}
+
+    /* timing indicator on challenge cards */
+    .time-row{display:flex;gap:.8rem}
+    .time-row>div{flex:1}
+
+    /* scrollable challenge list */
+    .ch-edit-list{display:flex;flex-direction:column;gap:1rem}
+
+    /* mobile friendly */
+    @media(max-width:600px){.row{flex-direction:column}.time-row{flex-direction:column}}
+  </style>
+</head>
+<body>
+<div class="crt"></div>
+
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-title">⬛ Backoffice — identification requise</div>
+  <input type="password" class="auth-input" id="admin-pass" placeholder="mot de passe"
+         autocomplete="off" onkeydown="if(event.key==='Enter')checkAdmin()">
+  <button class="btn" onclick="checkAdmin()">▶ Connexion</button>
+  <div id="auth-err"></div>
+</div>
+
+<!-- MAIN -->
+<div id="main-screen">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem">
+    <div class="page-title">⬛ Backoffice — Configuration de la mission</div>
+    <a href="/" class="back-link">← Voir l'app</a>
+  </div>
+
+  <!-- GLOBAL -->
+  <div class="card">
+    <div class="card-title">Paramètres globaux</div>
+    <div class="row">
+      <div>
+        <label>Durée totale de la mission (minutes)</label>
+        <input type="number" id="f-dur" min="5" max="180" placeholder="60">
+        <div class="hint" id="dur-hint"></div>
+      </div>
+      <div>
+        <label>Code PIN final (4 chiffres)</label>
+        <div style="display:flex;gap:.5rem;align-items:center;margin-top:.1rem" id="pin-preview"></div>
+        <div class="hint">Généré automatiquement depuis les chiffres des épreuves</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MESSAGE -->
+  <div class="card">
+    <div class="card-title">Message d'introduction (machine à écrire)</div>
+    <textarea id="f-msg" rows="10" spellcheck="false"></textarea>
+    <div class="hint">Sauts de ligne et ponctuation créent les pauses dramatiques</div>
+  </div>
+
+  <!-- ÉPREUVES -->
+  <div class="card">
+    <div class="card-title">
+      <span>Épreuves</span>
+      <div style="display:flex;gap:.5rem">
+        <button class="btn sm" onclick="addChallenge()">+ Ajouter</button>
+        <button class="btn sm ghost" onclick="removeLastChallenge()">− Supprimer</button>
+      </div>
+    </div>
+
+    <div class="ch-tabs" id="ch-tabs"></div>
+    <div class="ch-edit-list" id="ch-panels"></div>
+  </div>
+
+  <!-- SAVE -->
+  <div class="btn-row">
+    <button class="btn" onclick="saveConfig()">▶ Enregistrer</button>
+    <button class="btn ghost" onclick="resetDefault()">↺ Valeurs par défaut</button>
+    <span id="save-fb">✓ Enregistré</span>
+  </div>
+</div>
+
+<script>
+const ADMIN_PASS = "admin007";
+
+const DEFAULT_CFG = {
+  duration: 3600,
+  message: `AGENTS, VOUS RECEVEZ UNE TRANSMISSION D'URGENCE.
+
+Un des nôtres a été éliminé dans le QG.
+Le corps a été retrouvé. La scène est intacte.
+
+Un dispositif explosif a été activé par les
+ennemis. Vous disposez d'une heure pour
+résoudre l'affaire et le désamorcer.
+
+Chaque épreuve vous révèlera un chiffre
+du code de désarmement.
+
+Ne perdez pas de temps, agents.
+
+Bonne chance. Ce message s'autodétruira.`,
+  challenges: [
+    {
+      title: "ÉPREUVE 1 — La scène de crime",
+      brief: `Un agent a été éliminé. Son corps est marqué au sol.
+
+Examinez la scène de crime à la lampe UV.
+Un message invisible a été laissé sur le scotch.
+
+Déchiffrez ce message et entrez le code découvert.`,
+      code: "TRAHISON",
+      digit: "3"
+    },
+    {
+      title: "ÉPREUVE 2 — Le couloir laser",
+      brief: `Un couloir est protégé par un système laser.
+
+Traversez sans déclencher l'alarme.
+À l'autre bout, une enveloppe contient votre prochain code.
+
+Récupérez-la et entrez le code.`,
+      code: "COBRA",
+      digit: "7"
+    },
+    {
+      title: "ÉPREUVE 3 — Le message codé",
+      brief: `Un message chiffré a été intercepté.
+
+Utilisez la grille de déchiffrement
+dans votre carnet pour décoder le message.
+
+La solution est votre prochain code.`,
+      code: "LUNE",
+      digit: "1"
+    },
+    {
+      title: "ÉPREUVE 4 — Le témoin",
+      brief: `Une micro-photo a été cachée quelque part dans la pièce.
+
+Trouvez-la. Examinez-la à la loupe.
+Elle contient le dernier indice.
+
+Entrez le code caché dans l'image.`,
+      code: "88",
+      digit: "9"
+    }
+  ]
+};
+
+let cfg = JSON.parse(JSON.stringify(DEFAULT_CFG));
+let activeTab = 0;
+
+// ── AUTH ──────────────────────────────────────────────
+function checkAdmin() {
+  if (document.getElementById('admin-pass').value === ADMIN_PASS) {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('main-screen').classList.add('active');
+    loadConfig();
+  } else {
+    const e = document.getElementById('auth-err');
+    e.textContent = '✗ Mot de passe incorrect';
+    document.getElementById('admin-pass').value = '';
+    setTimeout(() => e.textContent = '', 2000);
+  }
+}
+
+// ── LOAD ──────────────────────────────────────────────
+function loadConfig() {
+  try {
+    const s = localStorage.getItem('agent_config');
+    if (s) cfg = { ...DEFAULT_CFG, ...JSON.parse(s) };
+  } catch(e) {}
+
+  document.getElementById('f-dur').value = Math.round(cfg.duration / 60);
+  document.getElementById('f-msg').value = cfg.message;
+  updateDurHint();
+  renderTabs();
+  updatePinPreview();
+}
+
+// ── TABS ──────────────────────────────────────────────
+function renderTabs() {
+  const tabs   = document.getElementById('ch-tabs');
+  const panels = document.getElementById('ch-panels');
+
+  tabs.innerHTML = cfg.challenges.map((ch, i) =>
+    `<button class="ch-tab${i===activeTab?' active':''}" onclick="switchTab(${i})">Épreuve ${i+1}</button>`
+  ).join('');
+
+  panels.innerHTML = cfg.challenges.map((ch, i) => `
+    <div class="ch-panel${i===activeTab?' active':''}" id="panel-${i}">
+      <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap">
+        <div style="flex:1">
+          <label>Titre de l'épreuve</label>
+          <input type="text" id="ch-title-${i}" value="${esc(ch.title)}" oninput="syncCh(${i})">
+        </div>
+      </div>
+      <div>
+        <label>Texte affiché aux enfants (briefing)</label>
+        <textarea id="ch-brief-${i}" rows="7" spellcheck="false" oninput="syncCh(${i})">${esc(ch.brief)}</textarea>
+      </div>
+      <div class="row">
+        <div>
+          <label>Code de déblocage (ce que les enfants trouvent et tapent)</label>
+          <input type="text" id="ch-code-${i}" value="${esc(ch.code)}"
+                 style="text-transform:uppercase;letter-spacing:.2em"
+                 oninput="syncCh(${i})" autocomplete="off" autocorrect="off" spellcheck="false">
+          <div class="hint">Lettres et/ou chiffres — insensible à la casse</div>
+        </div>
+        <div>
+          <label>Chiffre révélé si réussi (1 chiffre du PIN final)</label>
+          <input type="text" id="ch-digit-${i}" value="${esc(ch.digit)}"
+                 maxlength="1" style="width:60px;font-size:20px;text-align:center"
+                 oninput="syncCh(${i});updatePinPreview()">
+          <div class="hint">Un seul chiffre (0–9)</div>
+        </div>
+      </div>
+      <div style="background:#010d03;border:1px solid #002a08;padding:.7rem;display:flex;gap:1rem;align-items:center;flex-wrap:wrap">
+        <div class="hint" style="color:#006818">Code :</div>
+        <div class="code-badge" id="cb-${i}">${esc(ch.code)||'—'}</div>
+        <div class="hint" style="color:#006818;margin-left:auto">Révèle le chiffre :</div>
+        <div class="digit-badge${ch.digit?' set':''}" id="db-${i}">${ch.digit||'?'}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function switchTab(i) {
+  activeTab = i;
+  document.querySelectorAll('.ch-tab').forEach((t,j) => t.className='ch-tab'+(j===i?' active':''));
+  document.querySelectorAll('.ch-panel').forEach((p,j) => p.className='ch-panel'+(j===i?' active':''));
+}
+
+function syncCh(i) {
+  cfg.challenges[i].title  = document.getElementById(`ch-title-${i}`).value;
+  cfg.challenges[i].brief  = document.getElementById(`ch-brief-${i}`).value;
+  cfg.challenges[i].code   = document.getElementById(`ch-code-${i}`).value.toUpperCase();
+  cfg.challenges[i].digit  = document.getElementById(`ch-digit-${i}`).value.replace(/\D/g,'').slice(0,1);
+
+  const cb = document.getElementById(`cb-${i}`);
+  const db = document.getElementById(`db-${i}`);
+  if(cb) cb.textContent = cfg.challenges[i].code || '—';
+  if(db){ db.textContent = cfg.challenges[i].digit||'?'; db.className='digit-badge'+(cfg.challenges[i].digit?' set':''); }
+  updatePinPreview();
+}
+
+function addChallenge() {
+  cfg.challenges.push({
+    title: `ÉPREUVE ${cfg.challenges.length+1} — Nouvelle épreuve`,
+    brief: `Description de l'épreuve…`,
+    code: "CODE",
+    digit: "0"
+  });
+  activeTab = cfg.challenges.length - 1;
+  renderTabs();
+  updatePinPreview();
+}
+
+function removeLastChallenge() {
+  if (cfg.challenges.length <= 1) return;
+  if (!confirm(`Supprimer l'épreuve ${cfg.challenges.length} ?`)) return;
+  cfg.challenges.pop();
+  activeTab = Math.min(activeTab, cfg.challenges.length-1);
+  renderTabs();
+  updatePinPreview();
+}
+
+function updatePinPreview() {
+  const digits = cfg.challenges.map(c => c.digit || '?');
+  document.getElementById('pin-preview').innerHTML =
+    digits.map(d => `<div style="border:1px solid ${d!='?'?'#00ff41':'#003a0d'};color:${d!='?'?'#00ff41':'#003a0d'};width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;font-size:18px">${d}</div>`).join('');
+}
+
+function updateDurHint() {
+  const v = parseInt(document.getElementById('f-dur').value, 10);
+  const h = document.getElementById('dur-hint');
+  if (isNaN(v)) { h.textContent=''; return; }
+  h.textContent = v>=60 ? `= ${Math.floor(v/60)}h${v%60?String(v%60).padStart(2,'0')+'min':''}` : `= ${v} minute${v>1?'s':''}`;
+}
+
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── SAVE ──────────────────────────────────────────────
+function saveConfig() {
+  const mins = parseInt(document.getElementById('f-dur').value, 10);
+  if (isNaN(mins)||mins<1||mins>180) { alert('Durée invalide (1–180 min)'); return; }
+
+  // collect current challenge field values
+  cfg.challenges.forEach((ch, i) => {
+    ch.title  = document.getElementById(`ch-title-${i}`)?.value || ch.title;
+    ch.brief  = document.getElementById(`ch-brief-${i}`)?.value || ch.brief;
+    ch.code   = (document.getElementById(`ch-code-${i}`)?.value || ch.code).toUpperCase();
+    ch.digit  = (document.getElementById(`ch-digit-${i}`)?.value || ch.digit).replace(/\D/g,'').slice(0,1);
+  });
+
+  cfg.duration = mins * 60;
+  cfg.message  = document.getElementById('f-msg').value;
+
+  localStorage.setItem('agent_config', JSON.stringify(cfg));
+  const fb = document.getElementById('save-fb');
+  fb.classList.add('show');
+  setTimeout(()=>fb.classList.remove('show'), 2500);
+  updatePinPreview();
+}
+
+function resetDefault() {
+  if (!confirm('Rétablir tous les réglages par défaut ?')) return;
+  localStorage.removeItem('agent_config');
+  cfg = JSON.parse(JSON.stringify(DEFAULT_CFG));
+  activeTab = 0;
+  loadConfig();
+}
+
+document.getElementById('f-dur').addEventListener('input', updateDurHint);
+</script>
+</body>
+</html>
