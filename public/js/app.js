@@ -51,6 +51,10 @@ const ADJ_ALL = [
   "PUMA","RAPIDE","RENARD","ROUGE","SILENCIEUX","SPECTRE","TITAN","TORNADE",
   "URANIUM","VIPÈRE","ZÉNITH"
 ];
+const NOM_ALL = [
+  "DELTA","SIGMA","ZÉRO","ALPHA","BRAVO","OMEGA","KILO","VICTOR","ZULU",
+  "FOXTROT","SIERRA","TANGO","ROMEO","LIMA","INDIA","NOVEMBRE","PAPA","OSCAR","WHISKY","GOLF"
+];
 
 function normalizeChar(c) {
   return c.normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase();
@@ -59,21 +63,18 @@ function normalizeChar(c) {
 function proposalsForLetter(letter) {
   const l = normalizeChar(letter);
   const matching = ADJ_ALL.filter(a => normalizeChar(a[0]) === l);
-  const pool = matching.length >= 3 ? matching : ADJ_ALL;
-  // shuffle and pick 3 unique
-  const shuffled = pool.slice().sort(() => Math.random() - .5);
-  const used = agents.map(a => a.agentName);
+  const adjPool = matching.length >= 1
+    ? [...matching.sort(() => Math.random()-.5), ...ADJ_ALL.filter(a => normalizeChar(a[0]) !== l).sort(() => Math.random()-.5)]
+    : ADJ_ALL.slice().sort(() => Math.random()-.5);
+  const used = new Set(agents.map(a => a.agentName));
   const result = [];
-  for (const a of shuffled) {
-    if (!used.includes(a) && !result.includes(a)) result.push(a);
-    if (result.length === 3) break;
-  }
-  // fill if needed
-  if (result.length < 3) {
-    for (const a of ADJ_ALL) {
-      if (!result.includes(a)) result.push(a);
-      if (result.length === 3) break;
-    }
+  let tries = 0;
+  while (result.length < 3 && tries < 300) {
+    tries++;
+    const adj = adjPool[tries % adjPool.length];
+    const nom = NOM_ALL[Math.floor(Math.random() * NOM_ALL.length)];
+    const name = `AGENT ${adj} ${nom}`;
+    if (!used.has(name) && !result.includes(name)) result.push(name);
   }
   return result;
 }
@@ -358,6 +359,18 @@ function showChallenge(idx) {
   document.getElementById('ch-title').textContent = ch.title;
   document.getElementById('ch-brief').textContent = ch.brief;
   document.getElementById('step-dots').innerHTML  = buildStepDots(idx);
+
+  // team banner
+  const banner = document.getElementById('ch-team-banner');
+  if (ch.teamPlay && agents.length >= 2) {
+    const team = idx % 2 === 0 ? 'ombre' : 'cobra';
+    const label = team === 'ombre' ? 'ÉQUIPE OMBRE' : 'ÉQUIPE COBRA';
+    banner.textContent = `▶ ${label}`;
+    banner.className = 'ch-team-banner ' + team;
+    banner.style.display = '';
+  } else {
+    banner.style.display = 'none';
+  }
   document.getElementById('code-input').value     = '';
   document.getElementById('code-error').textContent = '';
 
