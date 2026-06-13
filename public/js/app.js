@@ -1,7 +1,10 @@
 // ══ APP — logique principale ═══════════════════════════
 
 // ── State ──────────────────────────────────────────────
-let agentNames       = [];
+let agents           = []; // [{realName, agentName, team}]
+let currentRealName  = '';
+let currentProposals = [];
+let draggedAgent     = null;
 let currentChallenge = 0;
 let revealedDigits   = [];
 let countdownTimer   = null;
@@ -33,36 +36,218 @@ function timerCls(s) {
 
 // ── Phase management ───────────────────────────────────
 function showPhase(id) {
+  if (id === 'phase-teams') { _activateTeamsPhase(); return; }
   document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   currentPhase = id;
   if (RESUMABLE_PHASES.includes(id)) saveSession();
 }
 
-// ── Names ──────────────────────────────────────────────
-const ADJ = ["OMBRE","ACIER","NOIR","ROUGE","SILENCIEUX","RAPIDE","GLACIAL","FANTÔME","FURTIF","COBRA","JADE","ARGENT","BRONZE","ÉCLAIR","VIPÈRE","LOUP","RENARD","LYNX","AIGLE","SPECTRE"];
-const NOM = ["DELTA","SIGMA","ZÉRO","ALPHA","BRAVO","OMEGA","KILO","VICTOR","ZULU","FOXTROT","SIERRA","TANGO","ROMEO","LIMA","INDIA","NOVEMBRE","PAPA","OSCAR","WHISKY","GOLF"];
+// ── Names / Recrutement ────────────────────────────────
+const ADJ_ALL = [
+  "ACIER","AIGLE","ARGENT","BLIZZARD","BRONZE","COBRA","CYCLONE","DAUPHIN",
+  "DRAGON","ÉCLAIR","FANTÔME","FURTIF","GLACIAL","GRIFFON","HIBOU","INVINCIBLE",
+  "JADE","KRAKEN","LOUP","LYNX","MERCURE","MYSTÈRE","NOIR","OMBRE","PYTHON",
+  "PUMA","RAPIDE","RENARD","ROUGE","SILENCIEUX","SPECTRE","TITAN","TORNADE",
+  "URANIUM","VIPÈRE","ZÉNITH"
+];
 
-function generateName() {
-  let name, tries = 0;
-  do {
-    const a = ADJ[Math.floor(Math.random()*ADJ.length)];
-    const n = NOM[Math.floor(Math.random()*NOM.length)];
-    name = `AGENT ${a} ${n}`;
-    tries++;
-  } while (agentNames.includes(name) && tries < ADJ.length * NOM.length);
-  if (agentNames.includes(name)) return;
-  agentNames.push(name);
-  renderNames(); playTypeSound();
+function normalizeChar(c) {
+  return c.normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase();
 }
-function removeLast() { agentNames.pop(); renderNames(); }
-function renderNames() {
-  document.getElementById('names-grid').innerHTML = agentNames.map(n => `<div class="name-badge">${n}</div>`).join('');
-  document.getElementById('launch-btn').style.display  = agentNames.length > 0 ? 'inline-block' : 'none';
-  document.getElementById('remove-btn').style.display  = agentNames.length > 0 ? 'inline-block' : 'none';
-  document.getElementById('names-hint').textContent    = agentNames.length === 0
-    ? 'Générez un nom par enfant, puis lancez la mission.'
-    : `${agentNames.length} agent${agentNames.length>1?'s':''} recruté${agentNames.length>1?'s':''}.`;
+
+function proposalsForLetter(letter) {
+  const l = normalizeChar(letter);
+  const matching = ADJ_ALL.filter(a => normalizeChar(a[0]) === l);
+  const pool = matching.length >= 3 ? matching : ADJ_ALL;
+  // shuffle and pick 3 unique
+  const shuffled = pool.slice().sort(() => Math.random() - .5);
+  const used = agents.map(a => a.agentName);
+  const result = [];
+  for (const a of shuffled) {
+    if (!used.includes(a) && !result.includes(a)) result.push(a);
+    if (result.length === 3) break;
+  }
+  // fill if needed
+  if (result.length < 3) {
+    for (const a of ADJ_ALL) {
+      if (!result.includes(a)) result.push(a);
+      if (result.length === 3) break;
+    }
+  }
+  return result;
+}
+
+function showProposals() {
+  const input = document.getElementById('recruit-input');
+  const name = input.value.trim();
+  if (!name) return;
+  currentRealName = name;
+  currentProposals = proposalsForLetter(name[0]);
+  const container = document.getElementById('recruit-proposals');
+  container.innerHTML = `<div class="proposals-label">Choisir un nom de code pour <strong>${esc(name)}</strong> :</div>` +
+    currentProposals.map(p =>
+      `<button class="proposal-btn" onclick="pickProposal('${p}')">${p}</button>`
+    ).join('');
+  document.getElementById('recruit-hint').textContent = 'Choisissez un nom de code.';
+  playTypeSound();
+}
+
+function pickProposal(agentName) {
+  agents.push({ realName: currentRealName, agentName, team: null });
+  renderRecruitList();
+  resetRecruitForm();
+  playRevealSound();
+}
+
+function resetRecruitForm() {
+  currentRealName = '';
+  currentProposals = [];
+  document.getElementById('recruit-input').value = '';
+  document.getElementById('recruit-proposals').innerHTML = '';
+  document.getElementById('recruit-hint').textContent =
+    agents.length === 0 ? 'Entrez un prénom pour générer des noms de code.' : 'Ajoutez un autre agent ou formez les équipes.';
+  document.getElementById('recruit-input').focus();
+}
+
+function renderRecruitList() {
+  const wrap = document.getElementById('recruit-list-wrap');
+  const list = document.getElementById('recruit-list');
+  if (agents.length === 0) { wrap.style.display = 'none'; }
+  else {
+    wrap.style.display = 'block';
+    list.innerHTML = agents.map((a,i) =>
+      `<div class="recruit-badge">
+        <span class="recruit-real">${esc(a.realName)}</span>
+        <span class="recruit-arrow">→</span>
+        <span class="recruit-agent">${esc(a.agentName)}</span>
+        <button class="recruit-del" onclick="removeAgent(${i})" title="Supprimer">✕</button>
+      </div>`
+    ).join('');
+  }
+  document.getElementById('add-agent-btn').style.display   = agents.length > 0 ? 'inline-block' : 'none';
+  document.getElementById('form-teams-btn').style.display  = agents.length >= 2 ? 'inline-block' : 'none';
+}
+
+function removeAgent(i) {
+  agents.splice(i, 1);
+  renderRecruitList();
+}
+
+// ── Teams ──────────────────────────────────────────────
+function _activateTeamsPhase() {
+  // distribute agents randomly into 2 teams
+  const shuffled = agents.slice().sort(() => Math.random() - .5);
+  shuffled.forEach((a, i) => { a.team = i % 2 === 0 ? 'ombre' : 'cobra'; });
+  renderTeams();
+  document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
+  document.getElementById('phase-teams').classList.add('active');
+  currentPhase = 'phase-teams';
+}
+
+function renderTeams() {
+  ['ombre','cobra'].forEach(team => {
+    const container = document.getElementById('cards-' + team);
+    const teamAgents = agents.filter(a => a.team === team);
+    container.innerHTML = teamAgents.map((a, _) => {
+      const idx = agents.indexOf(a);
+      return `<div class="agent-card" draggable="true"
+        data-idx="${idx}"
+        ondragstart="onDragStart(event,${idx})"
+        ondragend="onDragEnd(event)"
+        ontouchstart="onCardTouchStart(event,${idx})"
+        ontouchmove="onCardTouchMove(event)"
+        ontouchend="onCardTouchEnd(event,${idx})"
+        onclick="onCardClick(event,${idx})">
+        <div class="card-real">${esc(a.realName)}</div>
+        <div class="card-agent">${esc(a.agentName)}</div>
+      </div>`;
+    }).join('');
+  });
+}
+
+// Drag & drop (mouse)
+function onDragStart(e, idx) {
+  draggedAgent = idx;
+  e.dataTransfer.effectAllowed = 'move';
+  e.currentTarget.classList.add('dragging');
+}
+function onDragEnd(e) {
+  e.currentTarget.classList.remove('dragging');
+  document.querySelectorAll('.team-col').forEach(c => c.classList.remove('drag-over'));
+}
+function onDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('.team-col').forEach(c => c.classList.remove('drag-over'));
+  e.currentTarget.classList.add('drag-over');
+}
+function onDrop(e, team) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if (draggedAgent === null) return;
+  agents[draggedAgent].team = team;
+  draggedAgent = null;
+  renderTeams();
+}
+
+// Touch drag & drop (iPad)
+let touchStartX = 0, touchStartY = 0, touchMoved = false, touchDragIdx = null;
+let touchGhost = null;
+
+function onCardTouchStart(e, idx) {
+  touchStartX = e.touches[0].clientX;
+  touchStartY = e.touches[0].clientY;
+  touchMoved = false;
+  touchDragIdx = idx;
+  // create ghost after slight delay
+  const card = e.currentTarget;
+  const rect = card.getBoundingClientRect();
+  touchGhost = card.cloneNode(true);
+  touchGhost.style.cssText = `position:fixed;z-index:100;pointer-events:none;opacity:0.85;width:${rect.width}px;left:${rect.left}px;top:${rect.top}px;transition:none`;
+  touchGhost.classList.add('dragging');
+  document.body.appendChild(touchGhost);
+}
+function onCardTouchMove(e) {
+  const dx = e.touches[0].clientX - touchStartX;
+  const dy = e.touches[0].clientY - touchStartY;
+  if (Math.abs(dx) > 6 || Math.abs(dy) > 6) {
+    touchMoved = true;
+    e.preventDefault();
+  }
+  if (touchGhost) {
+    touchGhost.style.left = (e.touches[0].clientX - touchGhost.offsetWidth/2) + 'px';
+    touchGhost.style.top  = (e.touches[0].clientY - touchGhost.offsetHeight/2) + 'px';
+  }
+  // highlight column under finger
+  document.querySelectorAll('.team-col').forEach(c => c.classList.remove('drag-over'));
+  const el = document.elementFromPoint(e.touches[0].clientX, e.touches[0].clientY);
+  const col = el && el.closest('.team-col');
+  if (col) col.classList.add('drag-over');
+}
+function onCardTouchEnd(e, idx) {
+  if (touchGhost) { touchGhost.remove(); touchGhost = null; }
+  document.querySelectorAll('.team-col').forEach(c => c.classList.remove('drag-over'));
+  if (!touchMoved) return; // let click handle tap
+  // find column under finger
+  const touch = e.changedTouches[0];
+  const el = document.elementFromPoint(touch.clientX, touch.clientY);
+  const col = el && el.closest('.team-col');
+  if (col && touchDragIdx !== null) {
+    agents[touchDragIdx].team = col.dataset.team;
+    renderTeams();
+  }
+  touchDragIdx = null;
+}
+function onColTouchEnd(e, team) {
+  // handled by card touch end
+}
+
+// Tap = toggle team
+function onCardClick(e, idx) {
+  if (touchMoved) return; // was a drag
+  agents[idx].team = agents[idx].team === 'ombre' ? 'cobra' : 'ombre';
+  renderTeams();
 }
 
 // ── Splash ─────────────────────────────────────────────
@@ -383,9 +568,10 @@ function resetApp() {
   document.getElementById('particles').innerHTML = '';
   document.getElementById('autodestruct-overlay').classList.remove('active');
   document.getElementById('autodestruct-bar-wrap').classList.remove('visible');
-  agentNames=[]; revealedDigits=[]; currentChallenge=0; pinInput='';
+  agents=[]; currentRealName=''; currentProposals=[]; draggedAgent=null;
+  revealedDigits=[]; currentChallenge=0; pinInput='';
   secondsLeft=cfg.duration; totalSeconds=cfg.duration;
-  renderNames(); showPhase('phase-splash');
+  renderRecruitList(); resetRecruitForm(); showPhase('phase-splash');
   stopBgArtefacts(); initBgArtefacts(); startSplashRotation();
 }
 
@@ -395,7 +581,7 @@ function tryResume() {
   if (!s || !RESUMABLE_PHASES.includes(s.phase)) return;
 
   // Restore state
-  agentNames       = s.agentNames || [];
+  agents           = s.agents || [];
   currentChallenge = s.currentChallenge || 0;
   revealedDigits   = s.revealedDigits || [];
   secondsLeft      = s.secondsLeft || cfg.duration;
@@ -415,7 +601,7 @@ function resumeMission() {
   if (!s) return;
   document.getElementById('resume-banner').classList.remove('visible');
 
-  agentNames       = s.agentNames || [];
+  agents           = s.agents || [];
   currentChallenge = s.currentChallenge || 0;
   revealedDigits   = s.revealedDigits || [];
   secondsLeft      = s.secondsLeft || cfg.duration;
