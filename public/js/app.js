@@ -673,3 +673,34 @@ function dismissResume() {
   clearSession();
   document.getElementById('resume-banner').classList.remove('visible');
 }
+
+// ── Debug simulation (console: debugSim() ou Ctrl+Shift+D) ──
+function debugSim() {
+  const names = [
+    { realName: 'Alice',   agentName: 'AGENT OMBRE DELTA',  team: 'ombre' },
+    { realName: 'Bob',     agentName: 'AGENT ACIER SIGMA',  team: 'ombre' },
+    { realName: 'Camille', agentName: 'AGENT NOIR ALPHA',   team: 'ombre' },
+    { realName: 'Dylan',   agentName: 'AGENT ROUGE ZÉRO',   team: 'cobra' },
+    { realName: 'Emma',    agentName: 'AGENT COBRA VICTOR', team: 'cobra' },
+    { realName: 'Félix',   agentName: 'AGENT JADE OMEGA',   team: 'cobra' },
+  ];
+  clearInterval(countdownTimer); clearInterval(particleLoop);
+  clearInterval(hintTimer); clearInterval(adTimer);
+  clearTimeout(typewriterTmr); clearTimeout(adPostTmr);
+  stopAmbientMusic(); stopPoisonAnimation(); clearSession();
+  document.getElementById('autodestruct-overlay').classList.remove('active');
+  document.getElementById('autodestruct-bar-wrap').classList.remove('visible');
+  document.getElementById('particles').innerHTML = '';
+
+  agents = names; revealedDigits = []; currentChallenge = 0; pinInput = '';
+  secondsLeft = cfg.duration; totalSeconds = cfg.duration;
+  missionStart = Date.now();
+  countdownTimer = setInterval(globalTick, 1000);
+  startAmbientMusic();
+  showChallenge(0);
+  console.log('%c[DEBUG] Simulation lancée — 2 équipes de 3', 'color:#00ff41;font-weight:bold');
+}
+
+document.addEventListener('keydown', e => {
+  if (e.ctrlKey && e.shiftKey && e.key === 'D') { e.preventDefault(); debugSim(); }
+});
