@@ -280,9 +280,10 @@
       </div>
       <div class="card-body">
         <div style="font-size:12px;color:var(--muted);line-height:1.7">
-          Créez un compte gratuit sur <strong>jsonbin.io</strong>, copiez votre <em>Master Key</em>
-          et créez un bin vide. Collez les valeurs ci-dessous — la config se synchronisera
-          automatiquement sur tous les appareils à chaque sauvegarde.
+          1. Créez un compte gratuit sur <strong>jsonbin.io</strong><br>
+          2. Dans <em>API Keys</em>, copiez votre <strong>Master Key</strong><br>
+          3. Créez un nouveau <strong>Bin</strong> (mettez <code>{"init":true}</code> comme contenu)<br>
+          4. Copiez son <strong>ID</strong>, collez tout ci-dessous, puis cliquez <em>Tester</em> — le bin sera initialisé automatiquement avec la config actuelle.
         </div>
         <div class="row">
           <div class="field">
@@ -595,11 +596,13 @@ async function testSync() {
   if (!r?.key || !r?.bin) return;
   setSyncFb('Test en cours…', null);
   try {
-    const res = await fetch(`https://api.jsonbin.io/v3/b/${r.bin}/latest`, {
-      headers: { 'X-Master-Key': r.key, 'X-Bin-Meta': 'false' }
-    });
-    if (res.ok) { setSyncFb('✓ Connexion réussie !', true); }
-    else { setSyncFb(`✗ Erreur ${res.status} — vérifiez les identifiants.`, false); }
+    // Initialise le bin avec la config actuelle (PUT)
+    const pushRes = await pushConfigRemote(cfg);
+    if (pushRes) {
+      setSyncFb('✓ Connexion réussie — bin initialisé avec la config actuelle.', true);
+    } else {
+      setSyncFb('✗ Échec — vérifiez la Master Key et le Bin ID.', false);
+    }
   } catch(e) { setSyncFb('✗ Erreur réseau.', false); }
 }
 
