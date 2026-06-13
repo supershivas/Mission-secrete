@@ -271,39 +271,6 @@
       <div class="ch-panels" id="ch-panels"></div>
     </div>
 
-    <!-- SYNC DISTANTE -->
-    <div class="section-label">Synchronisation distante</div>
-    <div class="card">
-      <div class="card-head">
-        <div class="card-head-title">JSONBin.io — sync téléphone → iPad</div>
-        <div id="sync-status" style="font-size:11px;color:var(--muted)">Non configuré</div>
-      </div>
-      <div class="card-body">
-        <div style="font-size:12px;color:var(--muted);line-height:1.7">
-          1. Créez un compte gratuit sur <strong>jsonbin.io</strong><br>
-          2. Dans <em>API Keys</em>, copiez votre <strong>Master Key</strong><br>
-          3. Créez un nouveau <strong>Bin</strong> (mettez <code>{"init":true}</code> comme contenu)<br>
-          4. Copiez son <strong>ID</strong>, collez tout ci-dessous, puis cliquez <em>Tester</em> — le bin sera initialisé automatiquement avec la config actuelle.
-        </div>
-        <div class="row">
-          <div class="field">
-            <label>Master Key</label>
-            <input type="password" id="sync-key" class="mono" placeholder="$2a$10$..." autocomplete="off" oninput="syncStatusUpdate()">
-          </div>
-          <div class="field" style="max-width:220px">
-            <label>Bin ID</label>
-            <input type="text" id="sync-bin" class="mono" placeholder="64a3f..." autocomplete="off" oninput="syncStatusUpdate()">
-          </div>
-        </div>
-        <div class="action-bar">
-          <button class="btn btn-secondary btn-sm" onclick="saveSyncCfg()">Enregistrer les identifiants</button>
-          <button class="btn btn-secondary btn-sm" onclick="testSync()">Tester la connexion</button>
-          <button class="btn btn-ghost btn-sm" onclick="clearSync()">Effacer</button>
-          <div id="sync-fb" style="font-size:12px;color:var(--muted)"></div>
-        </div>
-      </div>
-    </div>
-
     <!-- SAVE -->
     <div class="action-bar">
       <button class="btn btn-primary" onclick="saveConfig()">💾 Enregistrer la mission</button>
@@ -411,7 +378,6 @@ function loadConfig() {
   updateDurHint();
   renderTabs();
   updatePinPreview();
-  loadSyncFields();
 }
 
 // ── TABS ──────────────────────────────────────
@@ -553,76 +519,15 @@ function resetDefault() {
 }
 
 // ── Remote sync ───────────────────────────────────────
-function getRemoteSyncCfg() {
-  try { return JSON.parse(localStorage.getItem('remote_sync') || 'null'); } catch(e) { return null; }
-}
-
-function loadSyncFields() {
-  const r = getRemoteSyncCfg();
-  if (!r) return;
-  document.getElementById('sync-key').value = r.key || '';
-  document.getElementById('sync-bin').value = r.bin || '';
-  syncStatusUpdate();
-}
-
-function syncStatusUpdate() {
-  const key = document.getElementById('sync-key').value.trim();
-  const bin = document.getElementById('sync-bin').value.trim();
-  const el = document.getElementById('sync-status');
-  el.textContent = (key && bin) ? '⬛ Configuré' : 'Non configuré';
-  el.style.color = (key && bin) ? 'var(--accent)' : 'var(--muted)';
-}
-
-function saveSyncCfg() {
-  const key = document.getElementById('sync-key').value.trim();
-  const bin = document.getElementById('sync-bin').value.trim();
-  if (!key || !bin) { setSyncFb('Remplissez les deux champs.', false); return; }
-  localStorage.setItem('remote_sync', JSON.stringify({ key, bin }));
-  syncStatusUpdate();
-  setSyncFb('Identifiants enregistrés.', true);
-}
-
-function clearSync() {
-  localStorage.removeItem('remote_sync');
-  document.getElementById('sync-key').value = '';
-  document.getElementById('sync-bin').value = '';
-  syncStatusUpdate();
-  setSyncFb('Sync distante désactivée.', null);
-}
-
-async function testSync() {
-  saveSyncCfg();
-  const r = getRemoteSyncCfg();
-  if (!r?.key || !r?.bin) return;
-  setSyncFb('Test en cours…', null);
-  try {
-    // Initialise le bin avec la config actuelle (PUT)
-    const pushRes = await pushConfigRemote(cfg);
-    if (pushRes) {
-      setSyncFb('✓ Connexion réussie — bin initialisé avec la config actuelle.', true);
-    } else {
-      setSyncFb('✗ Échec — vérifiez la Master Key et le Bin ID.', false);
-    }
-  } catch(e) { setSyncFb('✗ Erreur réseau.', false); }
-}
-
 async function pushConfigRemote(cfgData) {
-  const r = getRemoteSyncCfg();
-  if (!r?.key || !r?.bin) return false;
   try {
-    const res = await fetch(`https://api.jsonbin.io/v3/b/${r.bin}`, {
+    const res = await fetch('/api/config', {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'X-Master-Key': r.key },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(cfgData)
     });
     return res.ok;
   } catch(e) { return false; }
-}
-
-function setSyncFb(msg, ok) {
-  const el = document.getElementById('sync-fb');
-  el.textContent = msg;
-  el.style.color = ok === true ? 'var(--accent)' : ok === false ? 'var(--red)' : 'var(--muted)';
 }
 </script>
 </body>
