@@ -478,7 +478,61 @@ function buildStepDots(active) {
   ).join('');
 }
 
-function startChallenges() { currentChallenge = 0; revealedDigits = []; showChallenge(0); }
+function startChallenges() { currentChallenge = 0; revealedDigits = []; showChallengeWithIntro(0); }
+
+let _introAnimTmr = null;
+
+function showChallengeWithIntro(idx) {
+  const ch = cfg.challenges[idx];
+  const n  = cfg.challenges.length;
+
+  // Build overlay
+  let ov = document.getElementById('challenge-intro-overlay');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'challenge-intro-overlay';
+    ov.innerHTML = '<div id="ci-num"></div><pre id="ci-ascii"></pre><div id="ci-title"></div>';
+    document.body.appendChild(ov);
+  }
+  if (_introAnimTmr) { clearInterval(_introAnimTmr); _introAnimTmr = null; }
+
+  const numEl   = document.getElementById('ci-num');
+  const asciiEl = document.getElementById('ci-ascii');
+  const titleEl = document.getElementById('ci-title');
+  numEl.textContent   = `ÉPREUVE ${idx+1} / ${n}`;
+  asciiEl.textContent = '';
+  titleEl.textContent = '';
+
+  ov.classList.remove('ci-out');
+  void ov.offsetWidth;
+  ov.classList.add('show');
+  playBriefingSound();
+
+  // t=0.5s : ASCII animation
+  const anim = CHALLENGE_ANIMS[ch.animation];
+  if (anim) {
+    setTimeout(() => {
+      asciiEl.style.color = anim.color;
+      asciiEl.style.textShadow = `0 0 14px ${anim.color}88`;
+      let f = 0; asciiEl.textContent = anim.frames[0];
+      _introAnimTmr = setInterval(() => {
+        f = (f+1) % anim.frames.length; asciiEl.textContent = anim.frames[f];
+      }, anim.interval);
+    }, 500);
+  }
+
+  // t=1.1s : Déchiffrage du titre
+  const raw = ch.title.split('—');
+  const displayTitle = (raw[1] || ch.title).trim().toUpperCase();
+  setTimeout(() => matrixName(titleEl, displayTitle, null), 1100);
+
+  // t=3.9s : fermeture + lancement épreuve
+  setTimeout(() => {
+    if (_introAnimTmr) { clearInterval(_introAnimTmr); _introAnimTmr = null; }
+    ov.classList.add('ci-out');
+    setTimeout(() => { ov.classList.remove('show','ci-out'); showChallenge(idx); }, 380);
+  }, 3900);
+}
 
 function showChallenge(idx) {
   const ch = cfg.challenges[idx];
@@ -619,7 +673,7 @@ function matrixReveal(el, finalChar, onDone) {
 
 function advanceFromReveal() {
   const isLast = currentChallenge === cfg.challenges.length - 1;
-  isLast ? startFinalCountdown() : showChallenge(++currentChallenge);
+  isLast ? startFinalCountdown() : showChallengeWithIntro(++currentChallenge);
 }
 
 // ── Timers ─────────────────────────────────────────────

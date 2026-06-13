@@ -266,6 +266,23 @@ body.time-danger{animation:pulse-red 1.3s ease-in-out infinite}
 .hint-bar-track{width:100%;height:4px;background:#1a0a00;border:1px solid #2a1500;margin-top:.25rem}
 .hint-bar-fill{height:100%;background:#ff9900;width:0;transition:width 1s linear;box-shadow:0 0 5px rgba(255,153,0,.5)}
 
+/* ══ INTRO ÉPREUVE ═══════════════════════════════════════ */
+@keyframes ci-in{0%{opacity:0}100%{opacity:1}}
+@keyframes ci-out{0%{opacity:1}100%{opacity:0}}
+@keyframes ci-glitch{
+  0%,100%{transform:translate(0);color:#ff0024;text-shadow:0 0 24px rgba(255,0,36,.7)}
+  18%{transform:translate(-4px,1px);color:#ff6b00;text-shadow:5px 0 0 rgba(0,255,65,.25)}
+  36%{transform:translate(3px,-2px);color:#ff0024;text-shadow:-5px 0 0 rgba(255,0,36,.4)}
+  54%{transform:translate(-2px,2px);color:#ff3300}
+  72%{transform:translate(4px,-1px);color:#ff0024}
+}
+#challenge-intro-overlay{position:fixed;inset:0;z-index:450;display:none;flex-direction:column;align-items:center;justify-content:center;gap:1.4rem;background:#000;pointer-events:none}
+#challenge-intro-overlay.show{display:flex;animation:ci-in .25s ease-out}
+#challenge-intro-overlay.ci-out{animation:ci-out .38s ease-in forwards}
+#ci-num{font-size:clamp(42px,12vw,88px);letter-spacing:.18em;text-transform:uppercase;animation:ci-glitch .22s infinite}
+#ci-ascii{font-size:clamp(13px,2vw,17px);line-height:1.3;text-align:center;white-space:pre;animation:bubble 2s ease-in-out infinite}
+#ci-title{font-size:clamp(16px,3.8vw,30px);letter-spacing:.28em;color:#00ff41;text-transform:uppercase;text-align:center;text-shadow:0 0 24px rgba(0,255,65,.65);min-height:1.5em;display:flex;align-items:center;justify-content:center;width:90%}
+
 /* ══ AGENT REVEAL OVERLAY ════════════════════════════════ */
 @keyframes aro-in{0%{opacity:0;transform:scale(.9)}100%{opacity:1;transform:scale(1)}}
 @keyframes aro-out{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.08)}}

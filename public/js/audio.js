@@ -101,6 +101,28 @@ function playExplosion() {
   } catch(e) {}
 }
 
+function playBriefingSound() {
+  try {
+    const ctx = getAudioCtx();
+    // Drone grave
+    const drone = ctx.createOscillator(), dg = ctx.createGain();
+    drone.type = 'sawtooth'; drone.frequency.value = 55;
+    dg.gain.setValueAtTime(0, ctx.currentTime);
+    dg.gain.linearRampToValueAtTime(.1, ctx.currentTime + .5);
+    dg.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + 3);
+    const flt = ctx.createBiquadFilter(); flt.type = 'lowpass'; flt.frequency.value = 180;
+    drone.connect(flt); flt.connect(dg); dg.connect(ctx.destination); drone.start(); drone.stop(ctx.currentTime + 3);
+    // Notes montantes
+    [{f:110,t:.6,d:.35},{f:138,t:1.1,d:.35},{f:165,t:1.6,d:.6},{f:220,t:2.2,d:.9}].forEach(({f,t,d}) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'triangle'; o.frequency.value = f;
+      const s = ctx.currentTime + t;
+      g.gain.setValueAtTime(0,s); g.gain.linearRampToValueAtTime(.18,s+.06); g.gain.exponentialRampToValueAtTime(.001,s+d);
+      o.connect(g); g.connect(ctx.destination); o.start(s); o.stop(s+d+.1);
+    });
+  } catch(e) {}
+}
+
 function playDecodeSound() {
   try {
     const ctx = getAudioCtx();
