@@ -9,7 +9,7 @@ function saveSession() {
       phase:            currentPhase,
       currentChallenge: currentChallenge,
       revealedDigits:   revealedDigits,
-      agentNames:       agentNames,
+      agents:           agents,
       secondsLeft:      secondsLeft,
       totalSeconds:     totalSeconds,
       missionStart:     missionStart,
