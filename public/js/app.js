@@ -53,10 +53,6 @@ const ADJ_ALL = [
   "PUMA","RAPIDE","RENARD","ROUGE","SILENCIEUX","SPECTRE","TITAN","TORNADE",
   "URANIUM","VIPÈRE","ZÉNITH"
 ];
-const NOM_ALL = [
-  "DELTA","SIGMA","ZÉRO","ALPHA","BRAVO","OMEGA","KILO","VICTOR","ZULU",
-  "FOXTROT","SIERRA","TANGO","ROMEO","LIMA","INDIA","NOVEMBRE","PAPA","OSCAR","WHISKY","GOLF"
-];
 
 function normalizeChar(c) {
   return c.normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase();
@@ -74,9 +70,7 @@ function proposalsForLetter(letter) {
   while (result.length < 3 && tries < 300) {
     tries++;
     const adj = adjPool[tries % adjPool.length];
-    const nom = NOM_ALL[Math.floor(Math.random() * NOM_ALL.length)];
-    const name = `AGENT ${adj} ${nom}`;
-    if (!used.has(name) && !result.includes(name)) result.push(name);
+    if (!used.has(adj) && !result.includes(adj)) result.push(adj);
   }
   return result;
 }
@@ -94,8 +88,7 @@ function showProposals() {
   let sc = 0; const max = 22;
   scanTmr = setInterval(() => {
     const adj = ADJ_ALL[Math.floor(Math.random()*ADJ_ALL.length)];
-    const nom = NOM_ALL[Math.floor(Math.random()*NOM_ALL.length)];
-    const el = document.getElementById('scan-names'); if (el) el.textContent = `AGENT ${adj} ${nom}`;
+    const el = document.getElementById('scan-names'); if (el) el.textContent = adj;
     playTypeSound(); sc++;
     if (sc >= max) {
       clearInterval(scanTmr); scanTmr = null;
