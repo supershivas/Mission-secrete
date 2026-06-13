@@ -674,6 +674,43 @@ function dismissResume() {
   document.getElementById('resume-banner').classList.remove('visible');
 }
 
+// ── Appelée à chaque sync config (main.js) ─────────────
+function onCfgSync() {
+  // 1. Recalcule le timer si une mission est en cours
+  if (missionStart > 0 && countdownTimer) {
+    const elapsed = Math.round((Date.now() - missionStart) / 1000);
+    totalSeconds  = cfg.duration;
+    secondsLeft   = Math.max(0, cfg.duration - elapsed);
+    updateMiniTimer();
+    syncRevealTimer();
+    if (currentPhase === 'phase-countdown') updateBigTimer();
+  }
+
+  // 2. Rafraîchit l'épreuve active
+  if (currentPhase === 'phase-challenge') {
+    const ch = cfg.challenges[currentChallenge];
+    if (!ch) return;
+    document.getElementById('ch-title').textContent = ch.title;
+    document.getElementById('ch-brief').textContent = ch.brief;
+
+    // poison
+    const pv = document.getElementById('poison-visual');
+    ch.poison ? (pv.classList.add('active'), startPoisonAnimation())
+              : (pv.classList.remove('active'), stopPoisonAnimation());
+
+    // team banner
+    const banner = document.getElementById('ch-team-banner');
+    if (ch.teamPlay && agents.length >= 2) {
+      const team = currentChallenge % 2 === 0 ? 'ombre' : 'cobra';
+      banner.textContent = `▶ ÉQUIPE ${team.toUpperCase()}`;
+      banner.className = 'ch-team-banner ' + team;
+      banner.style.display = '';
+    } else {
+      banner.style.display = 'none';
+    }
+  }
+}
+
 // ── Debug simulation (console: debugSim() ou Ctrl+Shift+D) ──
 function debugSim() {
   const names = [

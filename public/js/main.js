@@ -32,6 +32,7 @@ setInterval(async () => {
     localStorage.setItem('agent_config', JSON.stringify(data));
     reloadCfg();
     applyCfgToSplash();
+    onCfgSync();
     showAdminSyncBanner();
   } catch(e) {}
 }, 3000);
@@ -40,6 +41,7 @@ window.addEventListener('storage', e => {
   if (e.key === 'agent_config') {
     reloadCfg();
     applyCfgToSplash();
+    onCfgSync();
     showAdminSyncBanner();
   }
 });
