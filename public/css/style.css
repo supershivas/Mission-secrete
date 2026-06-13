@@ -145,6 +145,42 @@ body{font-family:'Share Tech Mono','Courier New',monospace;color:#00ff41;display
 .particle{position:absolute;border-radius:50%;animation:fly var(--dur) ease-out forwards}
 @keyframes fly{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--tx),var(--ty)) scale(.1);opacity:0}}
 
+/* ══ RECRUTEMENT ═══════════════════════════════════════ */
+#recruit-form{width:100%;display:flex;flex-direction:column;gap:.7rem}
+.recruit-input-row{display:flex;gap:.5rem;width:100%}
+#recruit-input{flex:1;background:#010d03;border:1px solid #003a0d;color:#00ff41;font-family:inherit;font-size:16px;letter-spacing:.15em;padding:.55rem .8rem;outline:none;text-transform:uppercase}
+#recruit-input:focus{border-color:#00ff41;box-shadow:0 0 0 1px rgba(0,255,65,.2)}
+#recruit-proposals{display:flex;flex-wrap:wrap;gap:.6rem;justify-content:center;min-height:2rem}
+.proposals-label{width:100%;font-size:10px;letter-spacing:.2em;color:#006818;text-transform:uppercase;text-align:center;margin-bottom:.3rem}
+.proposal-btn{background:#010d03;border:1px solid #006818;color:#00ff41;font-family:inherit;font-size:13px;letter-spacing:.22em;padding:.6rem 1.2rem;cursor:pointer;text-transform:uppercase;transition:background .15s,border-color .15s;animation:fadein .3s ease}
+.proposal-btn:hover,.proposal-btn:active{background:rgba(0,255,65,.1);border-color:#00ff41}
+#recruit-list-wrap{width:100%;display:none}
+#recruit-list{display:flex;flex-direction:column;gap:.45rem;width:100%;margin-top:.3rem}
+.recruit-badge{display:flex;align-items:center;gap:.6rem;background:#010d03;border:1px solid #003a0d;padding:.45rem .8rem;animation:fadein .3s ease}
+.recruit-real{font-size:11px;letter-spacing:.15em;color:#006818;text-transform:uppercase}
+.recruit-arrow{color:#003a0d;font-size:12px}
+.recruit-agent{font-size:13px;letter-spacing:.22em;color:#00ff41;text-transform:uppercase;flex:1}
+.recruit-del{background:transparent;border:none;color:#003a0d;font-family:inherit;font-size:12px;cursor:pointer;padding:.1rem .3rem;margin-left:auto;transition:color .15s}
+.recruit-del:hover{color:#ff0024}
+#recruit-hint{font-size:10px;letter-spacing:.18em;color:#004d12;text-transform:uppercase;text-align:center}
+
+/* ══ ÉQUIPES ════════════════════════════════════════════ */
+#teams-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;width:100%}
+.team-col{display:flex;flex-direction:column;gap:.5rem;padding:.6rem;border:1px solid #003a0d;transition:background .15s,border-color .2s;min-height:120px}
+.team-col.drag-over{background:rgba(0,255,65,.04);border-color:#00ff41}
+.team-header{font-size:10px;letter-spacing:.25em;text-transform:uppercase;text-align:center;padding:.35rem .5rem;border-bottom:1px solid currentColor;margin-bottom:.3rem}
+.ombre-header{color:#00ff41;border-color:#00ff41;text-shadow:0 0 8px rgba(0,255,65,.4)}
+.cobra-header{color:#ff6b00;border-color:#ff6b00;text-shadow:0 0 8px rgba(255,107,0,.4)}
+.team-cards{display:flex;flex-direction:column;gap:.4rem}
+.agent-card{background:#010d03;border:1px solid #003a0d;padding:.5rem .7rem;cursor:grab;user-select:none;transition:border-color .15s,background .15s,opacity .15s;animation:fadein .3s ease}
+.agent-card:hover{border-color:#006818;background:rgba(0,255,65,.03)}
+.agent-card.dragging{opacity:.5;cursor:grabbing}
+.card-real{font-size:9px;letter-spacing:.18em;color:#004d12;text-transform:uppercase;margin-bottom:.15rem}
+.card-agent{font-size:13px;letter-spacing:.22em;color:#00ff41;text-transform:uppercase}
+#team-ombre .agent-card{border-left:2px solid #00ff41}
+#team-cobra .agent-card{border-left:2px solid #ff6b00;color:#ff6b00}
+#team-cobra .card-agent{color:#ff6b00}
+
 /* ══ RESUME BANNER ═════════════════════════════════════ */
 #resume-banner{position:fixed;bottom:0;left:0;right:0;z-index:30;background:#010d03;border-top:1px solid #006818;padding:.7rem 1.5rem;display:none;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
 #resume-banner.visible{display:flex}
