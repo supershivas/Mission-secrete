@@ -549,6 +549,37 @@ function showScore() {
   document.getElementById('score-rank').textContent  = rank;
   document.getElementById('score-time').textContent  = `Temps restant : ${timerText(remaining)} — Durée : ${timerText(elapsed)}`;
   document.getElementById('score-msg').textContent   = msg;
+
+  // Podium agents
+  const podium = document.getElementById('score-agents');
+  const hasTeams = agents.some(a => a.team);
+  if (agents.length > 0) {
+    if (hasTeams) {
+      const teams = ['ombre', 'cobra'];
+      podium.innerHTML = teams.map(team => {
+        const members = agents.filter(a => a.team === team);
+        if (!members.length) return '';
+        return `<div class="podium-team">
+          <div class="podium-team-label">Équipe ${team.toUpperCase()}</div>
+          ${members.map(a => `<div class="podium-agent">
+            <span class="podium-real">${esc(a.realName)}</span>
+            <span class="podium-code">${esc(a.agentName)}</span>
+          </div>`).join('')}
+        </div>`;
+      }).join('');
+    } else {
+      podium.innerHTML = `<div class="podium-solo">${agents.map(a => `
+        <div class="podium-agent">
+          <span class="podium-real">${esc(a.realName)}</span>
+          <span class="podium-code">${esc(a.agentName)}</span>
+        </div>`).join('')}
+      </div>`;
+    }
+    podium.style.display = 'flex';
+  } else {
+    podium.style.display = 'none';
+  }
+
   showPhase('phase-success');
 }
 

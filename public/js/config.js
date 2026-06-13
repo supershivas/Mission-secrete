@@ -60,4 +60,5 @@ function getCfg() {
   } catch(e) { return DEFAULT_CFG; }
 }
 
-const cfg = getCfg();
+let cfg = getCfg();
+function reloadCfg() { cfg = getCfg(); }
