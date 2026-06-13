@@ -15,6 +15,7 @@ let typewriterTmr    = null;
 let hintTimer        = null;
 let hintSeconds      = 0;
 let adTimer          = null;
+let adPostTmr        = null;
 let adSeconds        = 30;
 let currentPhase     = 'phase-splash';
 
@@ -43,10 +44,14 @@ const ADJ = ["OMBRE","ACIER","NOIR","ROUGE","SILENCIEUX","RAPIDE","GLACIAL","FAN
 const NOM = ["DELTA","SIGMA","ZÉRO","ALPHA","BRAVO","OMEGA","KILO","VICTOR","ZULU","FOXTROT","SIERRA","TANGO","ROMEO","LIMA","INDIA","NOVEMBRE","PAPA","OSCAR","WHISKY","GOLF"];
 
 function generateName() {
-  const a = ADJ[Math.floor(Math.random()*ADJ.length)];
-  const n = NOM[Math.floor(Math.random()*NOM.length)];
-  const name = `AGENT ${a} ${n}`;
-  if (agentNames.includes(name)) { generateName(); return; }
+  let name, tries = 0;
+  do {
+    const a = ADJ[Math.floor(Math.random()*ADJ.length)];
+    const n = NOM[Math.floor(Math.random()*NOM.length)];
+    name = `AGENT ${a} ${n}`;
+    tries++;
+  } while (agentNames.includes(name) && tries < ADJ.length * NOM.length);
+  if (agentNames.includes(name)) return;
   agentNames.push(name);
   renderNames(); playTypeSound();
 }
@@ -89,12 +94,13 @@ function typeNext() {
     typewriterTmr = setTimeout(typeNext, d);
   } else {
     el.innerHTML = esc(msg).replace(/\n/g,'<br>');
-    setTimeout(startAutodestruct, 800);
+    adPostTmr = setTimeout(startAutodestruct, 800);
   }
 }
 
 function skipTypewriter() {
   clearTimeout(typewriterTmr);
+  clearTimeout(adPostTmr);
   typewriterIdx = cfg.message.length;
   document.getElementById('typewriter-text').innerHTML = esc(cfg.message).replace(/\n/g,'<br>');
   startAutodestruct();
@@ -372,6 +378,7 @@ function spawnBurst() {
 function resetApp() {
   clearInterval(countdownTimer); clearInterval(particleLoop);
   clearInterval(hintTimer); clearInterval(adTimer);
+  clearTimeout(typewriterTmr); clearTimeout(adPostTmr);
   stopAmbientMusic(); stopPoisonAnimation(); clearSession();
   document.getElementById('particles').innerHTML = '';
   document.getElementById('autodestruct-overlay').classList.remove('active');
