@@ -8,8 +8,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function applyCfgToSplash() {
-  const el = document.getElementById('splash-name');
-  if (el) el.textContent = cfg.missionName || 'HELIE10';
+  const name = document.getElementById('splash-name');
+  if (name) name.textContent = cfg.missionName || 'HELIE10';
+  const dur = document.getElementById('splash-duration');
+  if (dur) {
+    const m = Math.round(cfg.duration / 60);
+    dur.textContent = `Durée mission : ${m} min`;
+  }
 }
 
 // Poll remote toutes les 3s (hors mission active)

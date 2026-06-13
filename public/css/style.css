@@ -47,6 +47,7 @@ body{font-family:'Share Tech Mono','Courier New',monospace;color:#00ff41;display
 #splash-artefact{font-size:clamp(9px,1.6vw,13px);line-height:1.28;color:#00ff41;text-align:center;white-space:pre;min-height:10em;display:flex;align-items:center;justify-content:center;transition:opacity .4s}
 #splash-name{font-size:clamp(32px,8vw,52px);letter-spacing:.4em;text-transform:uppercase;animation:glow 2s ease-in-out infinite;margin-top:.2rem}
 #splash-sub2{font-size:13px;letter-spacing:.22em;color:#004d12;text-transform:uppercase}
+#splash-duration{font-size:11px;letter-spacing:.18em;color:#003a0d;text-transform:uppercase}
 #splash-tap{font-size:14px;letter-spacing:.2em;color:#003a0d;text-transform:uppercase;animation:blink2 1.4s step-end infinite;margin-top:.8rem}
 
 /* ══ NOMS ══════════════════════════════════════════════ */
