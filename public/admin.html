@@ -244,6 +244,24 @@
 
   <div class="main-wrap">
 
+    <!-- LIVE CONTROL -->
+    <div class="card" style="border-color:#e67e22">
+      <div class="card-head" style="background:#fff8f2;border-color:#e67e22">
+        <div class="card-head-title" style="color:#e67e22">⏱ Contrôle en direct</div>
+        <div id="live-timer-display" style="font-family:var(--mono);font-size:13px;color:#e67e22"></div>
+      </div>
+      <div class="card-body">
+        <div style="font-size:12px;color:var(--muted)">Ajouter du temps à la mission en cours — appliqué immédiatement sur l'iPad.</div>
+        <div class="action-bar">
+          <button class="btn btn-secondary" onclick="addTime(5)">+ 5 min</button>
+          <button class="btn btn-secondary" onclick="addTime(10)">+ 10 min</button>
+          <button class="btn btn-secondary" onclick="addTime(15)">+ 15 min</button>
+          <button class="btn btn-secondary" onclick="addTime(30)">+ 30 min</button>
+          <div id="addtime-fb" style="font-size:12px;color:var(--accent)"></div>
+        </div>
+      </div>
+    </div>
+
     <!-- GLOBAL -->
     <div class="section-label">Paramètres généraux</div>
     <div class="card">
@@ -424,6 +442,7 @@ function loadConfig() {
   updateDurHint();
   renderTabs();
   updatePinPreview();
+  refreshLiveTimer();
 }
 
 // ── TABS ──────────────────────────────────────
@@ -530,6 +549,7 @@ function updateDurHint() {
   const h=document.getElementById('dur-hint');
   if(isNaN(v)){h.textContent='';return;}
   h.textContent=v>=60?`= ${Math.floor(v/60)}h${v%60?String(v%60).padStart(2,'0')+'min':''}`:`= ${v} minute${v>1?'s':''}`;
+  refreshLiveTimer();
 }
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
@@ -565,6 +585,36 @@ function resetDefault() {
   localStorage.removeItem('agent_config');
   cfg=JSON.parse(JSON.stringify(DEFAULT_CFG));
   activeTab=0; loadConfig();
+}
+
+// ── Contrôle en direct ────────────────────────────────
+async function addTime(minutes) {
+  const fb = document.getElementById('addtime-fb');
+  fb.textContent = 'Mise à jour…';
+  // Tire la config distante pour avoir la durée actuelle
+  try {
+    const res = await fetch('/api/config');
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.duration) cfg.duration = data.duration;
+    }
+  } catch(e) {}
+  cfg.duration += minutes * 60;
+  // Met aussi à jour le champ durée dans le formulaire
+  document.getElementById('f-dur').value = Math.round(cfg.duration / 60);
+  updateDurHint();
+  const ok = await pushConfigRemote(cfg);
+  fb.textContent = ok ? `✓ +${minutes} min appliquées` : '✗ Erreur réseau';
+  setTimeout(() => { fb.textContent = ''; }, 3000);
+}
+
+// Affiche la durée configurée dans le header live
+function refreshLiveTimer() {
+  const el = document.getElementById('live-timer-display');
+  if (el) {
+    const m = Math.round(cfg.duration / 60);
+    el.textContent = `Config : ${m} min`;
+  }
 }
 
 // ── Remote sync ───────────────────────────────────────
