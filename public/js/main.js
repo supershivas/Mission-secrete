@@ -1,9 +1,18 @@
 // ══ MAIN — init ════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+  await pullConfigRemote();
   startSplashRotation();
   initBgArtefacts();
   tryResume();
 });
+
+// Poll remote toutes les 30s (hors mission active)
+setInterval(async () => {
+  if (['phase-splash', 'phase-names', 'phase-teams'].includes(currentPhase)) {
+    const updated = await pullConfigRemote();
+    if (updated) showAdminSyncBanner();
+  }
+}, 30000);
 
 window.addEventListener('storage', e => {
   if (e.key === 'agent_config') {

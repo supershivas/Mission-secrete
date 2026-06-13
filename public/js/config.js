@@ -62,3 +62,36 @@ function getCfg() {
 
 let cfg = getCfg();
 function reloadCfg() { cfg = getCfg(); }
+
+// ── Remote sync (JSONBin) ───────────────────────────────
+function getRemoteSyncCfg() {
+  try { return JSON.parse(localStorage.getItem('remote_sync') || 'null'); } catch(e) { return null; }
+}
+
+async function pullConfigRemote() {
+  const r = getRemoteSyncCfg();
+  if (!r?.key || !r?.bin) return false;
+  try {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${r.bin}/latest`, {
+      headers: { 'X-Master-Key': r.key, 'X-Bin-Meta': 'false' }
+    });
+    if (!res.ok) return false;
+    const data = await res.json();
+    localStorage.setItem('agent_config', JSON.stringify(data.record));
+    reloadCfg();
+    return true;
+  } catch(e) { return false; }
+}
+
+async function pushConfigRemote(cfgData) {
+  const r = getRemoteSyncCfg();
+  if (!r?.key || !r?.bin) return false;
+  try {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${r.bin}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': r.key },
+      body: JSON.stringify(cfgData)
+    });
+    return res.ok;
+  } catch(e) { return false; }
+}
