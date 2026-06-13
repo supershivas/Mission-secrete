@@ -70,7 +70,8 @@ function proposalsForLetter(letter) {
   while (result.length < 3 && tries < 300) {
     tries++;
     const adj = adjPool[tries % adjPool.length];
-    if (!used.has(adj) && !result.includes(adj)) result.push(adj);
+    const name = `AGENT ${adj}`;
+    if (!used.has(name) && !result.includes(name)) result.push(name);
   }
   return result;
 }
@@ -88,7 +89,7 @@ function showProposals() {
   let sc = 0; const max = 22;
   scanTmr = setInterval(() => {
     const adj = ADJ_ALL[Math.floor(Math.random()*ADJ_ALL.length)];
-    const el = document.getElementById('scan-names'); if (el) el.textContent = adj;
+    const el = document.getElementById('scan-names'); if (el) el.textContent = `AGENT ${adj}`;
     playTypeSound(); sc++;
     if (sc >= max) {
       clearInterval(scanTmr); scanTmr = null;
@@ -269,30 +270,28 @@ function renderTeams() {
 }
 
 function animateTeamCards() {
-  const DELAY = 380;
+  const PRE = 1800; // lecture des noms d'équipes
+  const DELAY = 550;
   const cards = document.querySelectorAll('.agent-card');
+
+  // Phase 1 : headers clignotent pendant PRE ms
+  document.querySelectorAll('.team-header').forEach(h => h.classList.add('header-flash'));
+
+  // Phase 2 : cartes tombent une par une
   cards.forEach((c, i) => {
     c.style.opacity = '0';
     setTimeout(() => {
       c.style.opacity = '';
       c.classList.add('dropping');
-      c.style.animationDelay = '0ms';
       playStampSound();
-    }, i * DELAY);
+    }, PRE + i * DELAY);
   });
-  // Flash team headers after all cards land
-  const total = cards.length;
+
+  // Phase 3 : fin — headers arrêtent de clignoter + son de révélation
   setTimeout(() => {
-    document.querySelectorAll('.team-header').forEach(h => {
-      h.style.transition = 'opacity .15s';
-      let f = 0;
-      const fl = setInterval(() => {
-        h.style.opacity = f++ % 2 === 0 ? '.3' : '1';
-        if (f >= 6) { clearInterval(fl); h.style.opacity = ''; }
-      }, 120);
-    });
+    document.querySelectorAll('.team-header').forEach(h => h.classList.remove('header-flash'));
     playRevealSound();
-  }, total * DELAY + 300);
+  }, PRE + cards.length * DELAY + 200);
 }
 
 // Drag & drop (mouse)

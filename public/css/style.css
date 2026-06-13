@@ -212,6 +212,8 @@ body{font-family:'Share Tech Mono','Courier New',monospace;color:#00ff41;display
 /* ══ ANIMATION CHUTE CARTES ══════════════════════════════ */
 @keyframes card-drop{0%{opacity:0;transform:translateY(-50px) scale(.8)}55%{transform:translateY(6px) scale(1.04);opacity:1}75%{transform:translateY(-3px) scale(.98)}100%{transform:translateY(0) scale(1);opacity:1}}
 .agent-card.dropping{animation:card-drop .5s cubic-bezier(.2,.8,.25,1.2) both}
+@keyframes header-glow{0%,100%{opacity:1}50%{opacity:.25}}
+.team-header.header-flash{animation:header-glow .55s ease-in-out infinite}
 
 /* ══ OVERLAY FORMATION ÉQUIPES ═══════════════════════════ */
 @keyframes tfo-in{0%{opacity:0}100%{opacity:1}}
