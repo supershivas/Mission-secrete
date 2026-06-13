@@ -269,16 +269,30 @@ function renderTeams() {
 }
 
 function animateTeamCards() {
+  const DELAY = 380;
   const cards = document.querySelectorAll('.agent-card');
   cards.forEach((c, i) => {
     c.style.opacity = '0';
-    c.style.transform = 'translateY(-12px)';
     setTimeout(() => {
-      c.style.transition = 'opacity .3s ease, transform .3s ease';
-      c.style.opacity = ''; c.style.transform = '';
-      playTypeSound();
-    }, i * 120);
+      c.style.opacity = '';
+      c.classList.add('dropping');
+      c.style.animationDelay = '0ms';
+      playStampSound();
+    }, i * DELAY);
   });
+  // Flash team headers after all cards land
+  const total = cards.length;
+  setTimeout(() => {
+    document.querySelectorAll('.team-header').forEach(h => {
+      h.style.transition = 'opacity .15s';
+      let f = 0;
+      const fl = setInterval(() => {
+        h.style.opacity = f++ % 2 === 0 ? '.3' : '1';
+        if (f >= 6) { clearInterval(fl); h.style.opacity = ''; }
+      }, 120);
+    });
+    playRevealSound();
+  }, total * DELAY + 300);
 }
 
 // Drag & drop (mouse)
