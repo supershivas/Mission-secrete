@@ -194,20 +194,68 @@ function removeAgent(i) {
 
 // ── Teams ──────────────────────────────────────────────
 function _activateTeamsPhase() {
-  // distribute agents randomly into 2 teams
   const shuffled = agents.slice().sort(() => Math.random() - .5);
   shuffled.forEach((a, i) => { a.team = i % 2 === 0 ? 'ombre' : 'cobra'; });
-  renderTeams();
-  document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
-  document.getElementById('phase-teams').classList.add('active');
-  currentPhase = 'phase-teams';
+  _upgradeTeamHeaders();
+  showTeamsFormationOverlay(() => {
+    renderTeams();
+    document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
+    document.getElementById('phase-teams').classList.add('active');
+    currentPhase = 'phase-teams';
+    animateTeamCards();
+  });
+}
+
+function _upgradeTeamHeaders() {
+  [['ombre','ÉQUIPE OMBRE','#00ff41'],['cobra','ÉQUIPE COBRA','#ff6b00']].forEach(([team, label, color]) => {
+    const col = document.getElementById('team-' + team);
+    if (!col || col.querySelector('.team-name')) return;
+    const hdr = col.querySelector('.team-header');
+    if (hdr) hdr.innerHTML = `<div class="team-name">${label}</div><div class="team-count" style="color:${color}">—</div>`;
+  });
+}
+
+function showTeamsFormationOverlay(onDone) {
+  let ov = document.getElementById('teams-formation-overlay');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'teams-formation-overlay';
+    ov.innerHTML = `
+      <div id="tfo-title">⬛ Formation des équipes</div>
+      <div id="tfo-bar-track"><div id="tfo-bar-fill"></div></div>
+      <div id="tfo-status">Assignation en cours…</div>`;
+    document.body.appendChild(ov);
+  }
+  const fill = ov.querySelector('#tfo-bar-fill');
+  const status = ov.querySelector('#tfo-status');
+  fill.style.width = '0';
+  ov.classList.remove('tfo-out');
+  void ov.offsetWidth;
+  ov.classList.add('show');
+  // Animate bar
+  requestAnimationFrame(() => requestAnimationFrame(() => { fill.style.width = '100%'; }));
+  const msgs = ['Analyse des profils…', 'Équilibrage des forces…', 'Assignation en cours…', 'Équipes constituées.'];
+  let mi = 0;
+  const mTmr = setInterval(() => { if (++mi < msgs.length) status.textContent = msgs[mi]; }, 380);
+  setTimeout(() => {
+    clearInterval(mTmr);
+    status.textContent = '✓ Équipes prêtes.';
+    setTimeout(() => {
+      ov.classList.add('tfo-out');
+      setTimeout(() => { ov.classList.remove('show', 'tfo-out'); onDone(); }, 380);
+    }, 300);
+  }, 1600);
 }
 
 function renderTeams() {
   ['ombre','cobra'].forEach(team => {
     const container = document.getElementById('cards-' + team);
     const teamAgents = agents.filter(a => a.team === team);
-    container.innerHTML = teamAgents.map((a, _) => {
+    // Update team header count
+    const col = document.getElementById('team-' + team);
+    const hdr = col && col.querySelector('.team-count');
+    if (hdr) hdr.textContent = `${teamAgents.length} agent${teamAgents.length > 1 ? 's' : ''}`;
+    container.innerHTML = teamAgents.map((a) => {
       const idx = agents.indexOf(a);
       return `<div class="agent-card" draggable="true"
         data-idx="${idx}"
@@ -217,10 +265,26 @@ function renderTeams() {
         ontouchmove="onCardTouchMove(event)"
         ontouchend="onCardTouchEnd(event,${idx})"
         onclick="onCardClick(event,${idx})">
-        <div class="card-real">${esc(a.realName)}</div>
-        <div class="card-agent">${esc(a.agentName)}</div>
+        <div class="card-initial">${esc(a.realName[0].toUpperCase())}</div>
+        <div class="card-info">
+          <div class="card-real">${esc(a.realName)}</div>
+          <div class="card-agent">${esc(a.agentName)}</div>
+        </div>
       </div>`;
     }).join('');
+  });
+}
+
+function animateTeamCards() {
+  const cards = document.querySelectorAll('.agent-card');
+  cards.forEach((c, i) => {
+    c.style.opacity = '0';
+    c.style.transform = 'translateY(-12px)';
+    setTimeout(() => {
+      c.style.transition = 'opacity .3s ease, transform .3s ease';
+      c.style.opacity = ''; c.style.transform = '';
+      playTypeSound();
+    }, i * 120);
   });
 }
 
@@ -246,7 +310,7 @@ function onDrop(e, team) {
   if (draggedAgent === null) return;
   agents[draggedAgent].team = team;
   draggedAgent = null;
-  renderTeams();
+  playTypeSound(); renderTeams();
 }
 
 // Touch drag & drop (iPad)
@@ -303,9 +367,9 @@ function onColTouchEnd(e, team) {
 
 // Tap = toggle team
 function onCardClick(e, idx) {
-  if (touchMoved) return; // was a drag
+  if (touchMoved) return;
   agents[idx].team = agents[idx].team === 'ombre' ? 'cobra' : 'ombre';
-  renderTeams();
+  playTypeSound(); renderTeams();
 }
 
 // ── Splash ─────────────────────────────────────────────
