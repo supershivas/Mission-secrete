@@ -15,7 +15,7 @@ function applyCfgToSplash() {
 // Poll remote toutes les 3s (hors mission active)
 let _lastRemoteCfgHash = '';
 setInterval(async () => {
-  if (!['phase-splash', 'phase-names', 'phase-teams'].includes(currentPhase)) return;
+  if (currentPhase === 'phase-success' || currentPhase === 'phase-explosion') return;
   try {
     const res = await fetch('/api/config');
     if (!res.ok) return;
