@@ -107,13 +107,51 @@ function showProposals() {
 }
 
 function pickProposal(agentName) {
-  agents.push({ realName: currentRealName, agentName, team: null });
-  playStampSound();
-  renderRecruitList();
-  const badges = document.querySelectorAll('.recruit-badge');
-  if (badges.length) badges[badges.length-1].classList.add('stamp-in');
+  const realName = currentRealName;
+  agents.push({ realName, agentName, team: null });
   resetRecruitForm();
-  playRevealSound();
+  showAgentReveal(realName, agentName, () => {
+    renderRecruitList();
+    const badges = document.querySelectorAll('.recruit-badge');
+    if (badges.length) badges[badges.length-1].classList.add('stamp-in');
+  });
+}
+
+function showAgentReveal(realName, agentName, onDone) {
+  let ov = document.getElementById('agent-reveal-overlay');
+  if (!ov) {
+    ov = document.createElement('div');
+    ov.id = 'agent-reveal-overlay';
+    ov.innerHTML = '<div id="aro-badge">⬛ Agent recruté</div><div id="aro-name">—</div><div id="aro-sep"></div><div id="aro-real"></div>';
+    document.body.appendChild(ov);
+  }
+  document.getElementById('aro-real').textContent = realName.toUpperCase();
+  const nameEl = document.getElementById('aro-name');
+  nameEl.textContent = '—';
+  ov.classList.remove('show', 'fade-out');
+  void ov.offsetWidth;
+  ov.classList.add('show');
+  playStampSound();
+  setTimeout(() => matrixName(nameEl, agentName, () => playRevealSound()), 250);
+  setTimeout(() => {
+    ov.classList.add('fade-out');
+    setTimeout(() => { ov.classList.remove('show', 'fade-out'); if (onDone) onDone(); }, 420);
+  }, 2900);
+}
+
+function matrixName(el, finalName, onDone) {
+  const alpha = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const len = finalName.length;
+  let frame = 0; const total = 32;
+  const tmr = setInterval(() => {
+    let r = '';
+    for (let i = 0; i < len; i++) {
+      if (finalName[i] === ' ') { r += ' '; continue; }
+      r += frame >= Math.floor(total * 0.45 + i * 0.85) ? finalName[i] : alpha[Math.floor(Math.random() * alpha.length)];
+    }
+    el.textContent = r; frame++;
+    if (frame >= total + len) { clearInterval(tmr); el.textContent = finalName; if (onDone) onDone(); }
+  }, 58);
 }
 
 function resetRecruitForm() {
@@ -134,15 +172,19 @@ function renderRecruitList() {
     wrap.style.display = 'block';
     list.innerHTML = agents.map((a,i) =>
       `<div class="recruit-badge">
-        <span class="recruit-real">${esc(a.realName)}</span>
-        <span class="recruit-arrow">→</span>
-        <span class="recruit-agent">${esc(a.agentName)}</span>
+        <div class="badge-initial">${esc(a.realName[0].toUpperCase())}</div>
+        <div class="badge-info">
+          <div class="badge-real">${esc(a.realName)}</div>
+          <div class="badge-agent">${esc(a.agentName)}</div>
+        </div>
         <button class="recruit-del" onclick="removeAgent(${i})" title="Supprimer">✕</button>
       </div>`
-    ).join('');
+    ).join('') + (agents.length >= 2
+      ? `<div class="dossier-complet">✓ ${agents.length} agent${agents.length>1?'s':''} recrutés — dossier complet</div>`
+      : '');
   }
-  document.getElementById('add-agent-btn').style.display   = agents.length > 0 ? 'inline-block' : 'none';
-  document.getElementById('form-teams-btn').style.display  = agents.length >= 2 ? 'inline-block' : 'none';
+  document.getElementById('add-agent-btn').style.display  = agents.length > 0 ? 'inline-block' : 'none';
+  document.getElementById('form-teams-btn').style.display = agents.length >= 2 ? 'inline-block' : 'none';
 }
 
 function removeAgent(i) {
