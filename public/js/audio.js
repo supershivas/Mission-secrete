@@ -101,6 +101,27 @@ function playExplosion() {
   } catch(e) {}
 }
 
+function playLaunchSound() {
+  try {
+    const ctx = getAudioCtx();
+    // Trois notes descendantes
+    [{f:440,t:0,d:.13},{f:330,t:.14,d:.13},{f:220,t:.28,d:.13}].forEach(({f,t,d}) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sawtooth'; o.frequency.value = f;
+      const s = ctx.currentTime + t;
+      g.gain.setValueAtTime(.14,s); g.gain.exponentialRampToValueAtTime(.001,s+d);
+      o.connect(g); g.connect(ctx.destination); o.start(s); o.stop(s+d+.05);
+    });
+    // Impact grave
+    const buf = ctx.createBuffer(1, ctx.sampleRate*.35, ctx.sampleRate), d = buf.getChannelData(0);
+    for (let i=0; i<d.length; i++) d[i]=(Math.random()*2-1)*Math.pow(1-i/d.length,1.8);
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const ff = ctx.createBiquadFilter(); ff.type='lowpass'; ff.frequency.value=140;
+    const gv = ctx.createGain(); gv.gain.value=.75;
+    src.connect(ff); ff.connect(gv); gv.connect(ctx.destination); src.start(ctx.currentTime+.42);
+  } catch(e) {}
+}
+
 function playBriefingSound() {
   try {
     const ctx = getAudioCtx();

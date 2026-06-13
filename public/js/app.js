@@ -379,10 +379,19 @@ function onCardClick(e, idx) {
 }
 
 // ── Splash ─────────────────────────────────────────────
-function onSplashTap() { getAudioCtx(); stopSplashRotation(); showPhase('phase-names'); }
+function onSplashTap() {
+  getAudioCtx();
+  stopSplashRotation();
+  triggerPhaseFlash();
+  playRevealSound();
+  setTimeout(() => showPhase('phase-names'), 120);
+}
 
 // ── Launch ─────────────────────────────────────────────
 function launchMission() {
+  playLaunchSound();
+  triggerPhaseFlash();
+  setTimeout(() => {
   showPhase('phase-message');
   typewriterIdx = 0;
   document.getElementById('typewriter-text').innerHTML = '<span id="cursor"></span>';
@@ -393,6 +402,7 @@ function launchMission() {
   countdownTimer = setInterval(globalTick, 1000);
   startAmbientMusic();
   setTimeout(typeNext, 400);
+  }, 200);
 }
 
 // ── Typewriter ─────────────────────────────────────────
@@ -762,6 +772,13 @@ function showScore() {
   else if (ratio >= 0.35) { stars='★★☆'; rank='EXCELLENCE'; msg='Mission accomplie avec brio.\nVos noms entreront dans les archives secrètes.'; }
   else if (ratio >= 0.15) { stars='★☆☆'; rank='ACCOMPLIE';  msg='Mission réussie de justesse.\nLa prochaine fois, faites plus vite.'; }
   else                    { stars='☆☆☆'; rank='LIMITE';     msg='Le dispositif était sur le point d\'exploser.\nEntraînez-vous, agents.'; }
+
+  // Reset animations
+  ['score-stars','score-rank','score-time','score-msg'].forEach(id => {
+    const el = document.getElementById(id);
+    el.textContent=''; el.style.opacity='0'; el.style.animation='none';
+  });
+
   document.getElementById('score-stars').textContent = stars;
   document.getElementById('score-rank').textContent  = rank;
   document.getElementById('score-time').textContent  = `Temps restant : ${timerText(remaining)} — Durée : ${timerText(elapsed)}`;
@@ -799,6 +816,25 @@ function showScore() {
 
   showPhase('phase-success');
   spawnSuccessConfetti();
+
+  // Anime les éléments un par un
+  const seq = [
+    ['score-stars', 300,  'pop .7s cubic-bezier(.17,.67,.25,1.4) both'],
+    ['score-rank',  900,  'pop .8s cubic-bezier(.17,.67,.2,1.5) both'],
+    ['score-time',  1500, 'fadein .5s ease both'],
+    ['score-msg',   1900, 'fadein .5s ease both'],
+  ];
+  seq.forEach(([id, delay, anim]) => {
+    setTimeout(() => {
+      const el = document.getElementById(id);
+      el.style.opacity=''; el.style.animation=anim;
+    }, delay);
+  });
+  setTimeout(() => {
+    const p = document.getElementById('score-agents');
+    p.style.opacity='0'; p.style.animation='none';
+    setTimeout(() => { p.style.opacity=''; p.style.animation='fadein .5s ease both'; }, 2300);
+  }, 0);
 }
 
 function spawnSuccessConfetti() {
@@ -816,20 +852,28 @@ function spawnSuccessConfetti() {
 // ── Explosion ──────────────────────────────────────────
 function triggerExplosion() {
   clearSession();
-  showPhase('phase-explosion');
-  spawnBurst();
-  particleLoop = setInterval(spawnBurst, 1600);
+  // Flash rouge intense avant l'écran
+  let fl = document.getElementById('explosion-flash');
+  if (!fl) { fl=document.createElement('div'); fl.id='explosion-flash'; document.body.appendChild(fl); }
+  fl.classList.remove('active'); void fl.offsetWidth; fl.classList.add('active');
   playExplosion();
+  if (navigator.vibrate) navigator.vibrate([200,100,200,100,400]);
+  setTimeout(() => {
+    fl.classList.remove('active');
+    showPhase('phase-explosion');
+    spawnBurst(90); spawnBurst(90);
+    particleLoop = setInterval(() => spawnBurst(70), 1400);
+  }, 350);
 }
-function spawnBurst() {
+function spawnBurst(count = 55) {
   const c = document.getElementById('particles');
-  const cols = ['#ff0024','#ff6b00','#ffcc00','#ff3300','#ff9900'];
+  const cols = ['#ff0024','#ff6b00','#ffcc00','#ff3300','#ff9900','#ffffff'];
   const cx = window.innerWidth/2, cy = window.innerHeight/2;
-  for (let i = 0; i < 55; i++) {
+  for (let i = 0; i < count; i++) {
     const p = document.createElement('div'); p.className = 'particle';
-    const sz=4+Math.random()*12, ang=Math.random()*Math.PI*2, dist=150+Math.random()*350;
-    p.style.cssText=`width:${sz}px;height:${sz}px;background:${cols[Math.floor(Math.random()*cols.length)]};left:${cx}px;top:${cy}px;--tx:${Math.cos(ang)*dist}px;--ty:${Math.sin(ang)*dist}px;--dur:${(.7+Math.random()*.9).toFixed(2)}s;animation-delay:${(Math.random()*.25).toFixed(2)}s`;
-    c.appendChild(p); setTimeout(() => p.remove(), 2200);
+    const sz=3+Math.random()*14, ang=Math.random()*Math.PI*2, dist=100+Math.random()*420;
+    p.style.cssText=`width:${sz}px;height:${sz}px;background:${cols[Math.floor(Math.random()*cols.length)]};left:${cx}px;top:${cy}px;--tx:${Math.cos(ang)*dist}px;--ty:${Math.sin(ang)*dist}px;--dur:${(.6+Math.random()*1.1).toFixed(2)}s;animation-delay:${(Math.random()*.3).toFixed(2)}s`;
+    c.appendChild(p); setTimeout(() => p.remove(), 2500);
   }
 }
 
