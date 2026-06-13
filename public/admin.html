@@ -230,6 +230,10 @@
     <div class="card">
       <div class="card-head"><div class="card-head-title">Mission</div></div>
       <div class="card-body">
+        <div class="field">
+          <label>Nom de la mission (affiché sur le splash)</label>
+          <input type="text" id="f-name" class="mono" placeholder="HELIE10" style="letter-spacing:.2em;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
+        </div>
         <div class="row">
           <div class="field">
             <label>Durée totale (minutes)</label>
@@ -373,6 +377,7 @@ function loadConfig() {
     const s = localStorage.getItem('agent_config');
     if (s) cfg = { ...DEFAULT_CFG, ...JSON.parse(s) };
   } catch(e) {}
+  document.getElementById('f-name').value = cfg.missionName || 'HELIE10';
   document.getElementById('f-dur').value = Math.round(cfg.duration / 60);
   document.getElementById('f-msg').value = cfg.message;
   updateDurHint();
@@ -499,6 +504,7 @@ function saveConfig() {
     ch.hint   = (document.getElementById(`ch-hint-${i}`)?.value||ch.hint||''). trim();
     ch.poison = document.getElementById(`ch-poison-${i}`)?.checked||false;
   });
+  cfg.missionName = (document.getElementById('f-name').value.trim().toUpperCase()) || 'HELIE10';
   cfg.duration=mins*60;
   cfg.message=document.getElementById('f-msg').value;
   localStorage.setItem('agent_config',JSON.stringify(cfg));

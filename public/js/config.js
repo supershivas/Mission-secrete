@@ -1,5 +1,6 @@
 // ══ CONFIG PAR DÉFAUT ══════════════════════════════════
 const DEFAULT_CFG = {
+  missionName: "HELIE10",
   duration: 3600,
   message: `AGENTS, VOUS RECEVEZ UNE TRANSMISSION D'URGENCE.
 
@@ -56,7 +57,7 @@ function getCfg() {
     const chs = (stored.challenges || DEFAULT_CFG.challenges).map((c, i) => ({
       ...(DEFAULT_CFG.challenges[i] || {}), ...c
     }));
-    return { duration: stored.duration || DEFAULT_CFG.duration, message: stored.message || DEFAULT_CFG.message, challenges: chs };
+    return { missionName: stored.missionName || DEFAULT_CFG.missionName, duration: stored.duration || DEFAULT_CFG.duration, message: stored.message || DEFAULT_CFG.message, challenges: chs };
   } catch(e) { return DEFAULT_CFG; }
 }
 

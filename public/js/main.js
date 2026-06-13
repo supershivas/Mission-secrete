@@ -1,22 +1,29 @@
 // ══ MAIN — init ════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async () => {
   await pullConfigRemote();
+  applyCfgToSplash();
   startSplashRotation();
   initBgArtefacts();
   tryResume();
 });
 
+function applyCfgToSplash() {
+  const el = document.getElementById('splash-name');
+  if (el) el.textContent = cfg.missionName || 'HELIE10';
+}
+
 // Poll remote toutes les 30s (hors mission active)
 setInterval(async () => {
   if (['phase-splash', 'phase-names', 'phase-teams'].includes(currentPhase)) {
     const updated = await pullConfigRemote();
-    if (updated) showAdminSyncBanner();
+    if (updated) { applyCfgToSplash(); showAdminSyncBanner(); }
   }
 }, 30000);
 
 window.addEventListener('storage', e => {
   if (e.key === 'agent_config') {
     reloadCfg();
+    applyCfgToSplash();
     showAdminSyncBanner();
   }
 });
