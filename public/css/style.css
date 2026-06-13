@@ -205,3 +205,8 @@ body{font-family:'Share Tech Mono','Courier New',monospace;color:#00ff41;display
 #resume-banner.visible{display:flex}
 #resume-text{font-size:13px;letter-spacing:.15em;color:#00cc35;text-transform:uppercase}
 .resume-btns{display:flex;gap:.6rem}
+
+/* ══ PHASE TRANSITION FLASH ══════════════════════════════ */
+@keyframes phase-flash{0%{opacity:.7}100%{opacity:0}}
+#phase-transition{position:fixed;inset:0;background:#00ff41;pointer-events:none;z-index:999;opacity:0}
+#phase-transition.flash{animation:phase-flash .35s ease-out forwards}

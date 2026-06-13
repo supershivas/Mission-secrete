@@ -483,11 +483,19 @@ function renderTabs() {
         <textarea id="ch-hint-${i}" rows="2" spellcheck="false" oninput="syncCh(${i})">${esc(ch.hint||'')} </textarea>
         <div class="hint">Laissez vide pour désactiver l'indice sur cette épreuve</div>
       </div>
-      <div class="field" style="flex-direction:row;align-items:center;gap:.75rem">
-        <label style="margin:0;white-space:nowrap">Thème poison 🧪</label>
-        <input type="checkbox" id="ch-poison-${i}" ${ch.poison?'checked':''} onchange="syncCh(${i})"
-          style="width:18px;height:18px;cursor:pointer;accent-color:var(--accent-b)">
-        <div class="hint" style="margin:0">Active l'animation fiole sur cette épreuve</div>
+      <div class="field">
+        <label>Animation de l'épreuve</label>
+        <select id="ch-anim-${i}" onchange="syncCh(${i})">
+          <option value="none"${(ch.animation||'none')==='none'?' selected':''}>Aucune</option>
+          <option value="skull"${ch.animation==='skull'?' selected':''}>💀 Crâne</option>
+          <option value="laser"${ch.animation==='laser'?' selected':''}>⚡ Laser</option>
+          <option value="radar"${ch.animation==='radar'?' selected':''}>📡 Radar</option>
+          <option value="safe"${ch.animation==='safe'?' selected':''}>🔒 Coffre</option>
+          <option value="garden"${ch.animation==='garden'?' selected':''}>🌿 Jardin</option>
+          <option value="lab"${ch.animation==='lab'?' selected':''}>🔬 Labo</option>
+          <option value="poison"${ch.animation==='poison'?' selected':''}>🧪 Antidote</option>
+        </select>
+        <div class="hint">Animation ASCII affichée pendant l'épreuve</div>
       </div>
       <div class="field" style="flex-direction:row;align-items:center;gap:.75rem">
         <label style="margin:0;white-space:nowrap">Par équipe ⚔</label>
@@ -516,9 +524,9 @@ function syncCh(i) {
   cfg.challenges[i].brief  = document.getElementById(`ch-brief-${i}`).value;
   cfg.challenges[i].code   = document.getElementById(`ch-code-${i}`).value.toUpperCase();
   cfg.challenges[i].digit  = document.getElementById(`ch-digit-${i}`).value.replace(/\D/g,'').slice(0,1);
-  cfg.challenges[i].hint     = (document.getElementById(`ch-hint-${i}`)?.value||'').trim();
-  cfg.challenges[i].poison   = document.getElementById(`ch-poison-${i}`)?.checked||false;
-  cfg.challenges[i].teamPlay = document.getElementById(`ch-team-${i}`)?.checked||false;
+  cfg.challenges[i].hint      = (document.getElementById(`ch-hint-${i}`)?.value||'').trim();
+  cfg.challenges[i].animation = document.getElementById(`ch-anim-${i}`)?.value||'none';
+  cfg.challenges[i].teamPlay  = document.getElementById(`ch-team-${i}`)?.checked||false;
   const cb=document.getElementById(`cb-${i}`); if(cb) cb.textContent=cfg.challenges[i].code||'—';
   const db=document.getElementById(`db-${i}`); if(db){db.textContent=cfg.challenges[i].digit||'?';db.className='digit-tag'+(cfg.challenges[i].digit?' set':'');}
   updatePinPreview();
@@ -562,8 +570,8 @@ function saveConfig() {
     ch.brief  = document.getElementById(`ch-brief-${i}`)?.value||ch.brief;
     ch.code   = (document.getElementById(`ch-code-${i}`)?.value||ch.code).toUpperCase();
     ch.digit  = (document.getElementById(`ch-digit-${i}`)?.value||ch.digit).replace(/\D/g,'').slice(0,1);
-    ch.hint   = (document.getElementById(`ch-hint-${i}`)?.value||ch.hint||''). trim();
-    ch.poison = document.getElementById(`ch-poison-${i}`)?.checked||false;
+    ch.hint      = (document.getElementById(`ch-hint-${i}`)?.value||ch.hint||'').trim();
+    ch.animation = document.getElementById(`ch-anim-${i}`)?.value||ch.animation||'none';
   });
   cfg.missionName = (document.getElementById('f-name').value.trim().toUpperCase()) || 'HELIE10';
   cfg.duration=mins*60;

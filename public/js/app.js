@@ -37,6 +37,7 @@ function timerCls(s) {
 // ── Phase management ───────────────────────────────────
 function showPhase(id) {
   if (id === 'phase-teams') { _activateTeamsPhase(); return; }
+  triggerPhaseFlash();
   document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   currentPhase = id;
@@ -399,10 +400,10 @@ function showChallenge(idx) {
     hz.classList.remove('visible');
   }
 
-  // poison
-  const pv = document.getElementById('poison-visual');
-  ch.poison ? (pv.classList.add('active'), startPoisonAnimation())
-            : (pv.classList.remove('active'), stopPoisonAnimation());
+  // animation
+  ch.animation && ch.animation !== 'none'
+    ? startChallengeAnim(ch.animation)
+    : stopChallengeAnim();
 
   updateMiniTimer();
   showPhase('phase-challenge');
@@ -420,7 +421,8 @@ function submitCode() {
   const ch  = cfg.challenges[currentChallenge];
   if (val === ch.code.toUpperCase()) {
     revealedDigits.push(ch.digit);
-    clearInterval(hintTimer); stopPoisonAnimation();
+    clearInterval(hintTimer);
+    stopChallengeAnim();
     playRevealSound();
     showReveal(currentChallenge);
   } else {
@@ -455,21 +457,6 @@ function advanceFromReveal() {
   const isLast = currentChallenge === cfg.challenges.length - 1;
   isLast ? startFinalCountdown() : showChallenge(++currentChallenge);
 }
-
-// ── Poison animation ───────────────────────────────────
-const POTION_FRAMES = [
-`    ___\n   /   \\\n  | o o |\n  |  ~  |\n   \\___/\n  /|||||\\\n ( bubble )`,
-`    ___\n   /   \\\n  | · · |\n  | ~~~ |\n   \\___/\n  /|||||\\\n ( glou~ )`,
-`    ___\n   /   \\\n  | ° ° |\n  |~~~~~|\n   \\___/\n  /|||||\\\n (ANTIDO)`,
-];
-let poisonFrame = 0, poisonTmr = null;
-function startPoisonAnimation() {
-  poisonFrame = 0;
-  const el = document.getElementById('potion-ascii');
-  el.textContent = POTION_FRAMES[0];
-  poisonTmr = setInterval(() => { el.textContent = POTION_FRAMES[poisonFrame++ % POTION_FRAMES.length]; }, 700);
-}
-function stopPoisonAnimation() { clearInterval(poisonTmr); }
 
 // ── Timers ─────────────────────────────────────────────
 function globalTick() {
@@ -608,7 +595,7 @@ function resetApp() {
   clearInterval(countdownTimer); clearInterval(particleLoop);
   clearInterval(hintTimer); clearInterval(adTimer);
   clearTimeout(typewriterTmr); clearTimeout(adPostTmr);
-  stopAmbientMusic(); stopPoisonAnimation(); clearSession();
+  stopAmbientMusic(); stopChallengeAnim(); clearSession();
   document.getElementById('particles').innerHTML = '';
   document.getElementById('autodestruct-overlay').classList.remove('active');
   document.getElementById('autodestruct-bar-wrap').classList.remove('visible');
@@ -693,10 +680,9 @@ function onCfgSync() {
     document.getElementById('ch-title').textContent = ch.title;
     document.getElementById('ch-brief').textContent = ch.brief;
 
-    // poison
-    const pv = document.getElementById('poison-visual');
-    ch.poison ? (pv.classList.add('active'), startPoisonAnimation())
-              : (pv.classList.remove('active'), stopPoisonAnimation());
+    ch.animation && ch.animation !== 'none'
+      ? startChallengeAnim(ch.animation)
+      : stopChallengeAnim();
 
     // team banner
     const banner = document.getElementById('ch-team-banner');
@@ -724,7 +710,7 @@ function debugSim() {
   clearInterval(countdownTimer); clearInterval(particleLoop);
   clearInterval(hintTimer); clearInterval(adTimer);
   clearTimeout(typewriterTmr); clearTimeout(adPostTmr);
-  stopAmbientMusic(); stopPoisonAnimation(); clearSession();
+  stopAmbientMusic(); stopChallengeAnim(); clearSession();
   document.getElementById('autodestruct-overlay').classList.remove('active');
   document.getElementById('autodestruct-bar-wrap').classList.remove('visible');
   document.getElementById('particles').innerHTML = '';

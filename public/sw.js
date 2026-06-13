@@ -1,4 +1,4 @@
-const CACHE = 'agent-v7';
+const CACHE = 'agent-v8';
 const ASSETS = [
   '/',
   '/index.html',
@@ -8,6 +8,7 @@ const ASSETS = [
   '/js/config.js',
   '/js/audio.js',
   '/js/artefacts.js',
+  '/js/animations.js',
   '/js/session.js',
   '/js/app.js',
   '/js/main.js',
