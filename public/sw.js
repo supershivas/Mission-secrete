@@ -1,9 +1,16 @@
-const CACHE = 'agent-v1';
+const CACHE = 'agent-v3';
 const ASSETS = [
   '/',
   '/index.html',
   '/admin.html',
   '/manifest.json',
+  '/css/style.css',
+  '/js/config.js',
+  '/js/audio.js',
+  '/js/artefacts.js',
+  '/js/session.js',
+  '/js/app.js',
+  '/js/main.js',
   'https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap'
 ];
 
@@ -24,7 +31,23 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  e.respondWith(
-    caches.match(e.request).then(r => r || fetch(e.request))
-  );
+  const url = new URL(e.request.url);
+  // Network-first pour HTML et JS/CSS : toujours la dernière version
+  if (url.pathname.endsWith('.html') || url.pathname === '/' ||
+      url.pathname.endsWith('.js') || url.pathname.endsWith('.css')) {
+    e.respondWith(
+      fetch(e.request)
+        .then(r => {
+          const clone = r.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone));
+          return r;
+        })
+        .catch(() => caches.match(e.request))
+    );
+  } else {
+    // Cache-first pour les autres assets (images, fonts, icons)
+    e.respondWith(
+      caches.match(e.request).then(r => r || fetch(e.request))
+    );
+  }
 });
