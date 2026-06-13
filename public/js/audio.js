@@ -101,6 +101,44 @@ function playExplosion() {
   } catch(e) {}
 }
 
+function playDecodeSound() {
+  try {
+    const ctx = getAudioCtx();
+    for (let i = 0; i < 14; i++) {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'square'; o.frequency.value = 300 + Math.random() * 900;
+      const t = ctx.currentTime + i * 0.075;
+      g.gain.setValueAtTime(.07, t); g.gain.exponentialRampToValueAtTime(.001, t + .06);
+      o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + .08);
+    }
+  } catch(e) {}
+}
+
+function playAccessGranted() {
+  try {
+    const ctx = getAudioCtx();
+    [{f:523,t:0,d:.1},{f:659,t:.09,d:.1},{f:784,t:.18,d:.1},{f:1047,t:.27,d:.55}].forEach(({f,t,d}) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'triangle'; o.frequency.value = f;
+      const s = ctx.currentTime + t;
+      g.gain.setValueAtTime(0, s); g.gain.linearRampToValueAtTime(.32, s + .02); g.gain.exponentialRampToValueAtTime(.001, s + d);
+      o.connect(g); g.connect(ctx.destination); o.start(s); o.stop(s + d + .05);
+    });
+  } catch(e) {}
+}
+
+function playStampSound() {
+  try {
+    const ctx = getAudioCtx(), dur = .18;
+    const buf = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 1.5) * .9;
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 280;
+    const g = ctx.createGain(); g.gain.value = .85;
+    src.connect(f); f.connect(g); g.connect(ctx.destination); src.start();
+  } catch(e) {}
+}
+
 function playFanfare() {
   try {
     const ctx = getAudioCtx();

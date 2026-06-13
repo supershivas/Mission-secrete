@@ -1,7 +1,7 @@
 /* ══ RESET & BASE ══════════════════════════════════════ */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{width:100%;height:100%;background:#000;overflow:hidden}
-body{font-family:'Share Tech Mono','Courier New',monospace;color:#00ff41;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:16px}
+body{font-family:'Share Tech Mono','Courier New',monospace;color:#00ff41;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:17px}
 
 /* ══ CRT ═══════════════════════════════════════════════ */
 #crt{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:repeating-linear-gradient(transparent,transparent 2px,rgba(0,255,65,.015) 2px,rgba(0,255,65,.015) 4px)}
@@ -17,10 +17,10 @@ body{font-family:'Share Tech Mono','Courier New',monospace;color:#00ff41;display
 .phase.active{display:flex}
 
 /* ══ TYPOGRAPHIE ═══════════════════════════════════════ */
-.label{font-size:13px;letter-spacing:.22em;color:#006818;text-transform:uppercase;border-bottom:1px solid #002a08;padding-bottom:.4rem;width:100%}
-.title{font-size:clamp(20px,4vw,28px);letter-spacing:.2em;text-transform:uppercase;text-align:center}
-.sub{font-size:13px;letter-spacing:.18em;color:#006818;text-transform:uppercase;text-align:center}
-.body-txt{font-size:clamp(15px,2.2vw,18px);line-height:2;color:#00cc35;width:100%;white-space:pre-wrap}
+.label{font-size:14px;letter-spacing:.22em;color:#006818;text-transform:uppercase;border-bottom:1px solid #002a08;padding-bottom:.4rem;width:100%}
+.title{font-size:clamp(22px,4vw,30px);letter-spacing:.2em;text-transform:uppercase;text-align:center}
+.sub{font-size:14px;letter-spacing:.18em;color:#006818;text-transform:uppercase;text-align:center}
+.body-txt{font-size:clamp(17px,2.5vw,21px);line-height:1.95;color:#00cc35;width:100%;white-space:pre-wrap;background:#010d03;border:1px solid #003a0d;padding:.9rem 1.1rem;box-shadow:inset 0 0 24px rgba(0,255,65,.04)}
 
 /* ══ BUTTONS ═══════════════════════════════════════════ */
 .btn{background:transparent;border:1px solid #00ff41;color:#00ff41;font-family:inherit;font-size:13px;letter-spacing:.2em;padding:.8rem 2rem;cursor:pointer;text-transform:uppercase;transition:background .15s}
@@ -57,7 +57,7 @@ body{font-family:'Share Tech Mono','Courier New',monospace;color:#00ff41;display
 /* ══ MESSAGE ═══════════════════════════════════════════ */
 #skip-btn{position:absolute;top:6px;right:8px;background:transparent;border:none;color:#002a08;font-family:inherit;font-size:11px;letter-spacing:.15em;cursor:pointer;text-transform:uppercase;padding:.3rem .5rem;z-index:10;opacity:.35;transition:opacity .2s}
 #skip-btn:hover{opacity:.8;color:#006818}
-#typewriter-text{font-size:clamp(15px,2.2vw,18px);line-height:2;color:#00cc35;width:100%;white-space:pre-wrap}
+#typewriter-text{font-size:clamp(17px,2.5vw,21px);line-height:1.95;color:#00cc35;width:100%;white-space:pre-wrap}
 #autodestruct-bar-wrap{width:100%;display:none;flex-direction:column;gap:.5rem}
 #autodestruct-bar-wrap.visible{display:flex}
 #autodestruct-label{font-size:13px;letter-spacing:.22em;color:#ff0024;text-transform:uppercase;animation:blink2 .8s step-end infinite}
@@ -78,7 +78,7 @@ body{font-family:'Share Tech Mono','Courier New',monospace;color:#00ff41;display
 #progress-bar,#progress-bar-rev,#progress-bar-cd{height:100%;background:#00ff41;width:100%;transition:width 1s linear,background .3s}
 .bar-warn{background:#ff6b00!important}
 .bar-danger{background:#ff0024!important}
-#timer-sm,#timer-sm-rev{font-size:16px;letter-spacing:.1em;color:#006818;min-width:62px;text-align:right;font-variant-numeric:tabular-nums}
+#timer-sm,#timer-sm-rev{font-size:20px;letter-spacing:.1em;color:#006818;min-width:72px;text-align:right;font-variant-numeric:tabular-nums}
 .t-warn{color:#ff6b00!important}
 .t-danger{color:#ff0024!important;animation:shake .25s linear infinite}
 .mini-timer-bar{width:100%;display:flex;align-items:center;gap:.6rem;padding:.3rem 0}
@@ -91,7 +91,7 @@ body{font-family:'Share Tech Mono','Courier New',monospace;color:#00ff41;display
 .step-dot{width:10px;height:10px;border-radius:50%;border:1px solid #003a0d;background:transparent}
 .step-dot.done{background:#00ff41;border-color:#00ff41;box-shadow:0 0 6px rgba(0,255,65,.5)}
 .step-dot.active{border-color:#00ff41}
-.code-wrap{width:100%;display:flex;flex-direction:column;gap:.6rem}
+.code-wrap{width:100%;display:flex;flex-direction:column;gap:.6rem;background:#010d03;border:1px solid #003a0d;padding:.9rem 1rem;box-shadow:inset 0 0 24px rgba(0,255,65,.04)}
 .code-label{font-size:12px;letter-spacing:.22em;color:#006818;text-transform:uppercase}
 .code-field-row{display:flex;gap:.5rem;width:100%}
 #code-input{flex:1;background:#010d03;border:1px solid #003a0d;color:#00ff41;font-family:inherit;font-size:20px;letter-spacing:.2em;padding:.65rem .9rem;outline:none;text-transform:uppercase}
@@ -114,20 +114,20 @@ body{font-family:'Share Tech Mono','Courier New',monospace;color:#00ff41;display
 
 /* ══ REVEAL ════════════════════════════════════════════ */
 #partial-code{display:flex;gap:1rem;margin-top:.5rem;flex-wrap:wrap;justify-content:center}
-.code-slot{font-size:clamp(32px,8vw,52px);letter-spacing:.05em;min-width:42px;text-align:center;border-bottom:2px solid #003a0d;color:#003a0d}
+.code-slot{font-size:clamp(38px,9.5vw,62px);letter-spacing:.05em;min-width:46px;text-align:center;border-bottom:2px solid #003a0d;color:#003a0d}
 .code-slot.revealed{color:#00ff41;border-color:#00ff41;text-shadow:0 0 12px rgba(0,255,65,.5);animation:pop .4s ease-out}
 #reveal-next-btn{margin-top:1rem;animation:fadein .5s ease .8s both}
 
 /* ══ COUNTDOWN FINAL ════════════════════════════════════ */
-#big-timer{font-size:clamp(68px,18vw,120px);letter-spacing:.06em;color:#00ff41;text-shadow:0 0 24px rgba(0,255,65,.35);font-variant-numeric:tabular-nums;line-height:1}
+#big-timer{font-size:clamp(90px,25vw,175px);letter-spacing:.06em;color:#00ff41;text-shadow:0 0 30px rgba(0,255,65,.4);font-variant-numeric:tabular-nums;line-height:1}
 #big-timer.warn{color:#ff6b00;text-shadow:0 0 20px rgba(255,107,0,.4)}
 #big-timer.danger{color:#ff0024;text-shadow:0 0 24px rgba(255,0,36,.5);animation:shake .25s linear infinite}
 .pin-dots{display:flex;gap:20px}
 .pin-dot{width:22px;height:22px;border:1px solid #00ff41;border-radius:50%;background:transparent;transition:background .1s}
 .pin-dot.filled{background:#00ff41;box-shadow:0 0 8px rgba(0,255,65,.5)}
 .pin-dot.error{border-color:#ff0024;background:#ff0024}
-.numpad{display:grid;grid-template-columns:repeat(3,80px);gap:10px}
-.num-btn{background:transparent;border:1px solid #003a0d;color:#00ff41;font-family:inherit;font-size:24px;height:68px;cursor:pointer;transition:background .1s,border-color .1s;border-radius:2px;user-select:none}
+.numpad{display:grid;grid-template-columns:repeat(3,90px);gap:12px}
+.num-btn{background:transparent;border:1px solid #003a0d;color:#00ff41;font-family:inherit;font-size:28px;height:78px;cursor:pointer;transition:background .1s,border-color .1s;border-radius:2px;user-select:none}
 .num-btn:hover,.num-btn:active{background:rgba(0,255,65,.1);border-color:#00ff41}
 .num-btn.del{font-size:18px;color:#006818}
 .num-btn.ghost{border-color:transparent;pointer-events:none}
@@ -171,14 +171,14 @@ body{font-family:'Share Tech Mono','Courier New',monospace;color:#00ff41;display
 #recruit-input:focus{border-color:#00ff41;box-shadow:0 0 0 1px rgba(0,255,65,.2)}
 #recruit-proposals{display:flex;flex-wrap:wrap;gap:.6rem;justify-content:center;min-height:2rem}
 .proposals-label{width:100%;font-size:12px;letter-spacing:.2em;color:#006818;text-transform:uppercase;text-align:center;margin-bottom:.3rem}
-.proposal-btn{background:#010d03;border:1px solid #006818;color:#00ff41;font-family:inherit;font-size:14px;letter-spacing:.18em;padding:.65rem 1.3rem;cursor:pointer;text-transform:uppercase;transition:background .15s,border-color .15s;animation:fadein .3s ease}
+.proposal-btn{background:#010d03;border:1px solid #006818;color:#00ff41;font-family:inherit;font-size:16px;letter-spacing:.18em;padding:.7rem 1.4rem;cursor:pointer;text-transform:uppercase;transition:background .15s,border-color .15s;animation:fadein .3s ease}
 .proposal-btn:hover,.proposal-btn:active{background:rgba(0,255,65,.1);border-color:#00ff41}
 #recruit-list-wrap{width:100%;display:none}
 #recruit-list{display:flex;flex-direction:column;gap:.45rem;width:100%;margin-top:.3rem}
 .recruit-badge{display:flex;align-items:center;gap:.6rem;background:#010d03;border:1px solid #003a0d;padding:.5rem .9rem;animation:fadein .3s ease}
-.recruit-real{font-size:13px;letter-spacing:.12em;color:#006818;text-transform:uppercase}
-.recruit-arrow{color:#003a0d;font-size:13px}
-.recruit-agent{font-size:14px;letter-spacing:.18em;color:#00ff41;text-transform:uppercase;flex:1}
+.recruit-real{font-size:14px;letter-spacing:.12em;color:#006818;text-transform:uppercase}
+.recruit-arrow{color:#003a0d;font-size:14px}
+.recruit-agent{font-size:16px;letter-spacing:.18em;color:#00ff41;text-transform:uppercase;flex:1}
 .recruit-del{background:transparent;border:none;color:#003a0d;font-family:inherit;font-size:14px;cursor:pointer;padding:.1rem .3rem;margin-left:auto;transition:color .15s}
 .recruit-del:hover{color:#ff0024}
 #recruit-hint{font-size:12px;letter-spacing:.15em;color:#004d12;text-transform:uppercase;text-align:center}
@@ -210,3 +210,32 @@ body{font-family:'Share Tech Mono','Courier New',monospace;color:#00ff41;display
 @keyframes phase-flash{0%{opacity:.7}100%{opacity:0}}
 #phase-transition{position:fixed;inset:0;background:#00ff41;pointer-events:none;z-index:999;opacity:0}
 #phase-transition.flash{animation:phase-flash .35s ease-out forwards}
+
+/* ══ ACCÈS ACCORDÉ OVERLAY ═══════════════════════════════ */
+@keyframes access-granted-anim{0%{opacity:0;transform:scale(.82)}10%{opacity:1;transform:scale(1.04)}80%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1)}}
+#access-granted-overlay{position:fixed;inset:0;z-index:500;display:none;flex-direction:column;align-items:center;justify-content:center;gap:1rem;background:rgba(0,18,4,.94);color:#00ff41;font-size:clamp(26px,6.5vw,52px);letter-spacing:.25em;text-transform:uppercase;text-shadow:0 0 40px rgba(0,255,65,.9),0 0 90px rgba(0,255,65,.4);pointer-events:none}
+#access-granted-overlay .ag-sub{font-size:clamp(12px,2vw,16px);color:#006818;letter-spacing:.3em}
+#access-granted-overlay.show{display:flex;animation:access-granted-anim .95s ease-out forwards}
+
+/* ══ CHIFFRE RÉVÉLÉ BOX ══════════════════════════════════ */
+#reveal-digit-big{background:#010d03;border:1px solid rgba(0,255,65,.35);padding:.4rem 2rem;box-shadow:0 0 50px rgba(0,255,65,.18),inset 0 0 30px rgba(0,255,65,.06)}
+
+/* ══ CONFETTIS ASCII ══════════════════════════════════════ */
+@keyframes fall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(540deg);opacity:0}}
+.particle-ascii{position:fixed;top:0;font-family:'Share Tech Mono',monospace;pointer-events:none;z-index:10;animation:fall linear both}
+
+/* ══ STAMP RECRUTEMENT ═══════════════════════════════════ */
+@keyframes stamp{0%{transform:scale(2.8) rotate(-10deg);opacity:0}55%{transform:scale(.93) rotate(2deg);opacity:1}100%{transform:scale(1) rotate(0deg)}}
+.recruit-badge.stamp-in{animation:stamp .5s cubic-bezier(.17,.67,.25,1.4) both}
+
+/* ══ SCAN NOMS ═══════════════════════════════════════════ */
+.scan-names{font-size:16px;letter-spacing:.15em;color:#00cc35;text-align:center;padding:.65rem 1rem;border:1px solid #002a08;width:100%;animation:blink2 .12s step-end infinite}
+
+/* ══ TIME DANGER PULSE ═══════════════════════════════════ */
+@keyframes pulse-red{0%,100%{box-shadow:inset 0 0 0 transparent}50%{box-shadow:inset 0 0 90px rgba(255,0,36,.22)}}
+body.time-danger{animation:pulse-red 1.3s ease-in-out infinite}
+
+/* ══ HINT PROGRESS BAR ═══════════════════════════════════ */
+.hint-bar-label{font-size:11px;letter-spacing:.18em;color:#4d3000;text-transform:uppercase;margin-bottom:.3rem}
+.hint-bar-track{width:100%;height:4px;background:#1a0a00;border:1px solid #2a1500;margin-top:.25rem}
+.hint-bar-fill{height:100%;background:#ff9900;width:0;transition:width 1s linear;box-shadow:0 0 5px rgba(255,153,0,.5)}

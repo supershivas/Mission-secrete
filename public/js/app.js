@@ -13,6 +13,7 @@ let totalSeconds     = cfg.duration;
 let missionStart     = 0;
 let pinInput         = "";
 let particleLoop     = null;
+let scanTmr          = null;
 let typewriterIdx    = 0;
 let typewriterTmr    = null;
 let hintTimer        = null;
@@ -87,17 +88,30 @@ function showProposals() {
   currentRealName = name;
   currentProposals = proposalsForLetter(name[0]);
   const container = document.getElementById('recruit-proposals');
-  container.innerHTML = `<div class="proposals-label">Choisir un nom de code pour <strong>${esc(name)}</strong> :</div>` +
-    currentProposals.map(p =>
-      `<button class="proposal-btn" onclick="pickProposal('${p}')">${p}</button>`
-    ).join('');
-  document.getElementById('recruit-hint').textContent = 'Choisissez un nom de code.';
-  playTypeSound();
+  document.getElementById('recruit-hint').textContent = 'Scan identité en cours…';
+  if (scanTmr) { clearInterval(scanTmr); scanTmr = null; }
+  container.innerHTML = `<div class="proposals-label">Analyse : <strong>${esc(name)}</strong></div><div class="scan-names" id="scan-names">—</div>`;
+  let sc = 0; const max = 22;
+  scanTmr = setInterval(() => {
+    const adj = ADJ_ALL[Math.floor(Math.random()*ADJ_ALL.length)];
+    const nom = NOM_ALL[Math.floor(Math.random()*NOM_ALL.length)];
+    const el = document.getElementById('scan-names'); if (el) el.textContent = `AGENT ${adj} ${nom}`;
+    playTypeSound(); sc++;
+    if (sc >= max) {
+      clearInterval(scanTmr); scanTmr = null;
+      container.innerHTML = `<div class="proposals-label">Choisir un nom de code pour <strong>${esc(name)}</strong> :</div>` +
+        currentProposals.map(p => `<button class="proposal-btn" onclick="pickProposal('${p}')">${p}</button>`).join('');
+      document.getElementById('recruit-hint').textContent = 'Choisissez un nom de code.';
+    }
+  }, 72);
 }
 
 function pickProposal(agentName) {
   agents.push({ realName: currentRealName, agentName, team: null });
+  playStampSound();
   renderRecruitList();
+  const badges = document.querySelectorAll('.recruit-badge');
+  if (badges.length) badges[badges.length-1].classList.add('stamp-in');
   resetRecruitForm();
   playRevealSound();
 }
@@ -384,15 +398,20 @@ function showChallenge(idx) {
   hbtn.style.display = 'none';
   if (ch.hint) {
     hz.classList.add('visible');
+    const WAIT = 180;
+    document.getElementById('hint-timer').innerHTML =
+      `<div class="hint-bar-label">indice disponible dans 3:00</div><div class="hint-bar-track"><div class="hint-bar-fill" id="hint-bar-fill"></div></div>`;
     hintTimer = setInterval(() => {
       hintSeconds++;
-      const wait = 180 - hintSeconds;
+      const wait = WAIT - hintSeconds;
+      const fill = document.getElementById('hint-bar-fill');
+      if (fill) fill.style.width = (hintSeconds/WAIT*100)+'%';
       if (wait > 0) {
-        document.getElementById('hint-timer').textContent =
-          `Indice disponible dans ${Math.floor(wait/60)}:${String(wait%60).padStart(2,'0')}`;
+        const lbl = document.querySelector('.hint-bar-label');
+        if (lbl) lbl.textContent = `indice disponible dans ${Math.floor(wait/60)}:${String(wait%60).padStart(2,'0')}`;
       } else {
         clearInterval(hintTimer);
-        document.getElementById('hint-timer').textContent = 'Indice disponible';
+        document.getElementById('hint-timer').innerHTML = `<div class="hint-bar-label" style="color:#ff9900;animation:blink2 .8s step-end infinite">⚡ Indice disponible !</div>`;
         hbtn.style.display = 'inline-block';
       }
     }, 1000);
@@ -423,25 +442,42 @@ function submitCode() {
     revealedDigits.push(ch.digit);
     clearInterval(hintTimer);
     stopChallengeAnim();
-    playRevealSound();
-    showReveal(currentChallenge);
+    if (navigator.vibrate) navigator.vibrate([50, 30, 50, 30, 120]);
+    flashAccessGranted(() => { playRevealSound(); showReveal(currentChallenge); });
   } else {
     document.getElementById('code-error').textContent = '✗ Code incorrect — réessayez';
     document.getElementById('code-input').value = '';
     playErrorSound();
+    if (navigator.vibrate) navigator.vibrate(400);
     setTimeout(() => { document.getElementById('code-error').textContent = ''; }, 2000);
   }
+}
+
+function flashAccessGranted(onDone) {
+  let el = document.getElementById('access-granted-overlay');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'access-granted-overlay';
+    el.innerHTML = '✓ ACCÈS ACCORDÉ<div class="ag-sub">code validé</div>';
+    document.body.appendChild(el);
+  }
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+  playAccessGranted();
+  setTimeout(() => { el.classList.remove('show'); if (onDone) onDone(); }, 950);
 }
 
 // ── Reveal ─────────────────────────────────────────────
 function showReveal(idx) {
   const isLast = idx === cfg.challenges.length - 1;
   const n = cfg.challenges.length;
-  document.getElementById('reveal-digit-big').textContent = revealedDigits[idx];
+  const digitEl = document.getElementById('reveal-digit-big');
+  digitEl.textContent = '?';
   document.getElementById('partial-code').innerHTML =
     Array.from({length: n}, (_, i) => {
-      const rev = i <= idx;
-      return `<div class="code-slot${rev?' revealed':''}">${rev ? revealedDigits[i] : '?'}</div>`;
+      const prevRev = i < idx;
+      return `<div class="code-slot${(prevRev||i===idx)?' revealed':''}" id="rslot-${i}">${prevRev ? revealedDigits[i] : '?'}</div>`;
     }).join('');
   document.getElementById('reveal-label').textContent =
     isLast ? '⬛ Code de désarmement — complet !' : `⬛ Chiffre ${idx+1} récupéré !`;
@@ -451,6 +487,22 @@ function showReveal(idx) {
   btn.textContent = isLast ? '▶ Désamorcer maintenant' : '▶ Épreuve suivante';
   syncRevealTimer();
   showPhase('phase-reveal');
+  matrixReveal(digitEl, revealedDigits[idx], () => {
+    const slot = document.getElementById('rslot-'+idx);
+    if (slot) slot.textContent = revealedDigits[idx];
+    playRevealSound();
+  });
+}
+
+function matrixReveal(el, finalChar, onDone) {
+  const chars = '0123456789';
+  let count = 0; const max = 20;
+  playDecodeSound();
+  const tmr = setInterval(() => {
+    el.textContent = chars[Math.floor(Math.random() * chars.length)];
+    count++;
+    if (count >= max) { clearInterval(tmr); el.textContent = finalChar; if (onDone) onDone(); }
+  }, 65);
 }
 
 function advanceFromReveal() {
@@ -485,9 +537,17 @@ function startFinalCountdown() {
 function finalTick() {
   secondsLeft = Math.max(0, secondsLeft - 1);
   updateBigTimer();
+  updateCountdownBg();
+  if (secondsLeft <= 60) document.body.classList.add('time-danger');
   if (secondsLeft <= 30 && secondsLeft > 0) playTick(secondsLeft <= 10);
   if (secondsLeft === 0) { clearInterval(countdownTimer); stopAmbientMusic(); triggerExplosion(); }
   if (secondsLeft % 10 === 0) saveSession();
+}
+
+function updateCountdownBg() {
+  const ratio = secondsLeft / totalSeconds;
+  const intensity = Math.max(0, Math.min(1, (0.4 - ratio) / 0.4));
+  document.body.style.background = intensity > 0.02 ? `rgb(${Math.round(intensity*22)},0,0)` : '';
 }
 function updateBigTimer() {
   const el = document.getElementById('big-timer'), pb = document.getElementById('progress-bar-cd');
@@ -498,7 +558,9 @@ function updateBigTimer() {
 // ── PIN ────────────────────────────────────────────────
 function pressPin(n) {
   if (pinInput.length >= 4) return;
-  pinInput += n; updatePinDots();
+  pinInput += n;
+  if (navigator.vibrate) navigator.vibrate(28);
+  updatePinDots();
   if (pinInput.length === 4) setTimeout(checkPin, 150);
 }
 function delPin() {
@@ -512,9 +574,11 @@ function updatePinDots() {
 function checkPin() {
   const correct = revealedDigits.join('');
   if (pinInput === correct) {
+    if (navigator.vibrate) navigator.vibrate([80, 40, 80, 40, 200]);
     clearInterval(countdownTimer); stopAmbientMusic();
     clearSession(); showScore(); playFanfare();
   } else {
+    if (navigator.vibrate) navigator.vibrate(600);
     document.getElementById('pin-error').textContent = '✗ Code incorrect — accès refusé';
     for (let i = 0; i < 4; i++) document.getElementById('d'+i).className = 'pin-dot error';
     playErrorSound();
@@ -568,6 +632,19 @@ function showScore() {
   }
 
   showPhase('phase-success');
+  spawnSuccessConfetti();
+}
+
+function spawnSuccessConfetti() {
+  const chars = ['★','✦','▲','•','◆','*','✓'];
+  const c = document.getElementById('particles');
+  for (let i = 0; i < 70; i++) {
+    const p = document.createElement('div'); p.className = 'particle-ascii';
+    p.textContent = chars[Math.floor(Math.random()*chars.length)];
+    const x = 2 + Math.random()*96, fall = 1.6 + Math.random()*2.4, delay = Math.random()*2.2, sz = 12+Math.random()*22;
+    p.style.cssText = `left:${x}vw;font-size:${sz}px;color:#00ff41;opacity:${(.35+Math.random()*.65).toFixed(2)};animation-duration:${fall.toFixed(2)}s;animation-delay:${delay.toFixed(2)}s`;
+    c.appendChild(p); setTimeout(() => p.remove(), (fall+delay)*1000+300);
+  }
 }
 
 // ── Explosion ──────────────────────────────────────────
@@ -594,10 +671,12 @@ function spawnBurst() {
 function resetApp() {
   clearInterval(countdownTimer); clearInterval(particleLoop);
   clearInterval(hintTimer); clearInterval(adTimer);
+  if (scanTmr) { clearInterval(scanTmr); scanTmr = null; }
   clearTimeout(typewriterTmr); clearTimeout(adPostTmr);
   stopAmbientMusic(); stopChallengeAnim(); clearSession();
   document.getElementById('particles').innerHTML = '';
   document.getElementById('autodestruct-overlay').classList.remove('active');
+  document.body.classList.remove('time-danger'); document.body.style.background = '';
   document.getElementById('autodestruct-bar-wrap').classList.remove('visible');
   agents=[]; currentRealName=''; currentProposals=[]; draggedAgent=null;
   revealedDigits=[]; currentChallenge=0; pinInput='';
@@ -709,6 +788,7 @@ function debugSim() {
   ];
   clearInterval(countdownTimer); clearInterval(particleLoop);
   clearInterval(hintTimer); clearInterval(adTimer);
+  if (scanTmr) { clearInterval(scanTmr); scanTmr = null; }
   clearTimeout(typewriterTmr); clearTimeout(adPostTmr);
   stopAmbientMusic(); stopChallengeAnim(); clearSession();
   document.getElementById('autodestruct-overlay').classList.remove('active');
