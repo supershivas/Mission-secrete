@@ -195,6 +195,25 @@
     .section-label::after { content: ''; flex: 1; height: 1px; background: var(--border) }
 
     @media(max-width:600px) { .row{flex-direction:column} }
+
+    /* ── STICKY SAVE ── */
+    #sticky-save {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
+      transform: translateY(100%); transition: transform .25s ease;
+      background: var(--surface); border-top: 1px solid var(--border);
+      box-shadow: 0 -4px 20px rgba(0,0,0,.1);
+    }
+    #sticky-save.visible { transform: translateY(0) }
+    #sticky-save-inner {
+      max-width: 860px; margin: 0 auto;
+      padding: .75rem 1.5rem; display: flex; align-items: center; gap: 1rem;
+    }
+    #sticky-save-hint { font-size: 12px; color: var(--muted); flex: 1 }
+    #save-fb {
+      font-size: 12px; color: var(--accent); font-weight: 500;
+      opacity: 0; transition: opacity .3s;
+    }
+    #save-fb.show { opacity: 1 }
   </style>
 </head>
 <body>
@@ -275,15 +294,22 @@
       <div class="ch-panels" id="ch-panels"></div>
     </div>
 
-    <!-- SAVE -->
-    <div class="action-bar">
-      <button class="btn btn-primary" onclick="saveConfig()">💾 Enregistrer la mission</button>
+    <!-- reset -->
+    <div style="display:flex;justify-content:flex-end">
       <button class="btn btn-ghost" onclick="resetDefault()">↺ Valeurs par défaut</button>
-      <div id="save-fb">✓ Configuration enregistrée</div>
     </div>
 
   </div><!-- /main-wrap -->
 </div><!-- /main-screen -->
+
+<!-- STICKY SAVE BAR -->
+<div id="sticky-save">
+  <div id="sticky-save-inner">
+    <span id="sticky-save-hint">Modifications non enregistrées</span>
+    <button class="btn btn-primary" onclick="saveConfig()">💾 Enregistrer</button>
+    <div id="save-fb">✓ Enregistré + synchronisé</div>
+  </div>
+</div>
 
 <script>
 const ADMIN_PASS = "admin007";
@@ -357,12 +383,27 @@ Mélangez, goûtez, et entrez le code de validation.`,
 let cfg = JSON.parse(JSON.stringify(DEFAULT_CFG));
 let activeTab = 0;
 
+// ── DIRTY STATE ───────────────────────────────
+let _dirty = false;
+function markDirty() {
+  if (_dirty) return;
+  _dirty = true;
+  document.getElementById('sticky-save').classList.add('visible');
+}
+function markClean() {
+  _dirty = false;
+  document.getElementById('sticky-save').classList.remove('visible');
+}
+
 // ── AUTH ──────────────────────────────────────
 function checkAdmin() {
   if (document.getElementById('admin-pass').value === ADMIN_PASS) {
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('main-screen').classList.add('active');
     loadConfig();
+    // écoute tous les changements dans le formulaire
+    document.getElementById('main-screen').addEventListener('input', markDirty);
+    document.getElementById('main-screen').addEventListener('change', markDirty);
   } else {
     const e = document.getElementById('auth-err');
     e.textContent = '✗ Mot de passe incorrect';
@@ -508,12 +549,14 @@ function saveConfig() {
   cfg.duration=mins*60;
   cfg.message=document.getElementById('f-msg').value;
   localStorage.setItem('agent_config',JSON.stringify(cfg));
+  markClean();
   const fb=document.getElementById('save-fb');
   fb.classList.add('show');
   updatePinPreview();
   pushConfigRemote(cfg).then(ok => {
-    fb.textContent = ok ? '✓ Enregistré + synchronisé' : '✓ Configuration enregistrée';
-    setTimeout(()=>{ fb.classList.remove('show'); fb.textContent='✓ Configuration enregistrée'; }, 2500);
+    fb.textContent = ok ? '✓ Enregistré + synchronisé' : '✓ Enregistré (hors ligne)';
+    document.getElementById('sticky-save').classList.add('visible');
+    setTimeout(()=>{ fb.classList.remove('show'); document.getElementById('sticky-save').classList.remove('visible'); }, 2500);
   });
 }
 
