@@ -46,16 +46,51 @@
   </div>
 </div>
 
-<!-- ══ NOMS ══════════════════════════════════════════ -->
+<!-- ══ RECRUTEMENT ═════════════════════════════════════ -->
 <div id="phase-names" class="phase">
   <div class="label">⬛ Recrutement — attribution des noms de code</div>
-  <div id="names-grid"></div>
-  <div style="display:flex;gap:.8rem;flex-wrap:wrap;justify-content:center">
-    <button class="btn" onclick="generateName()">+ Générer un agent</button>
-    <button class="btn dim" onclick="removeLast()" id="remove-btn" style="display:none">− Supprimer le dernier</button>
+
+  <div id="recruit-form">
+    <div class="recruit-input-row">
+      <input id="recruit-input" type="text" autocomplete="off" autocorrect="off" spellcheck="false"
+             placeholder="Prénom de l'agent..." maxlength="20"
+             onkeydown="if(event.key==='Enter') showProposals()">
+      <button class="btn" onclick="showProposals()">Chercher</button>
+    </div>
+    <div id="recruit-proposals"></div>
   </div>
-  <div class="sub" id="names-hint">Générez un nom par enfant, puis lancez la mission.</div>
-  <button class="btn" id="launch-btn" onclick="launchMission()" style="display:none;margin-top:.5rem">▶ Lancer la mission</button>
+
+  <div id="recruit-list-wrap" style="display:none;width:100%">
+    <div class="sub" style="margin-bottom:.5rem">Agents recrutés</div>
+    <div id="recruit-list"></div>
+  </div>
+
+  <div id="recruit-hint" class="sub">Entrez un prénom pour générer des noms de code.</div>
+
+  <div style="display:flex;gap:.8rem;flex-wrap:wrap;justify-content:center;margin-top:.3rem">
+    <button class="btn dim" id="add-agent-btn" onclick="resetRecruitForm()" style="display:none">+ Nouvel agent</button>
+    <button class="btn" id="form-teams-btn" onclick="showPhase('phase-teams')" style="display:none">▶ Former les équipes</button>
+  </div>
+</div>
+
+<!-- ══ ÉQUIPES ════════════════════════════════════════ -->
+<div id="phase-teams" class="phase">
+  <div class="label">⬛ Formation des équipes</div>
+  <div id="teams-grid">
+    <div class="team-col" id="team-ombre" data-team="ombre"
+         ondragover="onDragOver(event)" ondrop="onDrop(event,'ombre')"
+         ontouchend="onColTouchEnd(event,'ombre')">
+      <div class="team-header ombre-header">ÉQUIPE OMBRE</div>
+      <div class="team-cards" id="cards-ombre"></div>
+    </div>
+    <div class="team-col" id="team-cobra" data-team="cobra"
+         ondragover="onDragOver(event)" ondrop="onDrop(event,'cobra')"
+         ontouchend="onColTouchEnd(event,'cobra')">
+      <div class="team-header cobra-header">ÉQUIPE COBRA</div>
+      <div class="team-cards" id="cards-cobra"></div>
+    </div>
+  </div>
+  <button class="btn" onclick="launchMission()" style="margin-top:.5rem">▶ Lancer la mission</button>
 </div>
 
 <!-- ══ MESSAGE ═══════════════════════════════════════ -->
