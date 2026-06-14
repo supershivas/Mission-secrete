@@ -614,7 +614,7 @@ function showChallenge(idx) {
 
   // animation
   ch.animation && ch.animation !== 'none'
-    ? startChallengeAnim(ch.animation)
+    ? startChallengeAnim(ch.animation, ch.code)
     : stopChallengeAnim();
 
   updateMiniTimer();
