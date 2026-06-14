@@ -88,3 +88,23 @@ async function pushConfigRemote(cfgData) {
     return res.ok;
   } catch(e) { return false; }
 }
+
+// ── État mission (spectateur) ──────────────────────────
+async function pushStateRemote(state) {
+  try {
+    const res = await fetch('/api/state', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(state)
+    });
+    return res.ok;
+  } catch(e) { return false; }
+}
+
+async function pullStateRemote() {
+  try {
+    const res = await fetch('/api/state');
+    if (!res.ok) return null;
+    return await res.json();
+  } catch(e) { return null; }
+}
