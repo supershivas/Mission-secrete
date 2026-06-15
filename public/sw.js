@@ -1,8 +1,9 @@
-const CACHE = 'agent-v13';
+const CACHE = 'agent-v14';
 const ASSETS = [
   '/',
   '/index.html',
   '/admin.html',
+  '/tv.html',
   '/manifest.json',
   '/css/style.css',
   '/js/config.js',

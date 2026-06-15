@@ -43,6 +43,23 @@ function showPhase(id) {
   document.getElementById(id).classList.add('active');
   currentPhase = id;
   if (RESUMABLE_PHASES.includes(id)) saveSession();
+  _pushMissionState();
+}
+
+function _pushMissionState() {
+  if (!missionStart) return;
+  const state = {
+    phase: currentPhase,
+    challengeIdx: currentChallenge,
+    challengeTotal: cfg.challenges.length,
+    challengeTitle: cfg.challenges[currentChallenge]?.title || '',
+    missionName: cfg.missionName || 'MISSION',
+    missionStart,
+    duration: cfg.duration,
+    agents: agents.map(a => ({ realName: a.realName, agentName: a.agentName, team: a.team })),
+    revealedDigits
+  };
+  pushStateRemote(state);
 }
 
 // ── Names / Recrutement ────────────────────────────────

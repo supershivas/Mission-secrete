@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mission — Spectateur</title>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box }
+    :root { --green:#00ff41; --red:#ff0024; --dim:#003a10; --bg:#000; --mid:#011a07 }
+
+    html, body {
+      background: var(--bg); color: var(--green);
+      font-family: 'Share Tech Mono','Courier New',monospace;
+      height: 100vh; overflow: hidden; display: flex; flex-direction: column;
+    }
+
+    /* ── HEADER ── */
+    #tv-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .8rem 2.5rem; border-bottom: 1px solid var(--dim);
+      font-size: 13px; letter-spacing: .2em; color: #005520;
+    }
+    #tv-mission-name { font-size: 15px; color: var(--green); letter-spacing: .35em }
+
+    /* ── MAIN ── */
+    #tv-main {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 2.5rem;
+      padding: 1.5rem 2rem;
+    }
+
+    /* Timer */
+    #tv-timer {
+      font-size: clamp(120px, 20vw, 220px);
+      line-height: 1; letter-spacing: -.02em;
+      text-shadow: 0 0 40px rgba(0,255,65,.6), 0 0 80px rgba(0,255,65,.2);
+      transition: color .5s;
+    }
+    #tv-timer.urgent { color: var(--red); text-shadow: 0 0 40px rgba(255,0,36,.7), 0 0 80px rgba(255,0,36,.3); animation: pulse-tv 1s ease-in-out infinite }
+    @keyframes pulse-tv { 0%,100%{opacity:1} 50%{opacity:.7} }
+
+    /* Phase label */
+    #tv-phase {
+      font-size: clamp(18px, 3vw, 32px); letter-spacing: .25em;
+      color: #00cc35; text-align: center; min-height: 2em;
+      text-shadow: 0 0 12px rgba(0,255,65,.4);
+    }
+
+    /* Progress bar */
+    #tv-progress-wrap {
+      width: min(600px, 80vw); display: flex; flex-direction: column; gap: .5rem; align-items: center;
+    }
+    #tv-progress-label { font-size: 12px; letter-spacing: .2em; color: #005520 }
+    #tv-progress-track {
+      width: 100%; height: 6px; background: var(--dim); border-radius: 3px; overflow: hidden;
+    }
+    #tv-progress-fill {
+      height: 100%; background: var(--green); border-radius: 3px;
+      box-shadow: 0 0 8px var(--green); transition: width 1s linear;
+    }
+
+    /* Agents */
+    #tv-agents {
+      display: flex; gap: 2rem; flex-wrap: wrap; justify-content: center; max-width: 900px;
+    }
+    .tv-agent {
+      display: flex; flex-direction: column; align-items: center; gap: .3rem;
+      border: 1px solid var(--dim); border-radius: 8px; padding: .6rem 1.2rem;
+    }
+    .tv-agent-code { font-size: 20px; letter-spacing: .15em; color: var(--green) }
+    .tv-agent-real { font-size: 12px; color: #005520; letter-spacing: .1em }
+
+    /* Teams */
+    #tv-teams {
+      display: flex; gap: 3rem; justify-content: center; flex-wrap: wrap;
+    }
+    .tv-team { display: flex; flex-direction: column; gap: .6rem; align-items: center }
+    .tv-team-name { font-size: 18px; letter-spacing: .2em; color: #00cc35; border-bottom: 1px solid var(--dim); padding-bottom: .3rem; width: 100%; text-align: center }
+    .tv-team-member { font-size: 15px; letter-spacing: .12em }
+
+    /* Idle / fin */
+    #tv-idle { font-size: 18px; letter-spacing: .2em; color: #005520; text-align: center }
+    #tv-success { font-size: clamp(36px,8vw,80px); letter-spacing: .2em; text-align: center; color: var(--green); text-shadow: 0 0 30px var(--green); display: none }
+    #tv-exploded { font-size: clamp(30px,6vw,60px); letter-spacing: .2em; text-align: center; color: var(--red); text-shadow: 0 0 30px var(--red); display: none }
+
+    /* Clignotant scan */
+    @keyframes blink { 0%,100%{opacity:1}50%{opacity:.2} }
+    #tv-sync { animation: blink 2s ease-in-out infinite; font-size: 11px; color: #003a10; letter-spacing: .15em }
+
+    /* Scanlines */
+    body::after {
+      content:''; position:fixed; inset:0; pointer-events:none;
+      background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.08) 2px, rgba(0,0,0,.08) 4px);
+    }
+  </style>
+</head>
+<body>
+
+<div id="tv-header">
+  <span id="tv-mission-name">MISSION</span>
+  <span id="tv-date"></span>
+  <span id="tv-sync">● SYNC</span>
+</div>
+
+<div id="tv-main">
+  <div id="tv-idle">EN ATTENTE DE LA MISSION…</div>
+
+  <div id="tv-timer" style="display:none">--:--</div>
+  <div id="tv-phase" style="display:none"></div>
+
+  <div id="tv-progress-wrap" style="display:none">
+    <div id="tv-progress-label"></div>
+    <div id="tv-progress-track"><div id="tv-progress-fill" style="width:0%"></div></div>
+  </div>
+
+  <div id="tv-agents" style="display:none"></div>
+  <div id="tv-teams" style="display:none"></div>
+
+  <div id="tv-success">✓ MISSION ACCOMPLIE</div>
+  <div id="tv-exploded">✕ EXPLOSION</div>
+</div>
+
+<script>
+let _state = null;
+let _timerInterval = null;
+
+function fmt(s) {
+  s = Math.max(0, Math.floor(s));
+  return String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0');
+}
+
+function render(st) {
+  _state = st;
+  const phase = st.phase || 'idle';
+  const idle = document.getElementById('tv-idle');
+  const timer = document.getElementById('tv-timer');
+  const phaseEl = document.getElementById('tv-phase');
+  const agents = document.getElementById('tv-agents');
+  const teams = document.getElementById('tv-teams');
+  const progress = document.getElementById('tv-progress-wrap');
+  const success = document.getElementById('tv-success');
+  const exploded = document.getElementById('tv-exploded');
+
+  document.getElementById('tv-mission-name').textContent = st.missionName || 'MISSION';
+
+  // Réinitialiser
+  idle.style.display = 'none';
+  timer.style.display = 'none';
+  phaseEl.style.display = 'none';
+  agents.style.display = 'none';
+  teams.style.display = 'none';
+  progress.style.display = 'none';
+  success.style.display = 'none';
+  exploded.style.display = 'none';
+
+  if (phase === 'idle' || phase === 'phase-splash' || phase === 'phase-names') {
+    idle.style.display = 'block';
+    if (st.agents?.length) renderAgentsList(st.agents);
+    return;
+  }
+
+  if (phase === 'phase-success') {
+    success.style.display = 'block';
+    renderTeamsOrAgents(st);
+    return;
+  }
+
+  if (phase === 'phase-explosion' || phase === 'phase-dead') {
+    exploded.style.display = 'block';
+    return;
+  }
+
+  // Mission en cours
+  timer.style.display = 'block';
+  phaseEl.style.display = 'block';
+
+  // Timer live
+  if (_timerInterval) clearInterval(_timerInterval);
+  _timerInterval = setInterval(() => {
+    if (!_state?.missionStart) return;
+    const elapsed = (Date.now() - _state.missionStart) / 1000;
+    const left = Math.max(0, (_state.duration || 3600) - elapsed);
+    timer.textContent = fmt(left);
+    timer.classList.toggle('urgent', left < 300);
+  }, 500);
+  const elapsed = (Date.now() - st.missionStart) / 1000;
+  const left = Math.max(0, (st.duration || 3600) - elapsed);
+  timer.textContent = fmt(left);
+  timer.classList.toggle('urgent', left < 300);
+
+  if (phase === 'phase-message' || phase === 'phase-teams') {
+    phaseEl.textContent = 'BRIEFING EN COURS…';
+  } else if (phase === 'phase-challenge' || phase === 'phase-reveal') {
+    const idx = st.challengeIdx || 0;
+    const total = st.challengeTotal || 4;
+    phaseEl.textContent = st.challengeTitle || `ÉPREUVE ${idx + 1}`;
+    // Barre de progression
+    progress.style.display = 'flex';
+    document.getElementById('tv-progress-label').textContent = `ÉPREUVE ${idx + 1} / ${total}`;
+    const pct = (idx / total) * 100 + (phase === 'phase-reveal' ? (1/total)*100 : 0);
+    document.getElementById('tv-progress-fill').style.width = pct + '%';
+  } else if (phase === 'phase-countdown') {
+    phaseEl.textContent = 'DÉSAMORÇAGE EN COURS…';
+  }
+
+  renderTeamsOrAgents(st);
+}
+
+function renderAgentsList(agts) {
+  const el = document.getElementById('tv-agents');
+  el.innerHTML = agts.map(a => `
+    <div class="tv-agent">
+      <span class="tv-agent-code">${a.agentName}</span>
+      <span class="tv-agent-real">${a.realName}</span>
+    </div>`).join('');
+  el.style.display = 'flex';
+}
+
+function renderTeamsOrAgents(st) {
+  const agts = st.agents || [];
+  if (!agts.length) return;
+  const hasTeams = agts.some(a => a.team);
+  if (hasTeams) {
+    const teamMap = {};
+    agts.forEach(a => { if (!teamMap[a.team]) teamMap[a.team] = []; teamMap[a.team].push(a); });
+    const teamsEl = document.getElementById('tv-teams');
+    teamsEl.innerHTML = Object.entries(teamMap).map(([name, members]) => `
+      <div class="tv-team">
+        <div class="tv-team-name">${name}</div>
+        ${members.map(m => `<div class="tv-team-member">${m.agentName}</div>`).join('')}
+      </div>`).join('');
+    teamsEl.style.display = 'flex';
+  } else {
+    renderAgentsList(agts);
+  }
+}
+
+async function poll() {
+  try {
+    const res = await fetch('/api/state');
+    if (res.ok) {
+      const st = await res.json();
+      document.getElementById('tv-sync').style.opacity = '1';
+      if (JSON.stringify(st) !== JSON.stringify(_state)) render(st);
+    }
+  } catch(e) {
+    document.getElementById('tv-sync').style.opacity = '.2';
+  }
+  setTimeout(poll, 3000);
+}
+
+// Date
+function tick() {
+  const now = new Date();
+  document.getElementById('tv-date').textContent =
+    now.toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+tick(); setInterval(tick, 1000);
+
+poll();
+</script>
+</body>
+</html>
