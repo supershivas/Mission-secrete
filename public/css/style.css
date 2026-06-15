@@ -307,9 +307,9 @@ body{font-family:'Share Tech Mono','Courier New',monospace;color:#00ff41;display
 #explosion-flash.active{display:block;animation:expfl .4s ease-out forwards}
 
 /* ══ PHASE TRANSITION FLASH ══════════════════════════════ */
-@keyframes phase-flash{0%{opacity:.7}100%{opacity:0}}
-#phase-transition{position:fixed;inset:0;background:#00ff41;pointer-events:none;z-index:999;opacity:0}
-#phase-transition.flash{animation:phase-flash .35s ease-out forwards}
+@keyframes phase-flash{0%{opacity:0}12%{opacity:1}45%{opacity:1}100%{opacity:0}}
+#phase-transition{position:fixed;inset:0;background:#000;pointer-events:none;z-index:999;opacity:0}
+#phase-transition.flash{animation:phase-flash .42s ease-out forwards}
 
 /* ══ ACCÈS ACCORDÉ OVERLAY ═══════════════════════════════ */
 @keyframes access-granted-anim{0%{opacity:0;transform:scale(.82)}10%{opacity:1;transform:scale(1.04)}80%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1)}}

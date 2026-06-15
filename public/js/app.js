@@ -38,12 +38,13 @@ function timerCls(s) {
 // ── Phase management ───────────────────────────────────
 function showPhase(id) {
   if (id === 'phase-teams') { _activateTeamsPhase(); return; }
-  triggerPhaseFlash();
-  document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  currentPhase = id;
-  if (RESUMABLE_PHASES.includes(id)) saveSession();
-  _pushMissionState();
+  triggerPhaseFlash(() => {
+    document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    currentPhase = id;
+    if (RESUMABLE_PHASES.includes(id)) saveSession();
+    _pushMissionState();
+  });
 }
 
 function _pushMissionState() {

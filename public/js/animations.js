@@ -282,7 +282,7 @@ function stopChallengeAnim() {
 }
 
 // ── Transition de phase ─────────────────────────────────
-function triggerPhaseFlash() {
+function triggerPhaseFlash(onPeak) {
   let el = document.getElementById('phase-transition');
   if (!el) {
     el = document.createElement('div');
@@ -292,4 +292,5 @@ function triggerPhaseFlash() {
   el.classList.remove('flash');
   void el.offsetWidth;
   el.classList.add('flash');
+  if (onPeak) setTimeout(onPeak, 70);
 }
