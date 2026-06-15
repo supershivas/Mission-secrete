@@ -199,3 +199,37 @@ function playFanfare() {
     });
   } catch(e) {}
 }
+
+function playMorse(word) {
+  try {
+    const MORSE = {
+      A:'·─',B:'─···',C:'─·─·',D:'─··',E:'·',F:'··─·',G:'──·',H:'····',
+      I:'··',J:'·───',K:'─·─',L:'·─··',M:'──',N:'─·',O:'───',P:'·──·',
+      Q:'──·─',R:'·─·',S:'···',T:'─',U:'··─',V:'···─',W:'·──',X:'─··─',
+      Y:'─·──',Z:'──··',
+      '0':'─────','1':'·────','2':'··───','3':'···──','4':'····─',
+      '5':'·····','6':'─····','7':'──···','8':'───··','9':'────·'
+    };
+    const ctx = getAudioCtx();
+    const freq = 660, dot = .08, dash = dot * 3, gap = dot, letterGap = dot * 3, wordGap = dot * 7;
+    let t = ctx.currentTime + .1;
+    word.toUpperCase().split('').forEach(ch => {
+      if (ch === ' ') { t += wordGap; return; }
+      const code = MORSE[ch]; if (!code) return;
+      code.split('').forEach((sym, si) => {
+        if (si > 0) t += gap;
+        const dur = sym === '─' ? dash : dot;
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sine'; o.frequency.value = freq;
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(.4, t + .008);
+        g.gain.setValueAtTime(.4, t + dur - .008);
+        g.gain.linearRampToValueAtTime(0, t + dur);
+        o.connect(g); g.connect(ctx.destination);
+        o.start(t); o.stop(t + dur + .01);
+        t += dur;
+      });
+      t += letterGap;
+    });
+  } catch(e) {}
+}
