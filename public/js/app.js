@@ -669,7 +669,8 @@ function flashAccessGranted(onDone) {
   void el.offsetWidth;
   el.classList.add('show');
   playAccessGranted();
-  setTimeout(() => { el.classList.remove('show'); if (onDone) onDone(); }, 950);
+  // Déclenche avant que l'animation ne revienne à opacity:0 (80% = 760ms)
+  setTimeout(() => { el.classList.remove('show'); if (onDone) onDone(); }, 740);
 }
 
 // ── Reveal ─────────────────────────────────────────────
@@ -711,7 +712,12 @@ function matrixReveal(el, finalChar, onDone) {
 
 function advanceFromReveal() {
   const isLast = currentChallenge === cfg.challenges.length - 1;
-  isLast ? startFinalCountdown() : showChallengeWithIntro(++currentChallenge);
+  if (isLast) { startFinalCountdown(); return; }
+  // Couvrir l'écran avant de désactiver la phase reveal, pour éviter tout flash
+  triggerPhaseFlash(() => {
+    document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
+    showChallengeWithIntro(++currentChallenge);
+  });
 }
 
 // ── Timers ─────────────────────────────────────────────

@@ -345,7 +345,7 @@ body.time-danger{animation:pulse-red 1.3s ease-in-out infinite}
 .hint-bar-fill{height:100%;background:#ff9900;width:0;transition:width 1s linear;box-shadow:0 0 5px rgba(255,153,0,.5)}
 
 /* ══ INTRO ÉPREUVE ═══════════════════════════════════════ */
-@keyframes ci-in{0%{opacity:0}100%{opacity:1}}
+@keyframes ci-in{0%{opacity:0}15%{opacity:1}100%{opacity:1}}
 @keyframes ci-out{0%{opacity:1}100%{opacity:0}}
 @keyframes ci-glitch{
   0%,100%{transform:translate(0);color:#ff0024;text-shadow:0 0 24px rgba(255,0,36,.7)}
