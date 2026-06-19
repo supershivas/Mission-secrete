@@ -45,6 +45,9 @@ let hintTimer        = null;
 let hintSeconds      = 0;
 let adTimer          = null;
 let adPostTmr        = null;
+let _adFi            = null;
+let _adFl            = null;
+let _adEndTmr        = null;
 let adSeconds        = 30;
 let currentPhase     = 'phase-splash';
 
@@ -162,52 +165,146 @@ function onSplashTap() {
 
 // ── Écran connexion ────────────────────────────────────
 let _connectTimers = [];
+let _connectAnimInt = null;
 
-const CONNECT_LINES = [
-  { t:   0, txt: 'INITIALISATION DU SYSTÈME KGB...',     cls: '' },
-  { t: 500, txt: 'PROTOCOLE DE CHIFFREMENT RSA-4096',     cls: 'pending' },
-  { t: 900, txt: 'PROTOCOLE DE CHIFFREMENT RSA-4096  ✓', cls: 'ok' },
-  { t:1100, txt: 'AUTHENTIFICATION BIOMÉTRIQUE',          cls: 'pending' },
-  { t:1500, txt: 'AUTHENTIFICATION BIOMÉTRIQUE  ✓',       cls: 'ok' },
-  { t:1700, txt: 'LOCALISATION SÉCURISÉE',                cls: 'pending' },
-  { t:2000, txt: 'LOCALISATION SÉCURISÉE  ✓',            cls: 'ok' },
-  { t:2300, txt: 'NIVEAU D\'ACCÈS : ALPHA',               cls: 'ok' },
-  { t:2700, txt: '',                                       cls: '' },
-  { t:2900, txt: '▶  ENRÔLEMENT DES AGENTS REQUIS',       cls: '' },
-];
+const _CT_MATRIX_WORDS = ['DGSE','COBRA','AGENT','DELTA','SIGMA','OMEGA','ALPHA','GHOST','VIPER','CIPHER','DAKAR','DKR','BXL','ADDIS','MONTREUIL','ÉTHIOPIE','SÉNÉGAL','BELGIQUE','OMBRE','ZÉNITH'];
+const _CT_MATRIX_SRC   = 'АБВГДЕЖЗИКЛМНОПРСТабвгдеж0123456789@#$%!?><';
+
+function _ctRand(n) {
+  return Array.from({length:n}, () => _CT_MATRIX_SRC[Math.random()*_CT_MATRIX_SRC.length|0]).join('');
+}
 
 function startConnect() {
   const el = document.getElementById('connect-terminal');
   el.innerHTML = '';
   _connectTimers.forEach(clearTimeout);
   _connectTimers = [];
-  let lines = [];
+  if (_connectAnimInt) { clearInterval(_connectAnimInt); _connectAnimInt = null; }
 
-  CONNECT_LINES.forEach(({ t, txt, cls }) => {
-    _connectTimers.push(setTimeout(() => {
-      if (cls === 'ok' && lines.length) {
-        lines[lines.length - 1] = _connectLine(txt, cls);
-      } else {
-        lines.push(_connectLine(txt, cls));
-      }
-      el.innerHTML = lines.join('\n');
-      playTypeSound();
-    }, t));
+  let starPos   = 0;
+  const STAR_W  = 34;
+  let progressVal = 0;
+  let counterVal  = 0;
+
+  let showStar = true, showMatrix = false, showProgress = false, showCounter = false;
+  let matrixTxt = '', counterTxt = '', progressTxt = '';
+  const fixed = [];
+  let terminated = false;
+
+  function render() {
+    if (terminated) return;
+    const rows = [];
+    if (showStar) {
+      const trail = '·'.repeat(starPos) + '✦' + '·'.repeat(STAR_W - starPos);
+      rows.push(`<span class="ct-star">${trail}</span>`);
+    }
+    if (showMatrix) rows.push(`<span class="ct-matrix">${matrixTxt}</span>`);
+    rows.push(...fixed);
+    if (showProgress) rows.push(`<span class="ct-prog">${progressTxt}</span>`);
+    if (showCounter)  rows.push(`<span class="ct-cnt">${counterTxt}</span>`);
+    el.innerHTML = rows.join('\n');
+  }
+
+  _connectAnimInt = setInterval(() => {
+    if (terminated) return;
+    if (showStar) starPos = (starPos + 1) % (STAR_W + 1);
+    if (showMatrix) {
+      const w = _CT_MATRIX_WORDS[Math.random()*_CT_MATRIX_WORDS.length|0];
+      matrixTxt = `${_ctRand(5)} ${w} ${_ctRand(4)} ${_ctRand(6)}`;
+    }
+    if (showProgress && progressVal < 100) {
+      progressVal = Math.min(100, progressVal + 5);
+      const f = Math.round(progressVal / 100 * 22);
+      progressTxt = `CHARGEMENT [${'█'.repeat(f)}${'░'.repeat(22-f)}] ${progressVal}%`;
+    }
+    if (showCounter && counterVal < 1247) {
+      counterVal = Math.min(1247, counterVal + (Math.random()*55+20|0));
+      counterTxt = `FICHIERS DÉCHIFFRÉS : ${String(counterVal).padStart(4,' ')} / 1247`;
+    }
+    render();
+  }, 80);
+
+  const sc = (ms, fn) => { const id = setTimeout(fn, ms); _connectTimers.push(id); };
+
+  sc(  0, () => { /* star visible from start */ });
+  sc(320, () => {
+    showMatrix = true;
+    fixed.push('<span class="ct-ok">CONNEXION RÉSEAU DGSE... ÉTABLIE</span>');
+    fixed.push('SERVEUR : MONTREUIL-7  |  LIAISON CHIFFRÉE');
+    fixed.push('NŒUDS RELAIS : DKR · BXL · ADD-ABEBA');
+    fixed.push('──────────────────────────────────────');
+    playTypeSound();
   });
-
-  _connectTimers.push(setTimeout(() => showPhase('phase-names'), 3800));
-}
-
-function _connectLine(txt, cls) {
-  if (!txt) return '';
-  if (cls === 'ok')      return `<span class="connect-ok">${txt}</span>`;
-  if (cls === 'pending') return `<span class="connect-pending">${txt}...</span>`;
-  return txt;
+  sc(620, () => {
+    fixed.push('');
+    fixed.push('INITIALISATION DU SYSTÈME...');
+    showProgress = true; progressVal = 0;
+  });
+  sc(1750, () => {
+    showProgress = false;
+    fixed.push('<span class="ct-ok">PROTOCOLES DE SÉCURITÉ  ✓</span>');
+    playTypeSound();
+  });
+  sc(1980, () => {
+    fixed.push('PARE-FEU QUANTIQUE...');
+    playTypeSound();
+  });
+  sc(2240, () => {
+    fixed[fixed.length-1] = '<span class="ct-ok">PARE-FEU QUANTIQUE  ✓</span>';
+    fixed.push('TUNNEL VPN NORDIQUE...');
+    playTypeSound();
+  });
+  sc(2500, () => {
+    fixed[fixed.length-1] = '<span class="ct-ok">TUNNEL VPN NORDIQUE  ✓</span>';
+    fixed.push('AUTHENTIFICATION BIOMÉTRIQUE...');
+    playTypeSound();
+  });
+  sc(2800, () => {
+    fixed[fixed.length-1] = '<span class="ct-ok">AUTHENTIFICATION BIOMÉTRIQUE  ✓</span>';
+    fixed.push('SCAN RÉTINIEN...');
+    playTypeSound();
+  });
+  sc(3060, () => {
+    fixed[fixed.length-1] = '<span class="ct-ok">SCAN RÉTINIEN  ✓</span>';
+    fixed.push('LOCALISATION GPS SÉCURISÉE...');
+    playTypeSound();
+  });
+  sc(3320, () => {
+    fixed[fixed.length-1] = '<span class="ct-ok">LOCALISATION GPS SÉCURISÉE  ✓</span>';
+    fixed.push(`NIVEAU D'ACCÈS : <span class="ct-ok">ALPHA-7</span>`);
+    fixed.push('');
+    showCounter = true; counterVal = 0;
+    playTypeSound();
+  });
+  sc(4100, () => {
+    showMatrix = false; showCounter = false;
+    fixed.push('<span class="ct-ok">FICHIERS DÉCHIFFRÉS : 1247 / 1247  ✓</span>');
+    fixed.push('');
+    playTypeSound();
+  });
+  sc(4380, () => {
+    fixed.push('<span class="ct-ok">DOSSIERS AGENTS  PRÊTS  ✓</span>');
+    showStar = false;
+    playTypeSound();
+  });
+  sc(4700, () => {
+    fixed.push('');
+    fixed.push('▶  ENRÔLEMENT DES AGENTS REQUIS');
+    playTypeSound();
+    render();
+  });
+  sc(5600, () => {
+    terminated = true;
+    clearInterval(_connectAnimInt);
+    _connectAnimInt = null;
+    showPhase('phase-names');
+  });
 }
 
 function skipConnect() {
   _connectTimers.forEach(clearTimeout);
   _connectTimers = [];
+  if (_connectAnimInt) { clearInterval(_connectAnimInt); _connectAnimInt = null; }
   showPhase('phase-names');
 }
 
@@ -291,7 +388,17 @@ const AD_FRAMES = [
 `░░░░░░░░░░░░░░░░░░░░`,
 ];
 
+function _clearAdAnim() {
+  clearInterval(_adFi); _adFi = null;
+  clearInterval(_adFl); _adFl = null;
+  clearTimeout(_adEndTmr); _adEndTmr = null;
+  const overlay = document.getElementById('autodestruct-overlay');
+  if (overlay) { overlay.classList.remove('active'); overlay.style.background = '#000'; }
+  document.getElementById('autodestruct-bar-wrap')?.classList.remove('visible');
+}
+
 function launchAutodestructAnimation() {
+  _clearAdAnim();
   const overlay  = document.getElementById('autodestruct-overlay');
   const staticEl = document.getElementById('ad-static');
   const progFill = document.getElementById('ad-progress-fill');
@@ -301,17 +408,16 @@ function launchAutodestructAnimation() {
   progFill.style.transition = 'none'; progFill.style.width = '100%';
   let frame = 0, elapsed = 0;
   const totalMs = 2800;
-  const fi = setInterval(() => {
+  _adFi = setInterval(() => {
     staticEl.textContent = AD_FRAMES[frame % AD_FRAMES.length]; frame++;
     elapsed += 220;
     progFill.style.width = Math.max(0, (1-elapsed/totalMs)*100)+'%';
   }, 220);
   let flicker = 0;
-  const fl = setInterval(() => { overlay.style.background = flicker++%2===0 ? '#0a0000' : '#000'; }, 90);
-  setTimeout(() => {
-    clearInterval(fi); clearInterval(fl);
+  _adFl = setInterval(() => { overlay.style.background = flicker++%2===0 ? '#0a0000' : '#000'; }, 90);
+  _adEndTmr = setTimeout(() => {
+    _clearAdAnim();
     document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
-    overlay.classList.remove('active'); overlay.style.background = '#000';
     startChallenges();
   }, totalMs);
 }
@@ -323,11 +429,11 @@ function resetApp() {
   if (scanTmr) { clearInterval(scanTmr); scanTmr = null; }
   clearTimeout(typewriterTmr); clearTimeout(adPostTmr);
   _connectTimers.forEach(clearTimeout); _connectTimers = [];
+  if (_connectAnimInt) { clearInterval(_connectAnimInt); _connectAnimInt = null; }
+  _clearAdAnim();
   stopAmbientMusic(); stopChallengeDisplay(); stopChallengeAnim(); clearSession();
   document.getElementById('particles').innerHTML = '';
-  document.getElementById('autodestruct-overlay').classList.remove('active');
   document.body.classList.remove('time-danger');
-  document.getElementById('autodestruct-bar-wrap').classList.remove('visible');
   const skipBtn = document.getElementById('skip-btn');
   if (skipBtn) { skipBtn.textContent = '⏭ passer'; skipBtn.onclick = skipTypewriter; skipBtn.style.display = ''; }
   agents=[]; currentRealName=''; currentProposals=[]; draggedAgent=null;
@@ -341,6 +447,13 @@ function resetApp() {
 // ── Appelée à chaque sync config ───────────────────────
 function onCfgSync() {
   initTestMode();
+  // Mise à jour agents/équipes injectée par l'admin en direct
+  if (cfg.runtimeAgents && missionStart > 0) {
+    agents = cfg.runtimeAgents;
+    _pushMissionState();
+    if (['phase-challenge','phase-reveal','phase-countdown'].includes(currentPhase))
+      _updateTeamsPeekBtn();
+  }
   if (missionStart > 0 && countdownTimer) {
     const elapsed = Math.round((Date.now() - missionStart) / 1000);
     totalSeconds  = cfg.duration;
@@ -383,9 +496,8 @@ function debugSim() {
   clearInterval(hintTimer); clearInterval(adTimer);
   if (scanTmr) { clearInterval(scanTmr); scanTmr = null; }
   clearTimeout(typewriterTmr); clearTimeout(adPostTmr);
+  _clearAdAnim();
   stopAmbientMusic(); stopChallengeDisplay(); stopChallengeAnim(); clearSession();
-  document.getElementById('autodestruct-overlay').classList.remove('active');
-  document.getElementById('autodestruct-bar-wrap').classList.remove('visible');
   document.getElementById('particles').innerHTML = '';
 
   agents = names; revealedDigits = []; currentChallenge = 0; pinInput = '';

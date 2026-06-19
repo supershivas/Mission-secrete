@@ -19,6 +19,11 @@ function syncRevealTimer()  { applyTimerStyle(document.getElementById('timer-sm-
 function startFinalCountdown() {
   clearInterval(countdownTimer);
   resetTheme();
+  // Generate PIN dots based on actual challenge count
+  const pinDotsEl = document.querySelector('.pin-dots');
+  if (pinDotsEl) {
+    pinDotsEl.innerHTML = cfg.challenges.map((_, i) => `<div class="pin-dot" id="d${i}"></div>`).join('');
+  }
   showPhase('phase-countdown');
   updateBigTimer();
   countdownTimer = setInterval(finalTick, 1000);

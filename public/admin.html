@@ -132,6 +132,12 @@
     .theme-swatch { font-family:inherit;font-size:10px;letter-spacing:.1em;border:1px solid #aaa;border-radius:4px;padding:.25rem .55rem;cursor:pointer;background:#f5f5f5;color:#333;transition:box-shadow .15s,opacity .15s }
     .theme-swatch.swatch-active { box-shadow:0 0 0 2px #333;font-weight:700 }
     .theme-swatch:not([style]) { background:#f5f5f5 }
+    .live-agent-row { display:grid;grid-template-columns:1fr 1fr auto;gap:.4rem;align-items:center;padding:.4rem 0;border-bottom:1px solid var(--border) }
+    .live-agent-row:last-child { border-bottom:none }
+    .live-agent-row input { border:1px solid var(--border2);border-radius:4px;padding:.3rem .5rem;font-family:inherit;font-size:12px;color:var(--text);background:#fff;width:100% }
+    .live-team-toggle { font-size:11px;padding:.25rem .55rem;border-radius:4px;border:1px solid #ccc;cursor:pointer;font-family:inherit;white-space:nowrap }
+    .live-team-toggle.ombre { background:#e8f5ee;border-color:var(--accent);color:var(--accent) }
+    .live-team-toggle.cobra { background:#fff4e0;border-color:#c07000;color:#c07000 }
     .pdf-card { display:flex;flex-direction:column;gap:.35rem;padding:1rem;border:1px solid var(--border2);border-radius:8px;background:var(--bg);text-decoration:none;color:inherit;transition:box-shadow .15s,border-color .15s }
     .pdf-card:hover { border-color:#b0b0b0;box-shadow:0 2px 8px rgba(0,0,0,.08) }
     .pdf-icon { font-size:28px }
@@ -280,6 +286,14 @@
           <button class="btn btn-secondary" onclick="addTime(15)">+ 15 min</button>
           <button class="btn btn-secondary" onclick="addTime(30)">+ 30 min</button>
           <div id="addtime-fb" style="font-size:12px;color:var(--accent)"></div>
+        </div>
+        <div style="border-top:1px solid var(--border);padding-top:1rem;display:flex;flex-direction:column;gap:.75rem">
+          <div style="display:flex;align-items:center;justify-content:space-between">
+            <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Joueurs &amp; Équipes</div>
+            <button class="btn btn-secondary btn-sm" onclick="refreshLiveAgents()">↺ Rafraîchir</button>
+          </div>
+          <div id="live-agents-wrap" style="font-size:12px;color:var(--muted)">Aucune mission en cours.</div>
+          <div id="live-agents-fb" style="font-size:12px;color:var(--accent);min-height:16px"></div>
         </div>
       </div>
     </div>
@@ -514,6 +528,7 @@ function loadConfig() {
   renderTabs();
   updatePinPreview();
   refreshLiveTimer();
+  refreshLiveAgents();
 }
 
 // ── TABS ──────────────────────────────────────
@@ -810,6 +825,61 @@ function previewAnim(i) {
   const tmr = setInterval(() => { fi = (fi + 1) % anim.frames.length; pre.textContent = anim.frames[fi]; }, anim.interval);
   _previewTimers[i] = tmr;
   setTimeout(() => { clearInterval(tmr); if (_previewTimers[i] === tmr) delete _previewTimers[i]; }, 5000);
+}
+
+// ── Live agents editing ───────────────────────────────
+let _liveAgents = [];
+
+async function refreshLiveAgents() {
+  const wrap = document.getElementById('live-agents-wrap');
+  try {
+    const res = await fetch('/api/state');
+    if (!res.ok) { wrap.textContent = 'Aucune mission en cours.'; return; }
+    const st = await res.json();
+    if (!st?.agents?.length) { wrap.textContent = 'Aucun agent enrôlé.'; return; }
+    _liveAgents = st.agents.map(a => ({ ...a }));
+    renderLiveAgents();
+  } catch(e) { wrap.textContent = 'Erreur réseau.'; }
+}
+
+function renderLiveAgents() {
+  const wrap = document.getElementById('live-agents-wrap');
+  wrap.innerHTML = `
+    <div style="font-size:11px;color:var(--muted);margin-bottom:.5rem">${_liveAgents.length} agent(s) — modifiez puis cliquez Appliquer</div>
+    <div style="display:grid;grid-template-columns:auto 1fr 1fr auto;gap:.3rem .5rem;align-items:center;font-size:11px;color:var(--muted);font-weight:600;padding:.2rem 0 .4rem">
+      <div>#</div><div>Prénom réel</div><div>Nom de code</div><div>Équipe</div>
+    </div>
+    ${_liveAgents.map((a, i) => `
+    <div class="live-agent-row" style="grid-template-columns:auto 1fr 1fr auto">
+      <span style="font-size:11px;color:var(--muted)">${i+1}</span>
+      <input value="${esc(a.realName)}" oninput="_liveAgents[${i}].realName=this.value" placeholder="Prénom">
+      <input value="${esc(a.agentName)}" oninput="_liveAgents[${i}].agentName=this.value" placeholder="Code">
+      <button class="live-team-toggle ${a.team||''}" onclick="toggleLiveTeam(${i})">${a.team ? a.team.toUpperCase() : '—'}</button>
+    </div>`).join('')}
+    <div style="margin-top:.75rem">
+      <button class="btn btn-primary btn-sm" onclick="applyLiveAgents()">▶ Appliquer sur l'iPad</button>
+    </div>`;
+}
+
+function toggleLiveTeam(i) {
+  const teams = [null, 'ombre', 'cobra'];
+  const cur = _liveAgents[i].team;
+  _liveAgents[i].team = teams[(teams.indexOf(cur) + 1) % teams.length];
+  renderLiveAgents();
+}
+
+async function applyLiveAgents() {
+  const fb = document.getElementById('live-agents-fb');
+  fb.textContent = 'Envoi…';
+  try {
+    const res = await fetch('/api/config');
+    if (!res.ok) throw new Error();
+    const remoteCfg = await res.json();
+    remoteCfg.runtimeAgents = _liveAgents;
+    const ok = await pushConfigRemote(remoteCfg);
+    fb.textContent = ok ? '✓ Mis à jour — synchronisation dans ~3s' : '✗ Erreur réseau';
+  } catch(e) { fb.textContent = '✗ Erreur réseau'; }
+  setTimeout(() => { fb.textContent = ''; }, 4000);
 }
 
 // ── Remote sync ───────────────────────────────────────
