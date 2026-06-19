@@ -711,10 +711,10 @@ function showChallenge(idx) {
     hz.classList.remove('visible');
   }
 
-  // animation
-  ch.animation && ch.animation !== 'none'
-    ? startChallengeAnim(ch.animation, ch.code)
-    : stopChallengeAnim();
+  // template display (type) + visual animation (animation) are independent
+  startChallengeDisplay(ch.type || 'libre', ch.code);
+  if (ch.animation && ch.animation !== 'none') startChallengeAnim(ch.animation);
+  else stopChallengeAnim();
 
   updateMiniTimer();
   showPhase('phase-challenge');
@@ -733,6 +733,7 @@ function submitCode() {
   if (val === ch.code.toUpperCase()) {
     revealedDigits.push(ch.digit);
     clearInterval(hintTimer);
+    stopChallengeDisplay();
     stopChallengeAnim();
     if (navigator.vibrate) navigator.vibrate([50, 30, 50, 30, 120]);
     flashAccessGranted(() => { playRevealSound(); showReveal(currentChallenge); });
@@ -1005,7 +1006,7 @@ function resetApp() {
   clearInterval(hintTimer); clearInterval(adTimer);
   if (scanTmr) { clearInterval(scanTmr); scanTmr = null; }
   clearTimeout(typewriterTmr); clearTimeout(adPostTmr);
-  stopAmbientMusic(); stopChallengeAnim(); clearSession();
+  stopAmbientMusic(); stopChallengeDisplay(); stopChallengeAnim(); clearSession();
   document.getElementById('particles').innerHTML = '';
   document.getElementById('autodestruct-overlay').classList.remove('active');
   document.body.classList.remove('time-danger'); document.body.style.background = '';
@@ -1094,9 +1095,9 @@ function onCfgSync() {
     document.getElementById('ch-title').textContent = ch.title;
     document.getElementById('ch-brief').textContent = ch.brief;
 
-    ch.animation && ch.animation !== 'none'
-      ? startChallengeAnim(ch.animation, ch.code)
-      : stopChallengeAnim();
+    startChallengeDisplay(ch.type || 'libre', ch.code);
+    if (ch.animation && ch.animation !== 'none') startChallengeAnim(ch.animation);
+    else stopChallengeAnim();
 
     // team banner
     const banner = document.getElementById('ch-team-banner');
@@ -1125,7 +1126,7 @@ function debugSim() {
   clearInterval(hintTimer); clearInterval(adTimer);
   if (scanTmr) { clearInterval(scanTmr); scanTmr = null; }
   clearTimeout(typewriterTmr); clearTimeout(adPostTmr);
-  stopAmbientMusic(); stopChallengeAnim(); clearSession();
+  stopAmbientMusic(); stopChallengeDisplay(); stopChallengeAnim(); clearSession();
   document.getElementById('autodestruct-overlay').classList.remove('active');
   document.getElementById('autodestruct-bar-wrap').classList.remove('visible');
   document.getElementById('particles').innerHTML = '';

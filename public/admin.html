@@ -286,6 +286,12 @@
     <div class="card">
       <div class="card-head"><div class="card-head-title">Mission</div></div>
       <div class="card-body">
+        <div class="field" style="flex-direction:row;align-items:center;gap:.75rem;flex-wrap:wrap;background:#fff8f0;border:1px solid #f0c080;border-radius:6px;padding:.75rem 1rem">
+          <label style="margin:0;white-space:nowrap;font-weight:700">Mode test 🧪</label>
+          <input type="checkbox" id="f-test-mode" onchange="syncTestMode()"
+            style="width:18px;height:18px;cursor:pointer;accent-color:#b35c00">
+          <div class="hint" style="margin:0">Affiche un bouton « ⏭ Passer » fixe en haut à droite pour sauter les phases</div>
+        </div>
         <div class="field">
           <label>Nom de la mission (affiché sur le splash)</label>
           <input type="text" id="f-name" class="mono" placeholder="HELIE10" style="letter-spacing:.2em;text-transform:uppercase" oninput="this.value=this.value.toUpperCase()">
@@ -303,12 +309,6 @@
               <div class="pin-full" id="pin-full"></div>
             </div>
             <div class="hint" style="margin-top:.4rem">Construit depuis les chiffres de chaque épreuve</div>
-          </div>
-          <div class="field" style="flex-direction:row;align-items:center;gap:.75rem;flex-wrap:wrap">
-            <label style="margin:0;white-space:nowrap">Mode test 🧪</label>
-            <input type="checkbox" id="f-test-mode" onchange="syncTestMode()"
-              style="width:18px;height:18px;cursor:pointer;accent-color:#b35c00">
-            <div class="hint" style="margin:0">Affiche un bouton « ⏭ Passer » fixe en haut à droite pour sauter les phases</div>
           </div>
         </div>
       </div>
@@ -553,24 +553,34 @@ function renderTabs() {
         <textarea id="ch-hint-${i}" rows="2" spellcheck="false" oninput="syncCh(${i})">${esc(ch.hint||'')} </textarea>
         <div class="hint">Laissez vide pour désactiver l'indice sur cette épreuve</div>
       </div>
-      <div class="field">
-        <label>Animation de l'épreuve</label>
-        <div style="display:flex;gap:.5rem;align-items:flex-start">
-          <select id="ch-anim-${i}" onchange="syncCh(${i});previewAnim(${i})" style="flex:1">
-            <option value="none"${(ch.animation||'none')==='none'?' selected':''}>Aucune</option>
-            <option value="skull"${ch.animation==='skull'?' selected':''}>💀 Crâne</option>
-            <option value="laser"${ch.animation==='laser'?' selected':''}>⚡ Laser</option>
-            <option value="radar"${ch.animation==='radar'?' selected':''}>📡 Radar</option>
-            <option value="safe"${ch.animation==='safe'?' selected':''}>🔒 Coffre</option>
-            <option value="garden"${ch.animation==='garden'?' selected':''}>🌿 Jardin</option>
-            <option value="lab"${ch.animation==='lab'?' selected':''}>🔬 Labo</option>
-            <option value="poison"${ch.animation==='poison'?' selected':''}>🧪 Antidote</option>
-            <option value="morse"${ch.animation==='morse'?' selected':''}>📡 Morse</option>
+      <div class="row">
+        <div class="field">
+          <label>Type d'épreuve</label>
+          <select id="ch-type-${i}" onchange="syncCh(${i})" style="flex:1">
+            <option value="libre"${(ch.type||'libre')==='libre'?' selected':''}>📝 Texte libre</option>
+            <option value="morse"${ch.type==='morse'?' selected':''}>📡 Morse (décodage)</option>
+            <option value="talkie"${ch.type==='talkie'?' selected':''}>📻 Talkie-walkie</option>
           </select>
-          <button class="btn btn-secondary btn-sm" onclick="previewAnim(${i})">▶ Aperçu</button>
+          <div class="hint">Contrôle l'interface affichée pendant l'épreuve</div>
         </div>
-        <pre id="anim-preview-${i}" style="font-family:'Share Tech Mono',monospace;font-size:11px;line-height:1.3;color:#00cc35;background:#010d03;border:1px solid #003a0d;padding:.5rem .8rem;min-height:2.5rem;margin-top:.4rem;display:none"></pre>
-        <div class="hint">Animation ASCII affichée pendant l'épreuve et dans l'intro</div>
+        <div class="field">
+          <label>Animation visuelle</label>
+          <div style="display:flex;gap:.5rem;align-items:flex-start">
+            <select id="ch-anim-${i}" onchange="syncCh(${i});previewAnim(${i})" style="flex:1">
+              <option value="none"${(ch.animation||'none')==='none'?' selected':''}>Aucune</option>
+              <option value="skull"${ch.animation==='skull'?' selected':''}>💀 Crâne</option>
+              <option value="laser"${ch.animation==='laser'?' selected':''}>⚡ Laser</option>
+              <option value="radar"${ch.animation==='radar'?' selected':''}>📡 Radar</option>
+              <option value="safe"${ch.animation==='safe'?' selected':''}>🔒 Coffre</option>
+              <option value="garden"${ch.animation==='garden'?' selected':''}>🌿 Jardin</option>
+              <option value="lab"${ch.animation==='lab'?' selected':''}>🔬 Labo</option>
+              <option value="poison"${ch.animation==='poison'?' selected':''}>🧪 Antidote</option>
+            </select>
+            <button class="btn btn-secondary btn-sm" onclick="previewAnim(${i})">▶</button>
+          </div>
+          <pre id="anim-preview-${i}" style="font-family:'Share Tech Mono',monospace;font-size:11px;line-height:1.3;color:#00cc35;background:#010d03;border:1px solid #003a0d;padding:.5rem .8rem;min-height:2.5rem;margin-top:.4rem;display:none"></pre>
+          <div class="hint">Décoration ASCII — combinable avec n'importe quel type</div>
+        </div>
       </div>
       <div class="field" style="flex-direction:row;align-items:center;gap:.75rem">
         <label style="margin:0;white-space:nowrap">Par équipe ⚔</label>
@@ -628,6 +638,7 @@ function syncCh(i) {
   cfg.challenges[i].code   = document.getElementById(`ch-code-${i}`).value.toUpperCase();
   cfg.challenges[i].digit  = document.getElementById(`ch-digit-${i}`).value.replace(/\D/g,'').slice(0,1);
   cfg.challenges[i].hint      = (document.getElementById(`ch-hint-${i}`)?.value||'').trim();
+  cfg.challenges[i].type      = document.getElementById(`ch-type-${i}`)?.value||'libre';
   cfg.challenges[i].animation = document.getElementById(`ch-anim-${i}`)?.value||'none';
   cfg.challenges[i].teamPlay  = document.getElementById(`ch-team-${i}`)?.checked||false;
   const cb=document.getElementById(`cb-${i}`); if(cb) cb.textContent=cfg.challenges[i].code||'—';
@@ -690,6 +701,7 @@ function saveConfig() {
     ch.code   = (document.getElementById(`ch-code-${i}`)?.value||ch.code).toUpperCase();
     ch.digit  = (document.getElementById(`ch-digit-${i}`)?.value||ch.digit).replace(/\D/g,'').slice(0,1);
     ch.hint      = (document.getElementById(`ch-hint-${i}`)?.value||ch.hint||'').trim();
+    ch.type      = document.getElementById(`ch-type-${i}`)?.value||ch.type||'libre';
     ch.animation = document.getElementById(`ch-anim-${i}`)?.value||ch.animation||'none';
   });
   cfg.missionName = (document.getElementById('f-name').value.trim().toUpperCase()) || 'HELIE10';

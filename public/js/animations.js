@@ -212,60 +212,83 @@ function wordToMorse(word) {
 }
 
 let _animTmr = null;
+let _displayTmr = null;
 let _morseWord = '';
 
-function startChallengeAnim(name, word) {
-  stopChallengeAnim();
-  const el   = document.getElementById('potion-ascii');
-  const wrap = document.getElementById('poison-visual');
+// ── Template display (driven by ch.type) ──────────────────
+function startChallengeDisplay(type, code) {
+  stopChallengeDisplay();
   const steps = document.getElementById('recipe-steps');
-  if (!el || !wrap) return;
+  if (!steps) return;
 
-  // ── Mode morse ─────────────────────────────────────────
-  if (name === 'morse') {
-    _morseWord = (word || '').toUpperCase();
-    wrap.classList.add('active');
-    el.style.color = '#00ff41';
-    el.style.textShadow = '0 0 14px rgba(0,255,65,.5)';
-    el.style.fontSize = 'clamp(18px,4vw,28px)';
-    el.style.letterSpacing = '.3em';
-    el.style.lineHeight = '2.2';
-    el.style.animation = 'none';
-
-    // Affichage des symboles morse SANS les lettres (les enfants décodent avec la table)
-    el.textContent = _morseWord.split('').map(c => MORSE_TABLE[c] || '?').join('   ');
-
-    // Table de référence A-Z compacte + bouton écouter
-    if (steps) {
-      const REF = [
-        ['A','·─'],['B','─···'],['C','─·─·'],['D','─··'],['E','·'],['F','··─·'],
-        ['G','──·'],['H','····'],['I','··'],['J','·───'],['K','─·─'],['L','·─··'],
-        ['M','──'],['N','─·'],['O','───'],['P','·──·'],['Q','──·─'],['R','·─·'],
-        ['S','···'],['T','─'],['U','··─'],['V','···─'],['W','·──'],['X','─··─'],
-        ['Y','─·──'],['Z','──··'],
-        ['0','─────'],['1','·────'],['2','··───'],['3','···──'],['4','····─'],
-        ['5','·····'],['6','─····'],['7','──···'],['8','───··'],['9','────·']
-      ];
-      const rows = REF.map(([l,m]) => `<span class="mref-cell"><b>${l}</b>${m}</span>`).join('');
-      steps.innerHTML =
-        `<button class="btn morse-listen-btn" onclick="playMorse('${_morseWord}')">▶ Écouter le signal</button>` +
-        `<div class="morse-ref-label">Table de référence :</div>` +
-        `<div class="morse-ref">${rows}</div>`;
+  if (type === 'morse') {
+    _morseWord = (code || '').toUpperCase();
+    const el   = document.getElementById('potion-ascii');
+    const wrap = document.getElementById('poison-visual');
+    if (el && wrap) {
+      wrap.classList.add('active');
+      el.style.color = '#00ff41';
+      el.style.textShadow = '0 0 14px rgba(0,255,65,.5)';
+      el.style.fontSize = 'clamp(18px,4vw,28px)';
+      el.style.letterSpacing = '.3em';
+      el.style.lineHeight = '2.2';
+      el.style.animation = 'none';
+      el.textContent = _morseWord.split('').map(c => MORSE_TABLE[c] || '?').join('   ');
+      let blink = true;
+      _displayTmr = setInterval(() => { blink = !blink; el.style.opacity = blink ? '1' : '.65'; }, 900);
     }
-
-    // Clignotement discret
-    let blink = true;
-    _animTmr = setInterval(() => {
-      blink = !blink;
-      el.style.opacity = blink ? '1' : '.65';
-    }, 900);
+    const REF = [
+      ['A','·─'],['B','─···'],['C','─·─·'],['D','─··'],['E','·'],['F','··─·'],
+      ['G','──·'],['H','····'],['I','··'],['J','·───'],['K','─·─'],['L','·─··'],
+      ['M','──'],['N','─·'],['O','───'],['P','·──·'],['Q','──·─'],['R','·─·'],
+      ['S','···'],['T','─'],['U','··─'],['V','···─'],['W','·──'],['X','─··─'],
+      ['Y','─·──'],['Z','──··'],
+      ['0','─────'],['1','·────'],['2','··───'],['3','···──'],['4','····─'],
+      ['5','·····'],['6','─····'],['7','──···'],['8','───··'],['9','────·']
+    ];
+    const rows = REF.map(([l,m]) => `<span class="mref-cell"><b>${l}</b>${m}</span>`).join('');
+    steps.innerHTML =
+      `<button class="btn morse-listen-btn" onclick="playMorse('${_morseWord}')">▶ Écouter le signal</button>` +
+      `<div class="morse-ref-label">Table de référence :</div>` +
+      `<div class="morse-ref">${rows}</div>`;
     return;
   }
 
-  // ── Autres animations ──────────────────────────────────
+  if (type === 'talkie') {
+    steps.innerHTML =
+      `<div class="talkie-card">
+        <div class="talkie-title">📻 PROTOCOLE TALKIE-WALKIE</div>
+        <div class="talkie-line">Canal : <strong>ALPHA-7</strong></div>
+        <div class="talkie-line">Phrase d'authentification :</div>
+        <div class="talkie-phrase">"Le renard sort à minuit"</div>
+        <div class="talkie-line">Réponse attendue :</div>
+        <div class="talkie-phrase">"La lune est rousse"</div>
+      </div>`;
+    return;
+  }
+
+  // type === 'libre' → nothing extra
+  steps.innerHTML = '';
+}
+
+function stopChallengeDisplay() {
+  clearInterval(_displayTmr); _displayTmr = null;
+  const steps = document.getElementById('recipe-steps');
+  if (steps) steps.innerHTML = '';
+  // Reset morse visuals if active
+  const el = document.getElementById('potion-ascii');
+  if (el) { el.style.opacity = '1'; el.style.animation = ''; }
+}
+
+// ── Visual animation (driven by ch.animation) ─────────────
+function startChallengeAnim(name) {
+  stopChallengeAnim();
+  const el   = document.getElementById('potion-ascii');
+  const wrap = document.getElementById('poison-visual');
+  if (!el || !wrap) return;
+
   const anim = CHALLENGE_ANIMS[name];
   if (!anim) return;
-  if (steps) steps.innerHTML = '';
   wrap.classList.add('active');
   el.style.color = anim.color;
   el.style.textShadow = `0 0 12px ${anim.color}66`;
@@ -284,11 +307,9 @@ function startChallengeAnim(name, word) {
 function stopChallengeAnim() {
   clearInterval(_animTmr); _animTmr = null;
   const wrap = document.getElementById('poison-visual');
-  const steps = document.getElementById('recipe-steps');
-  if (wrap) { wrap.classList.remove('active'); }
+  if (wrap) wrap.classList.remove('active');
   const el = document.getElementById('potion-ascii');
   if (el) { el.style.opacity = '1'; el.style.animation = ''; }
-  if (steps) steps.innerHTML = '';
 }
 
 // ── Transition de phase ─────────────────────────────────
