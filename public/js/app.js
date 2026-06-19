@@ -45,6 +45,9 @@ let hintTimer        = null;
 let hintSeconds      = 0;
 let adTimer          = null;
 let adPostTmr        = null;
+let _adFi            = null;
+let _adFl            = null;
+let _adEndTmr        = null;
 let adSeconds        = 30;
 let currentPhase     = 'phase-splash';
 
@@ -384,7 +387,17 @@ const AD_FRAMES = [
 `░░░░░░░░░░░░░░░░░░░░`,
 ];
 
+function _clearAdAnim() {
+  clearInterval(_adFi); _adFi = null;
+  clearInterval(_adFl); _adFl = null;
+  clearTimeout(_adEndTmr); _adEndTmr = null;
+  const overlay = document.getElementById('autodestruct-overlay');
+  if (overlay) { overlay.classList.remove('active'); overlay.style.background = '#000'; }
+  document.getElementById('autodestruct-bar-wrap')?.classList.remove('visible');
+}
+
 function launchAutodestructAnimation() {
+  _clearAdAnim();
   const overlay  = document.getElementById('autodestruct-overlay');
   const staticEl = document.getElementById('ad-static');
   const progFill = document.getElementById('ad-progress-fill');
@@ -394,17 +407,16 @@ function launchAutodestructAnimation() {
   progFill.style.transition = 'none'; progFill.style.width = '100%';
   let frame = 0, elapsed = 0;
   const totalMs = 2800;
-  const fi = setInterval(() => {
+  _adFi = setInterval(() => {
     staticEl.textContent = AD_FRAMES[frame % AD_FRAMES.length]; frame++;
     elapsed += 220;
     progFill.style.width = Math.max(0, (1-elapsed/totalMs)*100)+'%';
   }, 220);
   let flicker = 0;
-  const fl = setInterval(() => { overlay.style.background = flicker++%2===0 ? '#0a0000' : '#000'; }, 90);
-  setTimeout(() => {
-    clearInterval(fi); clearInterval(fl);
+  _adFl = setInterval(() => { overlay.style.background = flicker++%2===0 ? '#0a0000' : '#000'; }, 90);
+  _adEndTmr = setTimeout(() => {
+    _clearAdAnim();
     document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
-    overlay.classList.remove('active'); overlay.style.background = '#000';
     startChallenges();
   }, totalMs);
 }
@@ -416,11 +428,11 @@ function resetApp() {
   if (scanTmr) { clearInterval(scanTmr); scanTmr = null; }
   clearTimeout(typewriterTmr); clearTimeout(adPostTmr);
   _connectTimers.forEach(clearTimeout); _connectTimers = [];
+  if (_connectAnimInt) { clearInterval(_connectAnimInt); _connectAnimInt = null; }
+  _clearAdAnim();
   stopAmbientMusic(); stopChallengeDisplay(); stopChallengeAnim(); clearSession();
   document.getElementById('particles').innerHTML = '';
-  document.getElementById('autodestruct-overlay').classList.remove('active');
   document.body.classList.remove('time-danger');
-  document.getElementById('autodestruct-bar-wrap').classList.remove('visible');
   const skipBtn = document.getElementById('skip-btn');
   if (skipBtn) { skipBtn.textContent = '⏭ passer'; skipBtn.onclick = skipTypewriter; skipBtn.style.display = ''; }
   agents=[]; currentRealName=''; currentProposals=[]; draggedAgent=null;
@@ -476,9 +488,8 @@ function debugSim() {
   clearInterval(hintTimer); clearInterval(adTimer);
   if (scanTmr) { clearInterval(scanTmr); scanTmr = null; }
   clearTimeout(typewriterTmr); clearTimeout(adPostTmr);
+  _clearAdAnim();
   stopAmbientMusic(); stopChallengeDisplay(); stopChallengeAnim(); clearSession();
-  document.getElementById('autodestruct-overlay').classList.remove('active');
-  document.getElementById('autodestruct-bar-wrap').classList.remove('visible');
   document.getElementById('particles').innerHTML = '';
 
   agents = names; revealedDigits = []; currentChallenge = 0; pinInput = '';
