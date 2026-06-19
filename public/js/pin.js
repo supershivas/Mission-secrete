@@ -1,22 +1,27 @@
 // ══ PIN — saisie du code + score + explosion ════════════
 
 function pressPin(n) {
-  if (pinInput.length >= 4) return;
+  const pinLen = cfg.challenges.length;
+  if (pinInput.length >= pinLen) return;
   pinInput += n;
   if (navigator.vibrate) navigator.vibrate(28);
   updatePinDots();
-  if (pinInput.length === 4) setTimeout(checkPin, 150);
+  if (pinInput.length === pinLen) setTimeout(checkPin, 150);
 }
 function delPin() {
   pinInput = pinInput.slice(0, -1); updatePinDots();
   document.getElementById('pin-error').textContent = '';
 }
 function updatePinDots() {
-  for (let i = 0; i < 4; i++)
-    document.getElementById('d'+i).className = 'pin-dot' + (i < pinInput.length ? ' filled' : '');
+  const pinLen = cfg.challenges.length;
+  for (let i = 0; i < pinLen; i++) {
+    const d = document.getElementById('d'+i);
+    if (d) d.className = 'pin-dot' + (i < pinInput.length ? ' filled' : '');
+  }
 }
 function checkPin() {
   const correct = revealedDigits.join('');
+  const pinLen  = cfg.challenges.length;
   if (pinInput === correct) {
     if (navigator.vibrate) navigator.vibrate([80, 40, 80, 40, 200]);
     clearInterval(countdownTimer); stopAmbientMusic();
@@ -24,7 +29,10 @@ function checkPin() {
   } else {
     if (navigator.vibrate) navigator.vibrate(600);
     document.getElementById('pin-error').textContent = '✗ Code incorrect — accès refusé';
-    for (let i = 0; i < 4; i++) document.getElementById('d'+i).className = 'pin-dot error';
+    for (let i = 0; i < pinLen; i++) {
+      const d = document.getElementById('d'+i);
+      if (d) d.className = 'pin-dot error';
+    }
     playErrorSound();
     setTimeout(() => { pinInput = ''; updatePinDots(); document.getElementById('pin-error').textContent = ''; }, 900);
   }
