@@ -61,6 +61,7 @@ function getCfg() {
     chs.forEach(c => {
       if (!c.animation) c.animation = c.poison ? 'poison' : 'none';
       if (!c.type) c.type = 'libre';
+      if (c.theme === undefined) c.theme = '';
     });
     return { missionName: stored.missionName || DEFAULT_CFG.missionName, duration: stored.duration || DEFAULT_CFG.duration, testMode: !!stored.testMode, message: stored.message || DEFAULT_CFG.message, challenges: chs };
   } catch(e) { return DEFAULT_CFG; }

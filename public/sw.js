@@ -1,4 +1,4 @@
-const CACHE = 'agent-v24';
+const CACHE = 'agent-v25';
 const ASSETS = [
   '/',
   '/index.html',
@@ -13,6 +13,12 @@ const ASSETS = [
   '/js/animations.js',
   '/js/session.js',
   '/js/app.js',
+  '/js/names.js',
+  '/js/teams.js',
+  '/js/challenges.js',
+  '/js/timer.js',
+  '/js/pin.js',
+  '/js/resume.js',
   '/js/main.js',
   'https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap'
 ];

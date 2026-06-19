@@ -129,6 +129,9 @@
     .btn-sm { padding: .3rem .7rem; font-size: 11px }
     .btn-ghost { background: transparent; color: var(--muted); border-color: var(--border) }
     .btn-ghost:hover { background: var(--bg); color: var(--text) }
+    .theme-swatch { font-family:inherit;font-size:10px;letter-spacing:.1em;border:1px solid #aaa;border-radius:4px;padding:.25rem .55rem;cursor:pointer;background:#f5f5f5;color:#333;transition:box-shadow .15s,opacity .15s }
+    .theme-swatch.swatch-active { box-shadow:0 0 0 2px #333;font-weight:700 }
+    .theme-swatch:not([style]) { background:#f5f5f5 }
     .pdf-card { display:flex;flex-direction:column;gap:.35rem;padding:1rem;border:1px solid var(--border2);border-radius:8px;background:var(--bg);text-decoration:none;color:inherit;transition:box-shadow .15s,border-color .15s }
     .pdf-card:hover { border-color:#b0b0b0;box-shadow:0 2px 8px rgba(0,0,0,.08) }
     .pdf-icon { font-size:28px }
@@ -590,6 +593,20 @@ function renderTabs() {
           <div class="hint">Décoration ASCII — combinable avec n'importe quel type</div>
         </div>
       </div>
+      <div class="field">
+        <label>Couleur de thème</label>
+        <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center" id="ch-theme-swatches-${i}">
+          <button class="theme-swatch${(!ch.theme||ch.theme==='')?' swatch-active':''}" data-theme="" onclick="setChTheme(${i},'')" title="Auto (par position)">AUTO</button>
+          ${[
+            {t:'0',bg:'#000',acc:'#00ff41',lbl:'Vert'},
+            {t:'1',bg:'#00091a',acc:'#00aaff',lbl:'Bleu'},
+            {t:'2',bg:'#180005',acc:'#ff3366',lbl:'Rouge'},
+            {t:'3',bg:'#0d0020',acc:'#aa44ff',lbl:'Violet'},
+            {t:'4',bg:'#0d1400',acc:'#aaff00',lbl:'Acide'},
+          ].map(s=>`<button class="theme-swatch${ch.theme===s.t?' swatch-active':''}" data-theme="${s.t}" onclick="setChTheme(${i},'${s.t}')" title="${s.lbl}" style="background:${s.bg};border-color:${s.acc};color:${s.acc}">${s.lbl}</button>`).join('')}
+        </div>
+        <div class="hint">Couleur appliquée pendant cette épreuve — AUTO = varie selon la position</div>
+      </div>
       <div class="field" style="flex-direction:row;align-items:center;gap:.75rem">
         <label style="margin:0;white-space:nowrap">Par équipe ⚔</label>
         <input type="checkbox" id="ch-team-${i}" ${ch.teamPlay?'checked':''} onchange="syncCh(${i})"
@@ -638,6 +655,14 @@ function switchTab(i) {
   activeTab = i;
   document.querySelectorAll('.ch-tab').forEach((t,j)=>t.className='ch-tab'+(j===i?' active':''));
   document.querySelectorAll('.ch-panel').forEach((p,j)=>p.className='ch-panel'+(j===i?' active':''));
+}
+
+function setChTheme(i, val) {
+  cfg.challenges[i].theme = val;
+  document.querySelectorAll(`#ch-theme-swatches-${i} .theme-swatch`).forEach(b => {
+    b.classList.toggle('swatch-active', b.dataset.theme === val);
+  });
+  markDirty();
 }
 
 function syncCh(i) {
@@ -711,6 +736,7 @@ function saveConfig() {
     ch.hint      = (document.getElementById(`ch-hint-${i}`)?.value||ch.hint||'').trim();
     ch.type      = document.getElementById(`ch-type-${i}`)?.value||ch.type||'libre';
     ch.animation = document.getElementById(`ch-anim-${i}`)?.value||ch.animation||'none';
+    // theme persisted via setChTheme directly on cfg.challenges[i].theme
   });
   cfg.missionName = (document.getElementById('f-name').value.trim().toUpperCase()) || 'HELIE10';
   cfg.duration=mins*60;

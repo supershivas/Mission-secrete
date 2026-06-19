@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   startSplashRotation();
   initBgArtefacts();
   tryResume();
+  document.getElementById('phase-splash')?.classList.add('hue-cycle');
 });
 
 function applyCfgToSplash() {
