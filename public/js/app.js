@@ -1,5 +1,30 @@
 // ══ APP — logique principale ═══════════════════════════
 
+// ── Thèmes par épreuve ─────────────────────────────────
+const CHALLENGE_THEMES = [
+  { bg:'#000',    accent:'#00ff41', glow:'rgba(0,255,65,.25)',   dim:'#006818', border:'#003a0d' },
+  { bg:'#00091a', accent:'#00aaff', glow:'rgba(0,170,255,.25)',  dim:'#004d88', border:'#001a44' },
+  { bg:'#180005', accent:'#ff3366', glow:'rgba(255,51,102,.25)', dim:'#880030', border:'#3a0015' },
+  { bg:'#0d0020', accent:'#aa44ff', glow:'rgba(170,68,255,.25)', dim:'#550088', border:'#280044' },
+  { bg:'#0d1400', accent:'#aaff00', glow:'rgba(170,255,0,.25)',  dim:'#557700', border:'#2a3800' },
+];
+
+function applyTheme(idx) {
+  const t = CHALLENGE_THEMES[idx % CHALLENGE_THEMES.length];
+  const r = document.documentElement;
+  r.style.setProperty('--ch-accent', t.accent);
+  r.style.setProperty('--ch-glow',   t.glow);
+  r.style.setProperty('--ch-dim',    t.dim);
+  r.style.setProperty('--ch-border', t.border);
+  document.body.style.background = t.bg;
+}
+
+function resetTheme() {
+  ['--ch-accent','--ch-glow','--ch-dim','--ch-border'].forEach(v =>
+    document.documentElement.style.removeProperty(v));
+  document.body.style.background = '';
+}
+
 // ── State ──────────────────────────────────────────────
 let agents           = []; // [{realName, agentName, team}]
 let currentRealName  = '';
@@ -116,7 +141,8 @@ function showProposals() {
     if (sc >= max) {
       clearInterval(scanTmr); scanTmr = null;
       container.innerHTML = `<div class="proposals-label">Choisir un nom de code pour <strong>${esc(name)}</strong> :</div>` +
-        currentProposals.map(p => `<button class="proposal-btn" onclick="pickProposal('${p}')">${p}</button>`).join('');
+        currentProposals.map(p => `<button class="proposal-btn" onclick="pickProposal('${p}')">${p}</button>`).join('') +
+        `<button class="btn dim" style="font-size:11px;padding:.35rem .9rem;margin-top:.3rem;letter-spacing:.15em" onclick="cancelProposal()">← changer de prénom</button>`;
       document.getElementById('recruit-hint').textContent = 'Choisissez un nom de code.';
     }
   }, 72);
@@ -168,6 +194,17 @@ function matrixName(el, finalName, onDone) {
     el.textContent = r; frame++;
     if (frame >= total + len) { clearInterval(tmr); el.textContent = finalName; if (onDone) onDone(); }
   }, 58);
+}
+
+function cancelProposal() {
+  if (scanTmr) { clearInterval(scanTmr); scanTmr = null; }
+  currentRealName = '';
+  currentProposals = [];
+  document.getElementById('recruit-proposals').innerHTML = '';
+  document.getElementById('recruit-input').value = '';
+  document.getElementById('recruit-input').focus();
+  document.getElementById('recruit-hint').textContent =
+    agents.length === 0 ? 'Entrez un prénom pour générer des noms de code.' : 'Ajoutez un autre agent ou formez les équipes.';
 }
 
 function resetRecruitForm() {
@@ -444,7 +481,7 @@ function onSplashTap() {
 }
 
 // ── Écran connexion ────────────────────────────────────
-let _connectTmr = null;
+let _connectTimers = [];
 
 const CONNECT_LINES = [
   { t:   0, txt: 'INITIALISATION DU SYSTÈME KGB...',       cls: '' },
@@ -462,13 +499,12 @@ const CONNECT_LINES = [
 function startConnect() {
   const el = document.getElementById('connect-terminal');
   el.innerHTML = '';
-  if (_connectTmr) clearTimeout(_connectTmr);
+  _connectTimers.forEach(clearTimeout);
+  _connectTimers = [];
   let lines = [];
 
-  // Remplace la dernière ligne "pending" par la version "ok" quand elle arrive
   CONNECT_LINES.forEach(({ t, txt, cls }) => {
-    _connectTmr = setTimeout(() => {
-      // Si la ligne précédente était "pending", la remplacer
+    _connectTimers.push(setTimeout(() => {
       if (cls === 'ok' && lines.length) {
         lines[lines.length - 1] = _connectLine(txt, cls);
       } else {
@@ -476,11 +512,10 @@ function startConnect() {
       }
       el.innerHTML = lines.join('\n');
       playTypeSound();
-    }, t);
+    }, t));
   });
 
-  // Auto-avance vers le recrutement
-  _connectTmr = setTimeout(() => showPhase('phase-names'), 3800);
+  _connectTimers.push(setTimeout(() => showPhase('phase-names'), 3800));
 }
 
 function _connectLine(txt, cls) {
@@ -491,7 +526,8 @@ function _connectLine(txt, cls) {
 }
 
 function skipConnect() {
-  if (_connectTmr) clearTimeout(_connectTmr);
+  _connectTimers.forEach(clearTimeout);
+  _connectTimers = [];
   showPhase('phase-names');
 }
 
@@ -694,13 +730,14 @@ function showChallenge(idx) {
   if (ch.hint) {
     hz.classList.add('visible');
     const WAIT = 180;
+    const hintStartedAt = Date.now();
     document.getElementById('hint-timer').innerHTML =
       `<div class="hint-bar-label">indice disponible dans 3:00</div><div class="hint-bar-track"><div class="hint-bar-fill" id="hint-bar-fill"></div></div>`;
     hintTimer = setInterval(() => {
-      hintSeconds++;
+      hintSeconds = Math.round((Date.now() - hintStartedAt) / 1000);
       const wait = WAIT - hintSeconds;
       const fill = document.getElementById('hint-bar-fill');
-      if (fill) fill.style.width = (hintSeconds/WAIT*100)+'%';
+      if (fill) fill.style.width = (Math.min(hintSeconds, WAIT) / WAIT * 100) + '%';
       if (wait > 0) {
         const lbl = document.querySelector('.hint-bar-label');
         if (lbl) lbl.textContent = `indice disponible dans ${Math.floor(wait/60)}:${String(wait%60).padStart(2,'0')}`;
@@ -719,6 +756,7 @@ function showChallenge(idx) {
   if (ch.animation && ch.animation !== 'none') startChallengeAnim(ch.animation);
   else stopChallengeAnim();
 
+  applyTheme(idx);
   updateMiniTimer();
   showPhase('phase-challenge');
 }
@@ -832,6 +870,7 @@ function syncRevealTimer() { applyTimerStyle(document.getElementById('timer-sm-r
 // ── Final countdown ────────────────────────────────────
 function startFinalCountdown() {
   clearInterval(countdownTimer);
+  resetTheme();
   showPhase('phase-countdown');
   updateBigTimer();
   countdownTimer = setInterval(finalTick, 1000);
@@ -1019,6 +1058,7 @@ function resetApp() {
   agents=[]; currentRealName=''; currentProposals=[]; draggedAgent=null;
   revealedDigits=[]; currentChallenge=0; pinInput='';
   secondsLeft=cfg.duration; totalSeconds=cfg.duration;
+  resetTheme();
   renderRecruitList(); resetRecruitForm(); showPhase('phase-splash');
   stopBgArtefacts(); initBgArtefacts(); startSplashRotation();
 }

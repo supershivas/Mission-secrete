@@ -1,7 +1,25 @@
 /* ══ RESET & BASE ══════════════════════════════════════ */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{width:100%;height:100%;background:#000;overflow:hidden}
-body{font-family:'Share Tech Mono','Courier New',monospace;color:#00ff41;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:17px}
+body{font-family:'Share Tech Mono','Courier New',monospace;color:#00ff41;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:17px;transition:background 1.2s ease}
+
+/* ══ THÈME PAR ÉPREUVE ═════════════════════════════════ */
+:root{
+  --ch-accent:#00ff41;
+  --ch-glow:rgba(0,255,65,.25);
+  --ch-dim:#006818;
+  --ch-border:#003a0d;
+  --ch-bg:#000;
+}
+#phase-challenge .step-dot.active{border-color:var(--ch-accent);box-shadow:0 0 5px var(--ch-glow)}
+#phase-challenge .step-dot.done{background:var(--ch-accent);border-color:var(--ch-accent);box-shadow:0 0 6px var(--ch-glow)}
+#phase-challenge #code-input{border-color:var(--ch-border);color:var(--ch-accent)}
+#phase-challenge #code-input:focus{border-color:var(--ch-accent);box-shadow:0 0 0 1px var(--ch-glow)}
+#phase-challenge #timer-sm{color:var(--ch-dim)}
+#phase-challenge #progress-bar{background:var(--ch-accent)}
+#phase-challenge .label{color:var(--ch-dim);border-bottom-color:var(--ch-border)}
+#phase-reveal #timer-sm-rev{color:var(--ch-dim)}
+#phase-reveal #progress-bar-rev{background:var(--ch-accent)}
 
 /* ══ CRT ═══════════════════════════════════════════════ */
 #crt{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:repeating-linear-gradient(transparent,transparent 2px,rgba(0,255,65,.015) 2px,rgba(0,255,65,.015) 4px)}
