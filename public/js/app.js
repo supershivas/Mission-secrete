@@ -42,6 +42,7 @@ function showPhase(id) {
     document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     currentPhase = id;
+    if (id === 'phase-connect') startConnect();
     if (RESUMABLE_PHASES.includes(id)) saveSession();
     _pushMissionState();
   });
@@ -396,13 +397,99 @@ function onCardClick(e, idx) {
   playTypeSound(); renderTeams();
 }
 
+// ── Mode test ──────────────────────────────────────────
+function initTestMode() {
+  const bar = document.getElementById('test-mode-bar');
+  if (cfg.testMode) bar.style.display = 'flex';
+  else bar.style.display = 'none';
+}
+
+function globalSkip() {
+  switch (currentPhase) {
+    case 'phase-connect':
+      skipConnect(); break;
+    case 'phase-names':
+      if (agents.length === 0) {
+        agents.push({ realName: 'TEST', agentName: 'AGENT TEST', team: null });
+        renderRecruitList();
+      }
+      launchMission(); break;
+    case 'phase-message':
+      if (document.getElementById('autodestruct-bar-wrap').classList.contains('visible'))
+        skipAutodestruct();
+      else skipTypewriter();
+      break;
+    case 'phase-challenge':
+      document.getElementById('code-input').value = cfg.challenges[currentChallenge].code;
+      submitCode(); break;
+    case 'phase-reveal':
+      advanceFromReveal(); break;
+    case 'phase-countdown':
+      pinInput = revealedDigits.join('');
+      checkPin(); break;
+    default: break;
+  }
+}
+
 // ── Splash ─────────────────────────────────────────────
 function onSplashTap() {
   getAudioCtx();
   stopSplashRotation();
   triggerPhaseFlash();
   playRevealSound();
-  setTimeout(() => showPhase('phase-names'), 120);
+  setTimeout(() => showPhase('phase-connect'), 120);
+}
+
+// ── Écran connexion ────────────────────────────────────
+let _connectTmr = null;
+
+const CONNECT_LINES = [
+  { t:   0, txt: 'INITIALISATION DU SYSTÈME KGB...',       cls: '' },
+  { t: 500, txt: 'PROTOCOLE DE CHIFFREMENT RSA-4096',       cls: 'pending' },
+  { t: 900, txt: 'PROTOCOLE DE CHIFFREMENT RSA-4096  ✓',   cls: 'ok' },
+  { t:1100, txt: 'AUTHENTIFICATION BIOMÉTRIQUE',            cls: 'pending' },
+  { t:1500, txt: 'AUTHENTIFICATION BIOMÉTRIQUE  ✓',         cls: 'ok' },
+  { t:1700, txt: 'LOCALISATION SÉCURISÉE',                  cls: 'pending' },
+  { t:2000, txt: 'LOCALISATION SÉCURISÉE  ✓',              cls: 'ok' },
+  { t:2300, txt: 'NIVEAU D\'ACCÈS : ALPHA',                 cls: 'ok' },
+  { t:2700, txt: '',                                         cls: '' },
+  { t:2900, txt: '▶  ENRÔLEMENT DES AGENTS REQUIS',         cls: '' },
+];
+
+function startConnect() {
+  const el = document.getElementById('connect-terminal');
+  el.innerHTML = '';
+  if (_connectTmr) clearTimeout(_connectTmr);
+  let lines = [];
+
+  // Remplace la dernière ligne "pending" par la version "ok" quand elle arrive
+  CONNECT_LINES.forEach(({ t, txt, cls }) => {
+    _connectTmr = setTimeout(() => {
+      // Si la ligne précédente était "pending", la remplacer
+      if (cls === 'ok' && lines.length) {
+        lines[lines.length - 1] = _connectLine(txt, cls);
+      } else {
+        lines.push(_connectLine(txt, cls));
+      }
+      el.innerHTML = lines.join('\n');
+      playTypeSound();
+    }, t);
+  });
+
+  // Auto-avance vers le recrutement
+  _connectTmr = setTimeout(() => showPhase('phase-names'), 3800);
+}
+
+function _connectLine(txt, cls) {
+  if (!txt) return '';
+  if (cls === 'ok')      return `<span class="connect-ok">${txt}</span>`;
+  if (cls === 'pending') return `<span class="connect-pending">${txt}...</span>`;
+  return txt;
+}
+
+function skipConnect() {
+  if (_connectTmr) clearTimeout(_connectTmr);
+  showPhase('phase-names');
 }
 
 // ── Launch ─────────────────────────────────────────────
@@ -988,6 +1075,7 @@ function dismissResume() {
 
 // ── Appelée à chaque sync config (main.js) ─────────────
 function onCfgSync() {
+  initTestMode();
   // 1. Recalcule le timer si une mission est en cours
   if (missionStart > 0 && countdownTimer) {
     const elapsed = Math.round((Date.now() - missionStart) / 1000);

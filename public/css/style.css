@@ -115,8 +115,16 @@ body{font-family:'Share Tech Mono','Courier New',monospace;color:#00ff41;display
 .name-badge{background:#010d03;border:1px solid #003a0d;padding:.5rem 1rem;font-size:14px;letter-spacing:.12em;color:#00ff41;text-transform:uppercase;animation:fadein .4s ease}
 
 /* ══ MESSAGE ═══════════════════════════════════════════ */
-#skip-btn{position:absolute;top:6px;right:8px;background:transparent;border:none;color:#002a08;font-family:inherit;font-size:11px;letter-spacing:.15em;cursor:pointer;text-transform:uppercase;padding:.3rem .5rem;z-index:10;opacity:.35;transition:opacity .2s}
-#skip-btn:hover{opacity:.8;color:#006818}
+/* ══ MODE TEST — barre fixe ══════════════════════════ */
+#test-mode-bar{position:fixed;top:0;right:0;z-index:1200;display:flex;align-items:center;gap:.5rem;padding:.3rem .7rem .3rem .5rem;background:rgba(180,80,0,.92);border-bottom-left-radius:6px;pointer-events:auto}
+#test-mode-label{font-size:9px;letter-spacing:.2em;color:#ffe0b0;text-transform:uppercase;font-weight:700}
+#test-skip-btn{background:transparent;border:1px solid #ffe0b0;color:#ffe0b0;font-family:inherit;font-size:10px;letter-spacing:.12em;cursor:pointer;padding:.2rem .55rem;border-radius:3px;text-transform:uppercase;transition:background .15s}
+#test-skip-btn:hover{background:rgba(255,224,176,.2)}
+
+/* ══ ÉCRAN CONNEXION ════════════════════════════════ */
+#connect-terminal{font-size:clamp(11px,2.2vw,15px);line-height:1.9;color:#00ff41;text-shadow:0 0 8px rgba(0,255,65,.4);text-align:left;width:100%;max-width:480px;white-space:pre-wrap}
+.connect-ok{color:#00cc35}
+.connect-pending{color:#006818}
 #typewriter-text{font-size:clamp(17px,2.5vw,21px);line-height:1.95;color:#00cc35;width:100%;white-space:pre-wrap}
 #autodestruct-bar-wrap{width:100%;display:none;flex-direction:column;gap:.5rem}
 #autodestruct-bar-wrap.visible{display:flex}

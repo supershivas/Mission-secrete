@@ -2,6 +2,7 @@
 const DEFAULT_CFG = {
   missionName: "HELIE10",
   duration: 3600,
+  testMode: false,
   message: `AGENTS, VOUS RECEVEZ UNE TRANSMISSION D'URGENCE.
 
 Un des nôtres a été éliminé dans le QG.
@@ -58,7 +59,7 @@ function getCfg() {
       ...(DEFAULT_CFG.challenges[i] || {}), ...c
     }));
     chs.forEach(c => { if (!c.animation) c.animation = c.poison ? 'poison' : 'none'; });
-    return { missionName: stored.missionName || DEFAULT_CFG.missionName, duration: stored.duration || DEFAULT_CFG.duration, message: stored.message || DEFAULT_CFG.message, challenges: chs };
+    return { missionName: stored.missionName || DEFAULT_CFG.missionName, duration: stored.duration || DEFAULT_CFG.duration, testMode: !!stored.testMode, message: stored.message || DEFAULT_CFG.message, challenges: chs };
   } catch(e) { return DEFAULT_CFG; }
 }
 

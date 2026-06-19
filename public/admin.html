@@ -304,6 +304,12 @@
             </div>
             <div class="hint" style="margin-top:.4rem">Construit depuis les chiffres de chaque épreuve</div>
           </div>
+          <div class="field" style="flex-direction:row;align-items:center;gap:.75rem;flex-wrap:wrap">
+            <label style="margin:0;white-space:nowrap">Mode test 🧪</label>
+            <input type="checkbox" id="f-test-mode" onchange="syncTestMode()"
+              style="width:18px;height:18px;cursor:pointer;accent-color:#b35c00">
+            <div class="hint" style="margin:0">Affiche un bouton « ⏭ Passer » fixe en haut à droite pour sauter les phases</div>
+          </div>
         </div>
       </div>
     </div>
@@ -493,6 +499,7 @@ function loadConfig() {
   } catch(e) {}
   document.getElementById('f-name').value = cfg.missionName || 'HELIE10';
   document.getElementById('f-dur').value = Math.round(cfg.duration / 60);
+  document.getElementById('f-test-mode').checked = !!cfg.testMode;
   document.getElementById('f-msg').value = cfg.message;
   updateDurHint();
   renderTabs();
@@ -659,6 +666,11 @@ function updatePinPreview() {
   }
 }
 
+function syncTestMode() {
+  cfg.testMode = document.getElementById('f-test-mode').checked;
+  localStorage.setItem('agent_config', JSON.stringify(cfg));
+}
+
 function updateDurHint() {
   const v=parseInt(document.getElementById('f-dur').value,10);
   const h=document.getElementById('dur-hint');
@@ -682,6 +694,7 @@ function saveConfig() {
   });
   cfg.missionName = (document.getElementById('f-name').value.trim().toUpperCase()) || 'HELIE10';
   cfg.duration=mins*60;
+  cfg.testMode = document.getElementById('f-test-mode').checked;
   cfg.message=document.getElementById('f-msg').value;
   localStorage.setItem('agent_config',JSON.stringify(cfg));
   markClean();

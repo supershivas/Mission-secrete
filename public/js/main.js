@@ -2,6 +2,7 @@
 document.addEventListener('DOMContentLoaded', async () => {
   await pullConfigRemote();
   applyCfgToSplash();
+  initTestMode();
   startSplashRotation();
   initBgArtefacts();
   tryResume();

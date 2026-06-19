@@ -36,6 +36,12 @@
   </div>
 </div>
 
+<!-- ══ MODE TEST — bouton global fixe ════════════════ -->
+<div id="test-mode-bar" style="display:none">
+  <span id="test-mode-label">MODE TEST</span>
+  <button id="test-skip-btn" onclick="globalSkip()">⏭ Passer</button>
+</div>
+
 <!-- ══ SPLASH ════════════════════════════════════════ -->
 <div id="phase-splash" class="phase active" onclick="onSplashTap()">
   <div id="splash-center">
@@ -94,9 +100,13 @@
   <button class="btn" onclick="launchMission()" style="margin-top:.5rem">▶ Lancer la mission</button>
 </div>
 
+<!-- ══ CONNEXION ══════════════════════════════════════ -->
+<div id="phase-connect" class="phase">
+  <pre id="connect-terminal"></pre>
+</div>
+
 <!-- ══ MESSAGE ═══════════════════════════════════════ -->
-<div id="phase-message" class="phase" style="position:relative">
-  <button id="skip-btn" onclick="skipTypewriter()" title="Passer">⏭ passer</button>
+<div id="phase-message" class="phase">
   <div class="label">⬛ Transmission chiffrée — priorité absolue</div>
   <div id="typewriter-text"><span id="cursor"></span></div>
   <div id="autodestruct-bar-wrap">
