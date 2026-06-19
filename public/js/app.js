@@ -167,7 +167,7 @@ function onSplashTap() {
 let _connectTimers = [];
 let _connectAnimInt = null;
 
-const _CT_MATRIX_WORDS = ['МАТРИЦА','КОБРА','АГЕНТ','ДЕЛЬТА','СИГМА','ОМЕГА','АЛЬФА','GHOST','VIPER','CIPHER','BLAZE','NORDIK','SHADOW','ZÉNITH'];
+const _CT_MATRIX_WORDS = ['DGSE','COBRA','AGENT','DELTA','SIGMA','OMEGA','ALPHA','GHOST','VIPER','CIPHER','DAKAR','DKR','BXL','ADDIS','MONTREUIL','ÉTHIOPIE','SÉNÉGAL','BELGIQUE','OMBRE','ZÉNITH'];
 const _CT_MATRIX_SRC   = 'АБВГДЕЖЗИКЛМНОПРСТабвгдеж0123456789@#$%!?><';
 
 function _ctRand(n) {
@@ -229,8 +229,9 @@ function startConnect() {
   sc(  0, () => { /* star visible from start */ });
   sc(320, () => {
     showMatrix = true;
-    fixed.push('<span class="ct-ok">CONNEXION RÉSEAU KGB... ÉTABLIE</span>');
-    fixed.push('SERVEUR : MOSCOU-7  |  LIAISON CHIFFRÉE');
+    fixed.push('<span class="ct-ok">CONNEXION RÉSEAU DGSE... ÉTABLIE</span>');
+    fixed.push('SERVEUR : MONTREUIL-7  |  LIAISON CHIFFRÉE');
+    fixed.push('NŒUDS RELAIS : DKR · BXL · ADD-ABEBA');
     fixed.push('──────────────────────────────────────');
     playTypeSound();
   });
@@ -446,6 +447,13 @@ function resetApp() {
 // ── Appelée à chaque sync config ───────────────────────
 function onCfgSync() {
   initTestMode();
+  // Mise à jour agents/équipes injectée par l'admin en direct
+  if (cfg.runtimeAgents && missionStart > 0) {
+    agents = cfg.runtimeAgents;
+    _pushMissionState();
+    if (['phase-challenge','phase-reveal','phase-countdown'].includes(currentPhase))
+      _updateTeamsPeekBtn();
+  }
   if (missionStart > 0 && countdownTimer) {
     const elapsed = Math.round((Date.now() - missionStart) / 1000);
     totalSeconds  = cfg.duration;
