@@ -34,6 +34,7 @@ function showChallengeWithIntro(idx) {
   void ov.offsetWidth;
   ov.classList.add('show');
   playBriefingSound();
+  if (ch.animation && ch.animation !== 'none') playChallengeAmbient(ch.animation);
 
   const anim = CHALLENGE_ANIMS[ch.animation];
   if (anim) {
@@ -88,19 +89,19 @@ function showChallenge(idx) {
     hz.classList.add('visible');
     const WAIT = 180;
     const hintStartedAt = Date.now();
-    document.getElementById('hint-timer').innerHTML =
-      `<div class="hint-bar-label">indice disponible dans 3:00</div><div class="hint-bar-track"><div class="hint-bar-fill" id="hint-bar-fill"></div></div>`;
+    document.getElementById('hint-timer').textContent = '';
+    hbtn.style.display = 'none';
     hintTimer = setInterval(() => {
       hintSeconds = Math.round((Date.now() - hintStartedAt) / 1000);
       const wait = WAIT - hintSeconds;
-      const fill = document.getElementById('hint-bar-fill');
-      if (fill) fill.style.width = (Math.min(hintSeconds, WAIT) / WAIT * 100) + '%';
-      if (wait > 0) {
-        const lbl = document.querySelector('.hint-bar-label');
-        if (lbl) lbl.textContent = `indice disponible dans ${Math.floor(wait/60)}:${String(wait%60).padStart(2,'0')}`;
+      const htEl = document.getElementById('hint-timer');
+      if (wait > 60) {
+        if (htEl) htEl.textContent = '';
+      } else if (wait > 0) {
+        if (htEl) htEl.textContent = `💡 indice dans ${wait}s`;
       } else {
         clearInterval(hintTimer);
-        document.getElementById('hint-timer').innerHTML = `<div class="hint-bar-label" style="color:#ff9900;animation:blink2 .8s step-end infinite">⚡ Indice disponible !</div>`;
+        if (htEl) htEl.textContent = '';
         hbtn.style.display = 'inline-block';
       }
     }, 1000);
@@ -177,7 +178,10 @@ function showReveal(idx) {
   const btn = document.getElementById('reveal-next-btn');
   btn.textContent = isLast ? '▶ Désamorcer maintenant' : '▶ Épreuve suivante';
   syncRevealTimer();
+  btn.disabled = true;
+  btn.style.opacity = '0.35';
   showPhase('phase-reveal');
+  setTimeout(() => { btn.disabled = false; btn.style.opacity = ''; }, 2500);
   matrixReveal(digitEl, revealedDigits[idx], () => {
     const slot = document.getElementById('rslot-'+idx);
     if (slot) slot.textContent = revealedDigits[idx];
@@ -187,13 +191,22 @@ function showReveal(idx) {
 
 function matrixReveal(el, finalChar, onDone) {
   const chars = '0123456789';
-  let count = 0; const max = 20;
+  let count = 0; const total = 32;
+  el.classList.remove('digit-locked');
   playDecodeSound();
-  const tmr = setInterval(() => {
+  function step() {
     el.textContent = chars[Math.floor(Math.random() * chars.length)];
     count++;
-    if (count >= max) { clearInterval(tmr); el.textContent = finalChar; if (onDone) onDone(); }
-  }, 65);
+    const delay = count < 10 ? 45 : count < 20 ? 75 : count < 28 ? 130 : 220;
+    if (count < total) {
+      setTimeout(step, delay);
+    } else {
+      el.textContent = finalChar;
+      el.classList.add('digit-locked');
+      if (onDone) setTimeout(onDone, 280);
+    }
+  }
+  step();
 }
 
 function advanceFromReveal() {

@@ -200,6 +200,53 @@ function playFanfare() {
   } catch(e) {}
 }
 
+function playVocalCountdown(n) {
+  if (typeof speechSynthesis === 'undefined') return;
+  try {
+    const u = new SpeechSynthesisUtterance(String(n));
+    u.lang = 'fr-FR'; u.rate = 1.1; u.pitch = 0.75; u.volume = 1;
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+  } catch(e) {}
+}
+
+function updateAmbientIntensity() {
+  if (!ambientGain || !audioCtx || !totalSeconds) return;
+  const ratio = secondsLeft / totalSeconds;
+  const extra  = Math.max(0, (0.3 - ratio) / 0.3);
+  const gain   = 0.28 + extra * 0.34;
+  try { ambientGain.gain.setTargetAtTime(gain, audioCtx.currentTime, 2.5); } catch(e) {}
+}
+
+function playChallengeAmbient(animName) {
+  try {
+    const ctx = getAudioCtx();
+    const C = {
+      skull:  { freqs:[55,73.4],      type:'sawtooth', dur:5.5, filterHz:160,  g:.07 },
+      laser:  { freqs:[880,1320],     type:'sine',     dur:4,   filterHz:3000, g:.04 },
+      garden: { freqs:[330,415,523],  type:'triangle', dur:5.5, filterHz:4000, g:.055 },
+      poison: { freqs:[82,110,138.6], type:'sawtooth', dur:5.5, filterHz:260,  g:.07 },
+      creeper:{ freqs:[110,138.6],    type:'square',   dur:4,   filterHz:400,  g:.05 },
+      bloc:   { freqs:[220,277.2],    type:'triangle', dur:4.5, filterHz:1500, g:.055 },
+    };
+    const c = C[animName] || C.skull;
+    c.freqs.forEach((freq, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+      const lfo = ctx.createOscillator(), lfoG = ctx.createGain();
+      o.type = c.type; o.frequency.value = freq;
+      f.type = 'lowpass'; f.frequency.value = c.filterHz;
+      lfo.frequency.value = 0.1 + i * 0.06; lfoG.gain.value = freq * 0.035;
+      lfo.connect(lfoG); lfoG.connect(o.frequency); lfo.start(); lfo.stop(ctx.currentTime + c.dur);
+      const gl = c.g / (i + 1);
+      g.gain.setValueAtTime(0, ctx.currentTime);
+      g.gain.linearRampToValueAtTime(gl, ctx.currentTime + 1.2);
+      g.gain.setValueAtTime(gl, ctx.currentTime + c.dur - 1);
+      g.gain.linearRampToValueAtTime(0, ctx.currentTime + c.dur);
+      o.connect(f); f.connect(g); g.connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime + c.dur);
+    });
+  } catch(e) {}
+}
+
 function playMorse(word) {
   try {
     const MORSE = {

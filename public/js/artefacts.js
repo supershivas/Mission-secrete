@@ -46,7 +46,7 @@ function initBgArtefacts() {
     const z = zones[i];
     bgArts.push({ el, x: z.x[0] + Math.random() * (z.x[1] - z.x[0]), y: z.y[0] + Math.random() * (z.y[1] - z.y[0]),
       vx: (Math.random() - .5) * .016, vy: (Math.random() - .5) * .011,
-      base: .05 + Math.random() * .04, phase: Math.random() * Math.PI * 2, freq: .0004 + Math.random() * .0003 });
+      base: .13 + Math.random() * .09, phase: Math.random() * Math.PI * 2, freq: .0004 + Math.random() * .0003 });
   });
   if (bgAnimFrame) cancelAnimationFrame(bgAnimFrame);
   bgAnimFrame = requestAnimationFrame(tickBg);

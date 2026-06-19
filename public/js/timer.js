@@ -3,6 +3,7 @@
 function globalTick() {
   secondsLeft = Math.max(0, secondsLeft - 1);
   updateMiniTimer(); syncRevealTimer();
+  updateAmbientIntensity();
   if (secondsLeft <= 30 && secondsLeft > 0) playTick(secondsLeft <= 10);
   if (secondsLeft === 0) { clearInterval(countdownTimer); stopAmbientMusic(); triggerExplosion(); }
   if (secondsLeft % 10 === 0) saveSession();
@@ -35,6 +36,7 @@ function finalTick() {
   updateCountdownBg();
   if (secondsLeft <= 60) document.body.classList.add('time-danger');
   if (secondsLeft <= 30 && secondsLeft > 0) playTick(secondsLeft <= 10);
+  if (secondsLeft >= 1 && secondsLeft <= 10) playVocalCountdown(secondsLeft);
   if (secondsLeft === 0) { clearInterval(countdownTimer); stopAmbientMusic(); triggerExplosion(); }
   if (secondsLeft % 10 === 0) saveSession();
 }
