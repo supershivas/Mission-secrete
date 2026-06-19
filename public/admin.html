@@ -242,9 +242,29 @@
       opacity: 0; transition: opacity .3s;
     }
     #save-fb.show { opacity: 1 }
+
+    /* ── TOASTS ── */
+    #toast-container {
+      position: fixed; top: 1rem; right: 1rem; z-index: 9999;
+      display: flex; flex-direction: column; gap: .5rem; pointer-events: none;
+    }
+    .toast {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; padding: .6rem 1rem; font-size: 13px; font-weight: 500;
+      box-shadow: 0 4px 16px rgba(0,0,0,.12);
+      transform: translateX(110%); opacity: 0;
+      transition: transform .25s ease, opacity .25s ease;
+      pointer-events: auto; max-width: 280px;
+    }
+    .toast.visible { transform: translateX(0); opacity: 1 }
+    .toast.toast-ok   { border-left: 3px solid var(--accent); color: var(--accent) }
+    .toast.toast-err  { border-left: 3px solid var(--red);    color: var(--red) }
+    .toast.toast-info { border-left: 3px solid #888;          color: var(--text) }
   </style>
 </head>
 <body>
+
+<div id="toast-container"></div>
 
 <!-- ── AUTH ──────────────────────────────────── -->
 <div id="auth-screen">
@@ -285,7 +305,6 @@
           <button class="btn btn-secondary" onclick="addTime(10)">+ 10 min</button>
           <button class="btn btn-secondary" onclick="addTime(15)">+ 15 min</button>
           <button class="btn btn-secondary" onclick="addTime(30)">+ 30 min</button>
-          <div id="addtime-fb" style="font-size:12px;color:var(--accent)"></div>
         </div>
         <div style="border-top:1px solid var(--border);padding-top:1rem;display:flex;flex-direction:column;gap:.75rem">
           <div style="display:flex;align-items:center;justify-content:space-between">
@@ -293,7 +312,6 @@
             <button class="btn btn-secondary btn-sm" onclick="refreshLiveAgents()">↺ Rafraîchir</button>
           </div>
           <div id="live-agents-wrap" style="font-size:12px;color:var(--muted)">Aucune mission en cours.</div>
-          <div id="live-agents-fb" style="font-size:12px;color:var(--accent);min-height:16px"></div>
         </div>
       </div>
     </div>
@@ -584,6 +602,7 @@ function renderTabs() {
             <option value="libre"${(ch.type||'libre')==='libre'?' selected':''}>📝 Texte libre</option>
             <option value="morse"${ch.type==='morse'?' selected':''}>📡 Morse (décodage)</option>
             <option value="talkie"${ch.type==='talkie'?' selected':''}>📻 Talkie-walkie</option>
+            <option value="qr"${ch.type==='qr'?' selected':''}>📷 QR Code</option>
           </select>
           <div class="hint">Contrôle l'interface affichée pendant l'épreuve</div>
         </div>
@@ -740,6 +759,19 @@ function updateDurHint() {
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
+function showToast(msg, type='info', duration=3000) {
+  const container = document.getElementById('toast-container');
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  container.appendChild(t);
+  requestAnimationFrame(() => requestAnimationFrame(() => t.classList.add('visible')));
+  setTimeout(() => {
+    t.classList.remove('visible');
+    setTimeout(() => t.remove(), 300);
+  }, duration);
+}
+
 function saveConfig() {
   const mins=parseInt(document.getElementById('f-dur').value,10);
   if(isNaN(mins)||mins<1||mins>180){alert('Durée invalide (1–180 min)');return;}
@@ -759,13 +791,9 @@ function saveConfig() {
   cfg.message=document.getElementById('f-msg').value;
   localStorage.setItem('agent_config',JSON.stringify(cfg));
   markClean();
-  const fb=document.getElementById('save-fb');
-  fb.classList.add('show');
   updatePinPreview();
   pushConfigRemote(cfg).then(ok => {
-    fb.textContent = ok ? '✓ Enregistré + synchronisé' : '✓ Enregistré (hors ligne)';
-    document.getElementById('sticky-save').classList.add('visible');
-    setTimeout(()=>{ fb.classList.remove('show'); document.getElementById('sticky-save').classList.remove('visible'); }, 2500);
+    showToast(ok ? '✓ Enregistré + synchronisé' : '✓ Enregistré (hors ligne)', 'ok');
   });
 }
 
@@ -774,13 +802,12 @@ function resetDefault() {
   localStorage.removeItem('agent_config');
   cfg=JSON.parse(JSON.stringify(DEFAULT_CFG));
   activeTab=0; loadConfig();
+  showToast('↺ Réglages réinitialisés', 'info');
 }
 
 // ── Contrôle en direct ────────────────────────────────
 async function addTime(minutes) {
-  const fb = document.getElementById('addtime-fb');
-  fb.textContent = 'Mise à jour…';
-  // Tire la config distante pour avoir la durée actuelle
+  showToast('Mise à jour…', 'info', 1500);
   try {
     const res = await fetch('/api/config');
     if (res.ok) {
@@ -789,12 +816,10 @@ async function addTime(minutes) {
     }
   } catch(e) {}
   cfg.duration += minutes * 60;
-  // Met aussi à jour le champ durée dans le formulaire
   document.getElementById('f-dur').value = Math.round(cfg.duration / 60);
   updateDurHint();
   const ok = await pushConfigRemote(cfg);
-  fb.textContent = ok ? `✓ +${minutes} min appliquées` : '✗ Erreur réseau';
-  setTimeout(() => { fb.textContent = ''; }, 3000);
+  showToast(ok ? `✓ +${minutes} min appliquées` : '✗ Erreur réseau', ok ? 'ok' : 'err');
 }
 
 // Affiche la durée configurée dans le header live
@@ -834,12 +859,13 @@ async function refreshLiveAgents() {
   const wrap = document.getElementById('live-agents-wrap');
   try {
     const res = await fetch('/api/state');
-    if (!res.ok) { wrap.textContent = 'Aucune mission en cours.'; return; }
+    if (!res.ok) { wrap.textContent = 'Aucune mission en cours.'; showToast('Aucune mission active', 'info'); return; }
     const st = await res.json();
-    if (!st?.agents?.length) { wrap.textContent = 'Aucun agent enrôlé.'; return; }
+    if (!st?.agents?.length) { wrap.textContent = 'Aucun agent enrôlé.'; showToast('Aucun agent enrôlé', 'info'); return; }
     _liveAgents = st.agents.map(a => ({ ...a }));
     renderLiveAgents();
-  } catch(e) { wrap.textContent = 'Erreur réseau.'; }
+    showToast(`✓ ${_liveAgents.length} agent(s) chargé(s)`, 'ok');
+  } catch(e) { wrap.textContent = 'Erreur réseau.'; showToast('✗ Erreur réseau', 'err'); }
 }
 
 function renderLiveAgents() {
@@ -869,17 +895,15 @@ function toggleLiveTeam(i) {
 }
 
 async function applyLiveAgents() {
-  const fb = document.getElementById('live-agents-fb');
-  fb.textContent = 'Envoi…';
+  showToast('Envoi…', 'info', 1500);
   try {
     const res = await fetch('/api/config');
     if (!res.ok) throw new Error();
     const remoteCfg = await res.json();
     remoteCfg.runtimeAgents = _liveAgents;
     const ok = await pushConfigRemote(remoteCfg);
-    fb.textContent = ok ? '✓ Mis à jour — synchronisation dans ~3s' : '✗ Erreur réseau';
-  } catch(e) { fb.textContent = '✗ Erreur réseau'; }
-  setTimeout(() => { fb.textContent = ''; }, 4000);
+    showToast(ok ? '✓ Mis à jour — synchro dans ~3s' : '✗ Erreur réseau', ok ? 'ok' : 'err');
+  } catch(e) { showToast('✗ Erreur réseau', 'err'); }
 }
 
 // ── Remote sync ───────────────────────────────────────
