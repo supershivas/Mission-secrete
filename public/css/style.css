@@ -180,6 +180,10 @@ body{font-family:'Share Tech Mono','Courier New',monospace;color:#00ff41;display
   transition:background .15s;
 }
 .morse-listen-btn:active{background:rgba(0,255,65,.15)}
+.morse-ref-label{font-size:10px;letter-spacing:.2em;color:#006818;margin-top:.7rem;text-transform:uppercase}
+.morse-ref{display:flex;flex-wrap:wrap;gap:.2rem .5rem;justify-content:center;max-width:340px;margin-top:.3rem}
+.mref-cell{font-size:11px;letter-spacing:.05em;color:#00cc44;min-width:52px;white-space:nowrap}
+.mref-cell b{color:#00ff41;margin-right:.25rem}
 
 /* ══ REVEAL ════════════════════════════════════════════ */
 #partial-code{display:flex;gap:1rem;margin-top:.5rem;flex-wrap:wrap;justify-content:center}

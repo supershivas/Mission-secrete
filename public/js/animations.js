@@ -227,28 +227,38 @@ function startChallengeAnim(name, word) {
     wrap.classList.add('active');
     el.style.color = '#00ff41';
     el.style.textShadow = '0 0 14px rgba(0,255,65,.5)';
-    el.style.fontSize = 'clamp(14px,2.5vw,20px)';
-    el.style.letterSpacing = '.15em';
+    el.style.fontSize = 'clamp(18px,4vw,28px)';
+    el.style.letterSpacing = '.3em';
+    el.style.lineHeight = '2.2';
     el.style.animation = 'none';
 
-    // Affichage lettre par lettre
-    const lines = _morseWord.split('').map(c => {
-      const m = MORSE_TABLE[c] || '?';
-      return `${c}  ${m}`;
-    });
-    el.textContent = lines.join('\n');
+    // Affichage des symboles morse SANS les lettres (les enfants décodent avec la table)
+    el.textContent = _morseWord.split('').map(c => MORSE_TABLE[c] || '?').join('   ');
 
-    // Bouton écouter dans recipe-steps
+    // Table de référence A-Z compacte + bouton écouter
     if (steps) {
-      steps.innerHTML = `<button class="btn morse-listen-btn" onclick="playMorse('${_morseWord}')">▶ Écouter le signal</button>`;
+      const REF = [
+        ['A','·─'],['B','─···'],['C','─·─·'],['D','─··'],['E','·'],['F','··─·'],
+        ['G','──·'],['H','····'],['I','··'],['J','·───'],['K','─·─'],['L','·─··'],
+        ['M','──'],['N','─·'],['O','───'],['P','·──·'],['Q','──·─'],['R','·─·'],
+        ['S','···'],['T','─'],['U','··─'],['V','···─'],['W','·──'],['X','─··─'],
+        ['Y','─·──'],['Z','──··'],
+        ['0','─────'],['1','·────'],['2','··───'],['3','···──'],['4','····─'],
+        ['5','·····'],['6','─····'],['7','──···'],['8','───··'],['9','────·']
+      ];
+      const rows = REF.map(([l,m]) => `<span class="mref-cell"><b>${l}</b>${m}</span>`).join('');
+      steps.innerHTML =
+        `<button class="btn morse-listen-btn" onclick="playMorse('${_morseWord}')">▶ Écouter le signal</button>` +
+        `<div class="morse-ref-label">Table de référence :</div>` +
+        `<div class="morse-ref">${rows}</div>`;
     }
 
-    // Animation clignotante sur le curseur
+    // Clignotement discret
     let blink = true;
     _animTmr = setInterval(() => {
       blink = !blink;
-      el.style.opacity = blink ? '1' : '.7';
-    }, 700);
+      el.style.opacity = blink ? '1' : '.65';
+    }, 900);
     return;
   }
 
