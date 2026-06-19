@@ -292,5 +292,5 @@ function triggerPhaseFlash(onPeak) {
   el.classList.remove('flash');
   void el.offsetWidth;
   el.classList.add('flash');
-  if (onPeak) setTimeout(onPeak, 70);
+  if (onPeak) setTimeout(onPeak, 0);
 }

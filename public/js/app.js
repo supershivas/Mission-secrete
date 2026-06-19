@@ -173,7 +173,7 @@ function resetRecruitForm() {
   document.getElementById('recruit-proposals').innerHTML = '';
   document.getElementById('recruit-hint').textContent =
     agents.length === 0 ? 'Entrez un prénom pour générer des noms de code.' : 'Ajoutez un autre agent ou formez les équipes.';
-  document.getElementById('recruit-input').focus();
+  document.getElementById('recruit-input').blur();
 }
 
 function renderRecruitList() {
@@ -988,7 +988,7 @@ function onCfgSync() {
     document.getElementById('ch-brief').textContent = ch.brief;
 
     ch.animation && ch.animation !== 'none'
-      ? startChallengeAnim(ch.animation)
+      ? startChallengeAnim(ch.animation, ch.code)
       : stopChallengeAnim();
 
     // team banner
