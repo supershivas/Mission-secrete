@@ -164,9 +164,13 @@ body{font-family:'Share Tech Mono','Courier New',monospace;color:#00ff41;display
 #test-skip-btn:hover{background:rgba(255,224,176,.2)}
 
 /* ══ ÉCRAN CONNEXION ════════════════════════════════ */
-#connect-terminal{font-size:clamp(11px,2.2vw,15px);line-height:1.9;color:#00ff41;text-shadow:0 0 8px rgba(0,255,65,.4);text-align:left;width:100%;max-width:480px;white-space:pre-wrap}
+#connect-terminal{font-size:clamp(11px,2.2vw,14px);line-height:2;color:#00ff41;text-shadow:0 0 8px rgba(0,255,65,.4);text-align:left;width:100%;max-width:520px;white-space:pre-wrap}
 .connect-ok{color:#00cc35}
 .connect-pending{color:#006818}
+.ct-star{color:#ffe566;text-shadow:0 0 10px rgba(255,229,102,.7);letter-spacing:.08em}
+.ct-matrix{color:#004d1a;font-size:.85em;letter-spacing:.06em}
+.ct-prog{color:#00ff41;letter-spacing:.04em}
+.ct-cnt{color:#555;font-size:.88em}
 #typewriter-text{font-size:clamp(17px,2.5vw,21px);line-height:1.95;color:#00cc35;width:100%;white-space:pre-wrap}
 #autodestruct-bar-wrap{width:100%;display:none;flex-direction:column;gap:.5rem}
 #autodestruct-bar-wrap.visible{display:flex}
