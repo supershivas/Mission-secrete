@@ -1,9 +1,10 @@
-const CACHE = 'agent-v22';
+const CACHE = 'agent-v23';
 const ASSETS = [
   '/',
   '/index.html',
   '/admin.html',
   '/tv.html',
+  '/livret.html',
   '/manifest.json',
   '/css/style.css',
   '/js/config.js',

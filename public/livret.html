@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Livret Organisateur</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Share Tech Mono', monospace;
+      background: #111;
+      color: #00ff41;
+      padding: 1.5rem;
+    }
+
+    #toolbar {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      background: #0a2010;
+      border: 1px solid #003a0d;
+      border-radius: 6px;
+      padding: .8rem 1rem;
+    }
+    #toolbar h1 { font-size: 14px; letter-spacing: .2em; flex: 1; }
+    .btn-print {
+      background: #00cc44;
+      color: #000;
+      border: none;
+      border-radius: 4px;
+      padding: .5rem 1.2rem;
+      font-family: inherit;
+      font-size: 13px;
+      letter-spacing: .1em;
+      cursor: pointer;
+    }
+    .btn-print:active { opacity: .8; }
+    .status { font-size: 11px; color: #006818; letter-spacing: .1em; }
+
+    /* ── Pages ─────────────────────────────────────────── */
+    .page {
+      background: #fff;
+      color: #000;
+      width: 210mm;
+      min-height: 297mm;
+      margin: 0 auto 2rem;
+      padding: 15mm 18mm;
+      font-family: 'Share Tech Mono', monospace;
+      position: relative;
+    }
+
+    /* Cover */
+    .cover { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+    .cover-badge { border: 3px solid #000; display: inline-block; padding: .4rem 1.2rem; letter-spacing: .3em; font-size: 11px; margin-bottom: 2rem; }
+    .cover-title { font-size: 28px; font-weight: bold; letter-spacing: .15em; line-height: 1.2; margin-bottom: .5rem; }
+    .cover-sub { font-size: 13px; letter-spacing: .2em; color: #333; margin-bottom: 3rem; }
+    .cover-mission { font-size: 18px; letter-spacing: .3em; border-top: 2px solid #000; border-bottom: 2px solid #000; padding: .5rem 0; margin-bottom: 2rem; width: 100%; }
+    .cover-meta { font-size: 11px; letter-spacing: .1em; color: #555; }
+    .cover-warning { margin-top: 3rem; font-size: 11px; color: #333; border: 1px solid #333; padding: .5rem 1rem; letter-spacing: .05em; }
+
+    /* Challenge pages */
+    .page-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #000; padding-bottom: .6rem; margin-bottom: 1.2rem; }
+    .page-label { font-size: 10px; letter-spacing: .2em; color: #555; }
+    .ch-number { font-size: 11px; letter-spacing: .2em; background: #000; color: #fff; padding: .2rem .6rem; }
+    .ch-title { font-size: 18px; letter-spacing: .1em; font-weight: bold; margin-bottom: .5rem; }
+    .section { margin-bottom: 1.2rem; }
+    .section-label { font-size: 10px; letter-spacing: .25em; color: #555; text-transform: uppercase; border-bottom: 1px solid #ddd; padding-bottom: .2rem; margin-bottom: .5rem; }
+    .section-body { font-size: 12px; line-height: 1.6; white-space: pre-wrap; }
+    .code-box { background: #000; color: #00cc44; font-size: 20px; letter-spacing: .4em; text-align: center; padding: .6rem; margin: .3rem 0; border-radius: 3px; }
+    .digit-box { background: #000; color: #ffcc00; font-size: 32px; text-align: center; padding: .4rem; margin: .3rem 0; border-radius: 3px; }
+    .hint-box { background: #fffbe6; border-left: 3px solid #ffcc00; padding: .5rem .8rem; font-size: 11px; line-height: 1.5; }
+    .type-tag { display: inline-block; font-size: 10px; letter-spacing: .15em; border: 1px solid #333; padding: .1rem .4rem; margin-bottom: .8rem; }
+    .no-hint { font-size: 11px; color: #aaa; font-style: italic; }
+
+    /* PIN recap */
+    .pin-recap { display: flex; gap: 1rem; justify-content: center; margin: 1.5rem 0; }
+    .pin-slot { border: 2px solid #000; width: 60px; height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .pin-slot-num { font-size: 24px; font-weight: bold; }
+    .pin-slot-label { font-size: 8px; color: #666; letter-spacing: .1em; }
+    .pin-full { font-size: 36px; letter-spacing: .4em; text-align: center; border: 3px solid #000; padding: .5rem; margin-top: .5rem; }
+
+    /* Footer */
+    .page-footer { position: absolute; bottom: 10mm; left: 18mm; right: 18mm; display: flex; justify-content: space-between; font-size: 9px; color: #aaa; border-top: 1px solid #eee; padding-top: .3rem; }
+
+    /* Loader */
+    #loader {
+      display: flex; align-items: center; justify-content: center;
+      min-height: 60vh;
+    }
+    .loader-box {
+      background: #0a2010; border: 1px solid #003a0d; border-radius: 8px;
+      padding: 2rem 2.5rem; text-align: center; min-width: 280px;
+    }
+    .loader-title { font-size: 13px; letter-spacing: .25em; margin-bottom: 1.2rem; }
+    .loader-bar-track { background: #011a06; border: 1px solid #003a0d; border-radius: 3px; height: 8px; overflow: hidden; margin-bottom: .8rem; }
+    .loader-bar-fill { height: 100%; background: #00cc44; width: 0; transition: width .4s ease; border-radius: 3px; }
+    .loader-step { font-size: 11px; color: #006818; letter-spacing: .1em; min-height: 1.2em; }
+
+    /* Print */
+    @media print {
+      #toolbar, #loader { display: none !important; }
+      body { background: #fff; padding: 0; }
+      .page { margin: 0; box-shadow: none; page-break-after: always; display: block !important; }
+      .page:last-child { page-break-after: avoid; }
+      #livret { display: block !important; }
+    }
+  </style>
+</head>
+<body>
+  <div id="toolbar">
+    <h1>⬛ LIVRET ORGANISATEUR — aperçu avant impression</h1>
+    <span class="status" id="status">Chargement…</span>
+    <button class="btn-print" id="print-btn" onclick="doPrint()" style="display:none">🖨 Imprimer / Enregistrer PDF</button>
+  </div>
+  <div id="loader">
+    <div class="loader-box">
+      <div class="loader-title">⬛ GÉNÉRATION EN COURS</div>
+      <div class="loader-bar-track"><div class="loader-bar-fill" id="loader-fill"></div></div>
+      <div class="loader-step" id="loader-step">Lecture de la configuration…</div>
+    </div>
+  </div>
+  <div id="livret" style="display:none"></div>
+
+  <script>
+    function esc(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function setLoader(pct, step) {
+      const fill = document.getElementById('loader-fill');
+      const stepEl = document.getElementById('loader-step');
+      if (fill) fill.style.width = pct + '%';
+      if (stepEl) stepEl.textContent = step;
+    }
+
+    function doPrint() {
+      window.print();
+    }
+
+    async function loadCfg() {
+      // Priorité : localStorage, sinon API
+      try {
+        const local = localStorage.getItem('agent_config');
+        if (local) return JSON.parse(local);
+      } catch(e) {}
+      try {
+        const r = await fetch('/api/config');
+        if (r.ok) return await r.json();
+      } catch(e) {}
+      return null;
+    }
+
+    const TYPE_LABELS = { libre: 'Texte libre', morse: 'Décodage Morse', talkie: 'Talkie-walkie' };
+
+    async function render() {
+      setLoader(10, 'Lecture de la configuration…');
+      await new Promise(r => setTimeout(r, 120));
+
+      const cfg = await loadCfg();
+      setLoader(40, 'Configuration chargée…');
+      await new Promise(r => setTimeout(r, 100));
+
+      if (!cfg) {
+        document.getElementById('loader').style.display = 'none';
+        document.getElementById('status').textContent = '⚠ Config introuvable';
+        document.getElementById('livret').innerHTML = '<p style="color:#f00;padding:2rem;font-family:monospace">Aucune config trouvée. Ouvrez d\'abord le backoffice sur cet appareil.</p>';
+        document.getElementById('livret').style.display = '';
+        return;
+      }
+
+      const n = cfg.challenges.length;
+      const durMin = Math.round((cfg.duration || 3600) / 60);
+      const now = new Date().toLocaleDateString('fr-FR');
+
+      let html = '';
+
+      // ── Page couverture ──────────────────────────────
+      html += `<div class="page cover">
+        <div class="cover-badge">DOCUMENT CONFIDENTIEL — ORGANISATEUR UNIQUEMENT</div>
+        <div class="cover-title">MISSION AGENT SECRET</div>
+        <div class="cover-sub">Livret organisateur — généré le ${esc(now)}</div>
+        <div class="cover-mission">${esc(cfg.missionName || 'MISSION')}</div>
+        <div class="cover-meta">
+          Durée : ${durMin} minutes &nbsp;|&nbsp; ${n} épreuve${n>1?'s':''}<br>
+          PIN de désarmement : ${cfg.challenges.map(c => c.digit||'?').join('')}
+        </div>
+        <div class="cover-warning">
+          ⚠ Ce document contient les codes secrets et réponses à toutes les épreuves.<br>
+          Ne pas laisser à la portée des participants.
+        </div>
+        <div class="page-footer"><span>${esc(cfg.missionName||'MISSION')}</span><span>Page 1 / ${n+2}</span></div>
+      </div>`;
+
+      // ── Une page par épreuve ─────────────────────────
+      cfg.challenges.forEach((ch, i) => {
+        const typeLabel = TYPE_LABELS[ch.type || 'libre'] || 'Texte libre';
+        html += `<div class="page">
+          <div class="page-header">
+            <div>
+              <div class="page-label">${esc(cfg.missionName||'MISSION')} — FICHE ÉPREUVE</div>
+              <div class="ch-title">${esc(ch.title || `ÉPREUVE ${i+1}`)}</div>
+              <span class="type-tag">${esc(typeLabel)}</span>
+            </div>
+            <div class="ch-number">ÉPREUVE ${i+1} / ${n}</div>
+          </div>
+
+          <div class="section">
+            <div class="section-label">Brief affiché aux agents</div>
+            <div class="section-body">${esc(ch.brief||'').replace(/\\n/g,'\n')}</div>
+          </div>
+
+          <div class="section">
+            <div class="section-label">Code à trouver</div>
+            <div class="code-box">${esc(ch.code||'???')}</div>
+          </div>
+
+          <div class="section">
+            <div class="section-label">Chiffre révélé (position ${i+1} du PIN)</div>
+            <div class="digit-box">${esc(ch.digit||'?')}</div>
+          </div>
+
+          <div class="section">
+            <div class="section-label">Indice (affiché après 3 min de blocage)</div>
+            ${ch.hint
+              ? `<div class="hint-box">${esc(ch.hint)}</div>`
+              : `<div class="no-hint">Pas d'indice configuré pour cette épreuve</div>`}
+          </div>
+
+          <div class="page-footer">
+            <span>${esc(cfg.missionName||'MISSION')} — Confidentiel organisateur</span>
+            <span>Page ${i+2} / ${n+2}</span>
+          </div>
+        </div>`;
+      });
+
+      // ── Page récapitulatif PIN ───────────────────────
+      const digits = cfg.challenges.map(c => c.digit||'?');
+      const pin = digits.join('');
+      html += `<div class="page">
+        <div class="page-header">
+          <div>
+            <div class="page-label">${esc(cfg.missionName||'MISSION')} — RÉCAPITULATIF</div>
+            <div class="ch-title">Code de désarmement final</div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-label">Chiffres dans l'ordre</div>
+          <div class="pin-recap">
+            ${digits.map((d,i) => `<div class="pin-slot">
+              <div class="pin-slot-num">${esc(d)}</div>
+              <div class="pin-slot-label">ÉPREUVE ${i+1}</div>
+            </div>`).join('')}
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-label">PIN complet à entrer sur le pavé numérique</div>
+          <div class="pin-full">${esc(pin)}</div>
+        </div>
+
+        <div class="section" style="margin-top:2rem">
+          <div class="section-label">Déroulement chronologique</div>
+          <div class="section-body" style="font-size:11px;line-height:2">
+${cfg.challenges.map((ch,i) => `  ${i+1}. ${esc(ch.title||`Épreuve ${i+1}`)} → code : ${esc(ch.code||'?')} → chiffre : ${esc(ch.digit||'?')}`).join('\n')}
+  ${n+1}. Pavé PIN → saisir ${esc(pin)} pour désamorcer</div>
+        </div>
+
+        <div class="section" style="margin-top:2rem">
+          <div class="section-label">Configuration mission</div>
+          <div class="section-body" style="font-size:11px;color:#555">
+  Mission : ${esc(cfg.missionName||'MISSION')}
+  Durée : ${durMin} minutes
+  Mode test : ${cfg.testMode ? 'Activé' : 'Désactivé'}
+  Généré le : ${esc(now)}</div>
+        </div>
+
+        <div class="page-footer">
+          <span>${esc(cfg.missionName||'MISSION')} — Confidentiel organisateur</span>
+          <span>Page ${n+2} / ${n+2}</span>
+        </div>
+      </div>`;
+
+      setLoader(80, 'Mise en page…');
+      await new Promise(r => setTimeout(r, 80));
+
+      document.getElementById('livret').innerHTML = html;
+
+      setLoader(100, 'Prêt !');
+      await new Promise(r => setTimeout(r, 300));
+
+      document.getElementById('loader').style.display = 'none';
+      document.getElementById('livret').style.display = '';
+      document.getElementById('print-btn').style.display = '';
+      document.getElementById('status').textContent = `✓ ${n} épreuve${n>1?'s':''} — ${durMin} min`;
+    }
+
+    render();
+  </script>
+</body>
+</html>
