@@ -591,6 +591,7 @@ function launchAutodestructAnimation() {
   const fl = setInterval(() => { overlay.style.background = flicker++%2===0 ? '#0a0000' : '#000'; }, 90);
   setTimeout(() => {
     clearInterval(fi); clearInterval(fl);
+    document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
     overlay.classList.remove('active'); overlay.style.background = '#000';
     startChallenges();
   }, totalMs);
