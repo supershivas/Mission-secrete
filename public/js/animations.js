@@ -288,6 +288,8 @@ function wordToMorse(word) {
 let _animTmr = null;
 let _displayTmr = null;
 let _morseWord = '';
+let _qrStream = null;
+let _qrScanTmr = null;
 
 // ── Template display (driven by ch.type) ──────────────────
 function startChallengeDisplay(type, code) {
@@ -341,15 +343,57 @@ function startChallengeDisplay(type, code) {
     return;
   }
 
+  if (type === 'qr') {
+    const qrWrap = document.getElementById('qr-scanner-wrap');
+    if (qrWrap) qrWrap.style.display = 'flex';
+    if (!('BarcodeDetector' in window)) {
+      steps.innerHTML = '<div class="qr-unavailable">📷 Scanner indisponible sur cet appareil.<br>Entrez le code manuellement.</div>';
+      return;
+    }
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+      .then(stream => {
+        _qrStream = stream;
+        const video = document.getElementById('qr-video');
+        video.srcObject = stream; video.play();
+        const detector = new BarcodeDetector({ formats: ['qr_code'] });
+        function scan() {
+          if (!_qrStream) return;
+          detector.detect(video).then(codes => {
+            if (codes.length > 0) {
+              const val = codes[0].rawValue.trim().toUpperCase();
+              const inp = document.getElementById('code-input');
+              if (inp) inp.value = val;
+              const ch = cfg.challenges[currentChallenge];
+              if (ch && val === ch.code.toUpperCase()) {
+                setTimeout(submitCode, 120);
+              } else {
+                const err = document.getElementById('code-error');
+                if (err) { err.textContent = `QR lu : ${val}`; setTimeout(() => { if (err) err.textContent = ''; }, 2500); }
+              }
+            }
+            if (_qrStream) _qrScanTmr = setTimeout(scan, 350);
+          }).catch(() => { if (_qrStream) _qrScanTmr = setTimeout(scan, 600); });
+        }
+        video.addEventListener('playing', scan, { once: true });
+      })
+      .catch(() => {
+        steps.innerHTML = '<div class="qr-unavailable">🚫 Accès caméra refusé.<br>Entrez le code manuellement.</div>';
+      });
+    return;
+  }
+
   // type === 'libre' → nothing extra
   steps.innerHTML = '';
 }
 
 function stopChallengeDisplay() {
   clearInterval(_displayTmr); _displayTmr = null;
+  clearTimeout(_qrScanTmr); _qrScanTmr = null;
+  if (_qrStream) { _qrStream.getTracks().forEach(t => t.stop()); _qrStream = null; }
+  const qrWrap = document.getElementById('qr-scanner-wrap');
+  if (qrWrap) qrWrap.style.display = 'none';
   const steps = document.getElementById('recipe-steps');
   if (steps) steps.innerHTML = '';
-  // Reset morse visuals if active
   const el = document.getElementById('potion-ascii');
   if (el) { el.style.opacity = '1'; el.style.animation = ''; }
 }

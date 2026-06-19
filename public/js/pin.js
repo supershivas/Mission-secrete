@@ -60,31 +60,8 @@ function showScore() {
 
   const podium = document.getElementById('score-agents');
   const hasTeams = agents.some(a => a.team);
-  if (agents.length > 0) {
-    if (hasTeams) {
-      podium.innerHTML = ['ombre', 'cobra'].map(team => {
-        const members = agents.filter(a => a.team === team);
-        if (!members.length) return '';
-        return `<div class="podium-team">
-          <div class="podium-team-label">Équipe ${team.toUpperCase()}</div>
-          ${members.map(a => `<div class="podium-agent">
-            <span class="podium-real">${esc(a.realName)}</span>
-            <span class="podium-code">${esc(a.agentName)}</span>
-          </div>`).join('')}
-        </div>`;
-      }).join('');
-    } else {
-      podium.innerHTML = `<div class="podium-solo">${agents.map(a => `
-        <div class="podium-agent">
-          <span class="podium-real">${esc(a.realName)}</span>
-          <span class="podium-code">${esc(a.agentName)}</span>
-        </div>`).join('')}
-      </div>`;
-    }
-    podium.style.display = 'flex';
-  } else {
-    podium.style.display = 'none';
-  }
+  podium.style.display = 'none';
+  podium.innerHTML = '';
 
   showPhase('phase-success');
   spawnSuccessConfetti();
@@ -98,11 +75,42 @@ function showScore() {
   seq.forEach(([id, delay, anim]) => {
     setTimeout(() => { const el = document.getElementById(id); el.style.opacity=''; el.style.animation=anim; }, delay);
   });
-  setTimeout(() => {
-    const p = document.getElementById('score-agents');
-    p.style.opacity='0'; p.style.animation='none';
-    setTimeout(() => { p.style.opacity=''; p.style.animation='fadein .5s ease both'; }, 2300);
-  }, 0);
+
+  // Agents apparaissent un par un après le score
+  if (agents.length > 0) {
+    const agentList = hasTeams
+      ? ['ombre','cobra'].flatMap(team => {
+          const members = agents.filter(a => a.team === team);
+          if (!members.length) return [];
+          return [{ isHeader: true, team }, ...members];
+        })
+      : agents;
+
+    setTimeout(() => {
+      podium.style.display = 'flex';
+      podium.style.flexDirection = 'column';
+      podium.style.alignItems = 'center';
+      podium.style.gap = '.4rem';
+      agentList.forEach((item, i) => {
+        setTimeout(() => {
+          if (item.isHeader) {
+            const hd = document.createElement('div');
+            hd.className = 'podium-team-label';
+            hd.textContent = `Équipe ${item.team.toUpperCase()}`;
+            hd.style.cssText = 'opacity:0;animation:fadein .35s ease both';
+            podium.appendChild(hd);
+          } else {
+            const row = document.createElement('div');
+            row.className = 'podium-agent';
+            row.innerHTML = `<span class="podium-real">${esc(item.realName)}</span><span class="podium-code">${esc(item.agentName)}</span>`;
+            row.style.cssText = 'opacity:0;animation:fadein .4s ease both';
+            podium.appendChild(row);
+            playTypeSound();
+          }
+        }, i * 320);
+      });
+    }, 2400);
+  }
 }
 
 function spawnSuccessConfetti() {
