@@ -358,7 +358,7 @@ function skipAutodestruct() {
 
 // ── Autodestruction ────────────────────────────────────
 function startAutodestruct() {
-  adSeconds = 30;
+  adSeconds = 20;
   const wrap = document.getElementById('autodestruct-bar-wrap');
   const fill = document.getElementById('autodestruct-fill');
   const cd   = document.getElementById('ad-countdown');
@@ -368,14 +368,14 @@ function startAutodestruct() {
   fill.style.transition = 'none'; fill.style.width = '100%';
   requestAnimationFrame(() => requestAnimationFrame(() => {
     fill.style.transition = 'width 1s linear';
-    fill.style.width = ((adSeconds-1)/30*100)+'%';
+    fill.style.width = ((adSeconds-1)/20*100)+'%';
   }));
   cd.textContent = adSeconds;
   clearInterval(adTimer);
   adTimer = setInterval(() => {
     adSeconds--;
     cd.textContent = Math.max(0, adSeconds);
-    fill.style.width = (adSeconds/30*100)+'%';
+    fill.style.width = (adSeconds/20*100)+'%';
     if (adSeconds <= 0) { clearInterval(adTimer); launchAutodestructAnimation(); }
   }, 1000);
 }

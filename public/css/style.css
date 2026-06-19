@@ -108,7 +108,7 @@ body{font-family:'Share Tech Mono','Courier New',monospace;color:#00ff41;display
   min-height:6em;max-height:8em;overflow:hidden;
   display:flex;align-items:center;justify-content:center;
   transition:opacity .4s;
-  margin:1rem 0;opacity:.55;
+  margin:1rem 0;opacity:.78;
 }
 
 /* Durée — order 4 */
@@ -266,10 +266,10 @@ body{font-family:'Share Tech Mono','Courier New',monospace;color:#00ff41;display
 
 /* ══ SUCCÈS / SCORE ════════════════════════════════════ */
 #phase-success{text-align:center}
-.score-rank{font-size:clamp(36px,9vw,58px);letter-spacing:.1em;margin:.3rem 0;animation:pop .6s ease-out}
+.score-rank{font-size:clamp(36px,9vw,58px);letter-spacing:.1em;margin:.3rem 0;animation:pop .7s cubic-bezier(.17,.67,.2,1.5) both;color:#00ff41;text-shadow:0 0 20px rgba(0,255,65,.5)}
 .score-time{font-size:15px;letter-spacing:.2em;color:#006818;text-transform:uppercase}
 .score-msg{font-size:14px;letter-spacing:.1em;color:#004d12;margin-top:.5rem;line-height:1.9}
-.score-stars{font-size:clamp(24px,6vw,38px);letter-spacing:.3em;margin:.2rem 0}
+.score-stars{font-size:clamp(30px,7vw,52px);letter-spacing:.3em;margin:.4rem 0;color:#ffdd44;text-shadow:0 0 30px rgba(255,220,60,.6),0 0 60px rgba(255,200,0,.3);animation:pop .8s cubic-bezier(.17,.67,.2,1.6) both}
 
 /* ══ PODIUM AGENTS ═════════════════════════════════════ */
 #score-agents{width:100%;flex-direction:column;gap:.8rem;margin-top:1rem;display:none}
@@ -430,3 +430,13 @@ body.time-danger{animation:pulse-red 1.3s ease-in-out infinite}
 #aro-name{font-size:clamp(20px,5.5vw,42px);letter-spacing:.2em;color:#00ff41;text-align:center;text-shadow:0 0 30px rgba(0,255,65,.75),0 0 70px rgba(0,255,65,.3);text-transform:uppercase;min-height:1.5em;display:flex;align-items:center;justify-content:center;width:90%}
 #aro-sep{width:80px;height:1px;background:#003a0d}
 #aro-real{font-size:14px;letter-spacing:.35em;color:#004d12;text-transform:uppercase}
+
+/* ══ DIGIT REVEAL ══════════════════════════════════════ */
+@keyframes digit-lock{0%{text-shadow:0 0 100px rgba(0,255,65,1),0 0 200px rgba(0,255,65,.8);transform:scale(1.25)}100%{text-shadow:0 0 40px rgba(0,255,65,.6);transform:scale(1)}}
+.digit-locked{animation:digit-lock 1s ease-out forwards}
+
+/* ══ HINT TIMER allégé ══════════════════════════════════ */
+#hint-timer{font-size:10px;letter-spacing:.15em;color:#886600;min-height:1rem;text-align:left}
+
+/* ══ REVEAL BUTTON protection ════════════════════════════ */
+#reveal-next-btn:disabled{cursor:not-allowed}
