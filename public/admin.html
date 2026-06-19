@@ -168,6 +168,9 @@
     }
     .ch-tab.active { background: var(--surface); color: var(--text); border-color: var(--border2) }
     .ch-tab:hover:not(.active) { background: #eeecea; color: var(--text) }
+    .ch-tab[draggable] { cursor: grab }
+    .ch-tab.drag-over { outline: 2px solid var(--accent); outline-offset: -2px; background: #fff3e0 }
+    .ch-tab.dragging { opacity: .35 }
 
     .ch-panels { border-top: 1px solid var(--border2); margin-top: -1px }
     .ch-panel { display: none; padding: 1.25rem; flex-direction: column; gap: 1.1rem }
@@ -414,6 +417,7 @@ Mélangez, goûtez, et entrez le code de validation.`,
 
 let cfg = JSON.parse(JSON.stringify(DEFAULT_CFG));
 let activeTab = 0;
+let _dragSrcIdx = -1;
 
 // ── DIRTY STATE ───────────────────────────────
 let _dirty = false;
@@ -461,8 +465,16 @@ function loadConfig() {
 
 // ── TABS ──────────────────────────────────────
 function renderTabs() {
-  document.getElementById('ch-tabs').innerHTML = cfg.challenges.map((ch,i) =>
-    `<button class="ch-tab${i===activeTab?' active':''}" onclick="switchTab(${i})">Épreuve ${i+1}</button>`
+  const tabsEl = document.getElementById('ch-tabs');
+  tabsEl.innerHTML = cfg.challenges.map((ch,i) =>
+    `<button class="ch-tab${i===activeTab?' active':''}" draggable="true"
+      onclick="switchTab(${i})"
+      ondragstart="_tabDragStart(event,${i})"
+      ondragover="_tabDragOver(event,${i})"
+      ondragleave="_tabDragLeave(event)"
+      ondrop="_tabDrop(event,${i})"
+      ondragend="_tabDragEnd()"
+    >⠿ Épreuve ${i+1}</button>`
   ).join('');
 
   document.getElementById('ch-panels').innerHTML = cfg.challenges.map((ch,i) => `
@@ -530,6 +542,34 @@ function renderTabs() {
       </div>
     </div>
   `).join('');
+}
+
+function _tabDragStart(e, i) {
+  _dragSrcIdx = i;
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+function _tabDragOver(e, i) {
+  if (_dragSrcIdx === i) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  document.querySelectorAll('.ch-tab').forEach((t,j) => t.classList.toggle('drag-over', j===i));
+}
+function _tabDragLeave(e) {
+  if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.classList.remove('drag-over');
+}
+function _tabDrop(e, i) {
+  e.preventDefault();
+  if (_dragSrcIdx === i || _dragSrcIdx === -1) return;
+  const moved = cfg.challenges.splice(_dragSrcIdx, 1)[0];
+  cfg.challenges.splice(i, 0, moved);
+  activeTab = i;
+  renderTabs();
+  updatePinPreview();
+}
+function _tabDragEnd() {
+  _dragSrcIdx = -1;
+  document.querySelectorAll('.ch-tab').forEach(t => t.classList.remove('dragging','drag-over'));
 }
 
 function switchTab(i) {
