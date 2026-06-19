@@ -447,6 +447,12 @@ function skipTypewriter() {
   startAutodestruct();
 }
 
+function skipAutodestruct() {
+  clearInterval(adTimer);
+  document.getElementById('autodestruct-bar-wrap').classList.remove('visible');
+  launchAutodestructAnimation();
+}
+
 // ── Autodestruction ────────────────────────────────────
 function startAutodestruct() {
   adSeconds = 30;
@@ -454,6 +460,8 @@ function startAutodestruct() {
   const fill = document.getElementById('autodestruct-fill');
   const cd   = document.getElementById('ad-countdown');
   wrap.classList.add('visible');
+  const skipBtn = document.getElementById('skip-btn');
+  if (skipBtn) { skipBtn.textContent = '⏭ lancer'; skipBtn.onclick = skipAutodestruct; }
   fill.style.transition = 'none'; fill.style.width = '100%';
   requestAnimationFrame(() => requestAnimationFrame(() => {
     fill.style.transition = 'width 1s linear';
@@ -481,6 +489,8 @@ function launchAutodestructAnimation() {
   const overlay  = document.getElementById('autodestruct-overlay');
   const staticEl = document.getElementById('ad-static');
   const progFill = document.getElementById('ad-progress-fill');
+  const skipBtn  = document.getElementById('skip-btn');
+  if (skipBtn) skipBtn.style.display = 'none';
   overlay.classList.add('active');
   progFill.style.transition = 'none'; progFill.style.width = '100%';
   let frame = 0, elapsed = 0;
@@ -906,6 +916,8 @@ function resetApp() {
   document.getElementById('autodestruct-overlay').classList.remove('active');
   document.body.classList.remove('time-danger'); document.body.style.background = '';
   document.getElementById('autodestruct-bar-wrap').classList.remove('visible');
+  const skipBtn = document.getElementById('skip-btn');
+  if (skipBtn) { skipBtn.textContent = '⏭ passer'; skipBtn.onclick = skipTypewriter; skipBtn.style.display = ''; }
   agents=[]; currentRealName=''; currentProposals=[]; draggedAgent=null;
   revealedDigits=[]; currentChallenge=0; pinInput='';
   secondsLeft=cfg.duration; totalSeconds=cfg.duration;
