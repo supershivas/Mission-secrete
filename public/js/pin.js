@@ -9,6 +9,7 @@ function pressPin(n) {
   if (navigator.vibrate) navigator.vibrate(28);
   updatePinDots();
   _updatePinSubmitBtn();
+  if (pinInput.length === pinLen) setTimeout(checkPin, 250);
 }
 function delPin() {
   pinInput = pinInput.slice(0, -1); updatePinDots();
@@ -33,7 +34,7 @@ function sosPin() {
   alert('Code PIN : ' + correct);
 }
 function updatePinDots() {
-  const pinLen = cfg.challenges.length;
+  const pinLen = cfg.challenges.filter(c => c.type !== 'pause').length;
   for (let i = 0; i < pinLen; i++) {
     const d = document.getElementById('d'+i);
     if (d) d.className = 'pin-dot' + (i < pinInput.length ? ' filled' : '');
