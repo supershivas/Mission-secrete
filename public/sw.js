@@ -1,4 +1,4 @@
-const CACHE = 'agent-v60';
+const CACHE = 'agent-v61';
 const ASSETS = [
   '/',
   '/index.html',
