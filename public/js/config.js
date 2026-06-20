@@ -66,8 +66,10 @@ function getCfg() {
       if (!merged.type) merged.type = 'libre';
       if (!merged.cipher) merged.cipher = 'polybe';
       if (merged.theme === undefined) merged.theme = '';
-      if (merged.type === 'pause' && !merged.speechText) merged.speechText = "AAAAAh, j'ai soif !";
-      if (merged.type !== 'pause' && !merged.speechText) merged.speechText = '';
+      if (!merged.speechText) {
+        const def = DEFAULT_CFG.challenges[i];
+        merged.speechText = def?.speechText || (merged.type === 'pause' ? "AAAAAh, j'ai soif !" : '');
+      }
       return merged;
     });
     return {
