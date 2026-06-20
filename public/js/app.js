@@ -231,6 +231,8 @@ function _peekConfirm(realName, agentName, team) {
 
 // ── Splash ─────────────────────────────────────────────
 function onSplashTap() {
+  // Ne pas avancer si le banner de reprise de session est affiché
+  if (document.getElementById('resume-banner')?.classList.contains('visible')) return;
   getAudioCtx();
   document.body.classList.remove('splash-tapped', 'hue-cycle');
   void document.body.offsetWidth;
