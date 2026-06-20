@@ -428,8 +428,12 @@
       </div>
     </div>
 
-    <!-- reset usine -->
-    <div style="display:flex;justify-content:flex-end;padding-top:.5rem;border-top:1px solid var(--border);margin-top:.5rem">
+    <!-- reset usine + abandon mission -->
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;padding-top:.5rem;border-top:1px solid var(--border);margin-top:.5rem;flex-wrap:wrap;gap:.75rem">
+      <div style="display:flex;flex-direction:column;gap:.3rem">
+        <button class="btn btn-danger btn-sm" onclick="abandonMission()">✕ Abandonner la mission en cours</button>
+        <div style="font-size:11px;color:var(--muted)">Efface la session sauvegardée sur cet appareil</div>
+      </div>
       <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.3rem">
         <button class="btn btn-danger btn-sm" onclick="resetDefault()">↺ Réinitialisation usine</button>
         <div style="font-size:11px;color:var(--muted)">Remet tous les réglages par défaut sur tous les appareils</div>
@@ -919,6 +923,12 @@ function saveConfig() {
   pushConfigRemote(cfg).then(ok => {
     showToast(ok ? '✓ Enregistré + synchronisé' : '✓ Enregistré (hors ligne)', 'ok');
   });
+}
+
+function abandonMission() {
+  if (!confirm('Abandonner la mission en cours ?\nLa progression sera effacée sur cet appareil.')) return;
+  localStorage.removeItem('agent_mission_state');
+  showToast('✓ Mission abandonnée — session effacée', 'ok');
 }
 
 async function resetDefault() {
