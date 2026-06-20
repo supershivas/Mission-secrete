@@ -76,6 +76,8 @@ function showPause(idx) {
     }
   }
 
+  stopChallengeAmbientLoop();
+
   let fi = 0;
   const waterEl = document.getElementById('pause-water');
   if (waterEl) waterEl.textContent = WATER_FRAMES[0];
@@ -198,6 +200,8 @@ function showChallenge(idx) {
   const ri = _realIdx(idx);
   const n  = _realCount();
 
+  startChallengeAmbientLoop(ch.animation || 'skull');
+
   document.getElementById('ch-num').textContent   = `ÉPREUVE ${ri + 1} / ${n}`;
   document.getElementById('ch-title').textContent = ch.title;
   document.getElementById('ch-brief').textContent = ch.brief;
@@ -294,6 +298,7 @@ function submitCode() {
     clearInterval(hintTimer);
     stopChallengeDisplay();
     stopChallengeAnim();
+    stopChallengeAmbientLoop();
     if (navigator.vibrate) navigator.vibrate([50, 30, 50, 30, 120]);
     // 2. Fake-loader pendant ~1.4s
     _showVerifying(() => {

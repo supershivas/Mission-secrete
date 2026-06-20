@@ -209,12 +209,183 @@ function playVocalCountdown(n) {
   } catch(e) {}
 }
 
+// ── Tension layers (compte à rebours évolutif) ─────────
+let _tensionGain1 = null, _tensionGain2 = null, _tensionCtx = null;
+
+function _startTensionLayer1() {
+  if (_tensionGain1) return;
+  try {
+    const ctx = _tensionCtx || getAudioCtx();
+    const master = ctx.createGain(); master.gain.value = 0; master.connect(ctx.destination); _tensionGain1 = master;
+    master.gain.linearRampToValueAtTime(1, ctx.currentTime + 6);
+    // Pulsation basse rapide (4Hz LFO sur bruit filtré)
+    const buf = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate), d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+    const flt = ctx.createBiquadFilter(); flt.type = 'bandpass'; flt.frequency.value = 180; flt.Q.value = 4;
+    const lfo = ctx.createOscillator(), lfoG = ctx.createGain();
+    lfo.frequency.value = 4; lfoG.gain.value = 0.055;
+    lfo.connect(lfoG); lfoG.connect(src.playbackRate);
+    src.connect(flt); flt.connect(master); src.start(); lfo.start();
+    // Pulsation métallique grave
+    const pulse = ctx.createOscillator(), pg = ctx.createGain();
+    pulse.type = 'sawtooth'; pulse.frequency.value = 55;
+    const plfo = ctx.createOscillator(), plfoG = ctx.createGain();
+    plfo.frequency.value = 2; plfoG.gain.value = 0.03;
+    plfo.connect(plfoG); plfoG.connect(pg.gain); plfo.start();
+    const pf = ctx.createBiquadFilter(); pf.type = 'lowpass'; pf.frequency.value = 120;
+    pg.gain.value = 0.04; pulse.connect(pf); pf.connect(pg); pg.connect(master); pulse.start();
+  } catch(e) {}
+}
+
+function _startTensionLayer2() {
+  if (_tensionGain2) return;
+  try {
+    const ctx = _tensionCtx || getAudioCtx();
+    const master = ctx.createGain(); master.gain.value = 0; master.connect(ctx.destination); _tensionGain2 = master;
+    master.gain.linearRampToValueAtTime(1, ctx.currentTime + 3);
+    // Alarme sweep rapide (8Hz LFO sur oscillateur 440-880Hz)
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'square';
+    const slfo = ctx.createOscillator(), slfoG = ctx.createGain();
+    slfo.frequency.value = 8; slfoG.gain.value = 220;
+    o.frequency.value = 660; slfo.connect(slfoG); slfoG.connect(o.frequency); slfo.start();
+    const glfo = ctx.createOscillator(), glfoG = ctx.createGain();
+    glfo.frequency.value = 8; glfoG.gain.value = 0.04;
+    glfo.connect(glfoG); glfoG.connect(g.gain); glfo.start();
+    g.gain.value = 0.0;
+    const f = ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=800; f.Q.value=2;
+    o.connect(f); f.connect(g); g.connect(master); o.start();
+  } catch(e) {}
+}
+
+function _stopTensionLayers() {
+  const ctx = audioCtx;
+  if (!ctx) return;
+  [_tensionGain1, _tensionGain2].forEach(g => {
+    if (g) try { g.gain.setTargetAtTime(0, ctx.currentTime, 0.6); } catch(e) {}
+  });
+  _tensionGain1 = _tensionGain2 = null;
+}
+
 function updateAmbientIntensity() {
   if (!ambientGain || !audioCtx || !totalSeconds) return;
+  _tensionCtx = audioCtx;
   const ratio = secondsLeft / totalSeconds;
-  const extra  = Math.max(0, (0.3 - ratio) / 0.3);
-  const gain   = 0.28 + extra * 0.34;
+  // Volume de base qui monte au fil du temps
+  const extra = Math.max(0, (0.3 - ratio) / 0.3);
+  const gain  = 0.28 + extra * 0.34;
   try { ambientGain.gain.setTargetAtTime(gain, audioCtx.currentTime, 2.5); } catch(e) {}
+  // Couche tension 1 : <5 min (ratio < 0.083 sur 60min ou <5min absolu)
+  if (secondsLeft <= 300 && secondsLeft > 60) _startTensionLayer1();
+  // Couche tension 2 : <1 min
+  if (secondsLeft <= 60) { _startTensionLayer1(); _startTensionLayer2(); }
+}
+
+// ── Challenge ambient loop (boucle pendant l'épreuve) ──
+let _chalMaster = null, _chalStop = false;
+
+function stopChallengeAmbientLoop() {
+  _chalStop = true;
+  if (_chalMaster && audioCtx) {
+    try { _chalMaster.gain.setTargetAtTime(0, audioCtx.currentTime, 0.8); } catch(e) {}
+    _chalMaster = null;
+  }
+}
+
+function startChallengeAmbientLoop(animName) {
+  stopChallengeAmbientLoop();
+  _chalStop = false;
+  try {
+    const ctx = getAudioCtx();
+    const master = ctx.createGain();
+    master.gain.value = 0;
+    master.connect(ctx.destination);
+    _chalMaster = master;
+    master.gain.linearRampToValueAtTime(1, ctx.currentTime + 2.5);
+
+    if (animName === 'skull') {
+      // Battement de cœur grave : deux coups toutes les ~1.1s
+      const hb = () => {
+        if (_chalStop || !_chalMaster) return;
+        [0, 0.23].forEach(off => {
+          try {
+            const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.2), ctx.sampleRate);
+            const d = buf.getChannelData(0);
+            for (let i = 0; i < d.length; i++) d[i] = (Math.random()*2-1) * Math.exp(-i/d.length * 14);
+            const src = ctx.createBufferSource(); src.buffer = buf;
+            const f = ctx.createBiquadFilter(); f.type='lowpass'; f.frequency.value=110;
+            const g = ctx.createGain(); g.gain.value = 0.28;
+            src.connect(f); f.connect(g); g.connect(master);
+            src.start(ctx.currentTime + off);
+          } catch(e) {}
+        });
+        setTimeout(hb, 1100);
+      };
+      hb();
+      // Drone grave
+      const o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+      o.type='sawtooth'; o.frequency.value=41; f.type='lowpass'; f.frequency.value=90; g.gain.value=0.06;
+      o.connect(f); f.connect(g); g.connect(master); o.start();
+
+    } else if (animName === 'laser') {
+      // Bourdonnement électrique : sinus 880Hz + trémolo rapide
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type='sine'; o.frequency.value=880;
+      const lfo = ctx.createOscillator(), lfoG = ctx.createGain();
+      lfo.frequency.value=28; lfoG.gain.value=0.035;
+      lfo.connect(lfoG); lfoG.connect(g.gain); lfo.start();
+      g.gain.value=0.04; o.connect(g); g.connect(master); o.start();
+      // Sifflement haute fréquence
+      const o2 = ctx.createOscillator(), g2 = ctx.createGain();
+      o2.type='sawtooth'; o2.frequency.value=1760; g2.gain.value=0.012;
+      const f2 = ctx.createBiquadFilter(); f2.type='highpass'; f2.frequency.value=1500;
+      o2.connect(f2); f2.connect(g2); g2.connect(master); o2.start();
+
+    } else if (animName === 'garden') {
+      // Vent : bruit filtré passe-bande qui ondule
+      const buf = ctx.createBuffer(1, ctx.sampleRate * 3, ctx.sampleRate), d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random()*2-1;
+      const src = ctx.createBufferSource(); src.buffer=buf; src.loop=true;
+      const f = ctx.createBiquadFilter(); f.type='bandpass'; f.frequency.value=600; f.Q.value=1.5;
+      const lfo = ctx.createOscillator(), lfoG = ctx.createGain();
+      lfo.frequency.value=0.07; lfoG.gain.value=200;
+      lfo.connect(lfoG); lfoG.connect(f.frequency); lfo.start();
+      const g = ctx.createGain(); g.gain.value=0.07;
+      src.connect(f); f.connect(g); g.connect(master); src.start();
+      // Note douce résonnante (insectes)
+      const o = ctx.createOscillator(), og = ctx.createGain();
+      o.type='sine'; o.frequency.value=523;
+      const olfo = ctx.createOscillator(), olfoG = ctx.createGain();
+      olfo.frequency.value=5.2; olfoG.gain.value=3;
+      olfo.connect(olfoG); olfoG.connect(o.frequency); olfo.start();
+      og.gain.value=0.018; o.connect(og); og.connect(master); o.start();
+
+    } else if (animName === 'poison') {
+      // Drone acide grave + bullles aléatoires
+      const o = ctx.createOscillator(), g = ctx.createGain(), f = ctx.createBiquadFilter();
+      o.type='sawtooth'; o.frequency.value=82; f.type='lowpass'; f.frequency.value=160; g.gain.value=0.07;
+      const lfo = ctx.createOscillator(), lfoG = ctx.createGain();
+      lfo.frequency.value=0.2; lfoG.gain.value=18;
+      lfo.connect(lfoG); lfoG.connect(f.frequency); lfo.start();
+      o.connect(f); f.connect(g); g.connect(master); o.start();
+      // Bulles : petits pops filtrés graves aléatoires
+      const bubble = () => {
+        if (_chalStop || !_chalMaster) return;
+        try {
+          const buf = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.08), ctx.sampleRate);
+          const d = buf.getChannelData(0);
+          for (let i=0; i<d.length; i++) d[i]=(Math.random()*2-1)*Math.exp(-i/d.length*18);
+          const src=ctx.createBufferSource(); src.buffer=buf;
+          const ff=ctx.createBiquadFilter(); ff.type='bandpass'; ff.frequency.value=200+Math.random()*150; ff.Q.value=5;
+          const gg=ctx.createGain(); gg.gain.value=0.15;
+          src.connect(ff); ff.connect(gg); gg.connect(master); src.start();
+        } catch(e) {}
+        setTimeout(bubble, 300 + Math.random()*900);
+      };
+      bubble();
+    }
+  } catch(e) {}
 }
 
 function playChallengeAmbient(animName) {

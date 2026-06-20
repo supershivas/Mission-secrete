@@ -46,7 +46,7 @@ function checkPin() {
   const pinLen  = realChallenges.length;
   if (pinInput === correct) {
     if (navigator.vibrate) navigator.vibrate([80, 40, 80, 40, 200]);
-    clearInterval(countdownTimer); stopAmbientMusic();
+    clearInterval(countdownTimer); stopAmbientMusic(); _stopTensionLayers();
     clearSession(); showScore(); playFanfare();
   } else {
     pinAttempts++;
@@ -158,6 +158,7 @@ function spawnSuccessConfetti() {
 
 // ── Explosion ──────────────────────────────────────────
 function triggerExplosion() {
+  stopAmbientMusic(); _stopTensionLayers();
   clearSession();
   let fl = document.getElementById('explosion-flash');
   if (!fl) { fl=document.createElement('div'); fl.id='explosion-flash'; document.body.appendChild(fl); }
