@@ -130,16 +130,21 @@ const TEAMS_PEEK_PHASES = ['phase-challenge','phase-reveal','phase-countdown'];
 function _updateTeamsPeekBtn() {
   const btn = document.getElementById('teams-peek-btn');
   if (!btn) return;
-  btn.style.display = (TEAMS_PEEK_PHASES.includes(currentPhase) && agents.some(a => a.team)) ? 'flex' : 'none';
+  btn.style.display = (TEAMS_PEEK_PHASES.includes(currentPhase) && agents.length > 0) ? 'flex' : 'none';
 }
 
 function toggleTeamsPeek() {
   const ov = document.getElementById('teams-peek-overlay');
   if (!ov) return;
   if (ov.classList.contains('show')) { ov.classList.remove('show'); return; }
-  // Build content
+  _renderPeekBody();
+  ov.classList.add('show');
+}
+
+function _renderPeekBody() {
   const body = document.getElementById('teams-peek-body');
-  body.innerHTML = ['ombre','cobra'].map(team => {
+  const hasTeams = agents.some(a => a.team);
+  const teamBlocks = ['ombre','cobra'].map(team => {
     const members = agents.filter(a => a.team === team);
     if (!members.length) return '';
     const color = team === 'ombre' ? '#00ff41' : '#ff6b00';
@@ -151,7 +156,77 @@ function toggleTeamsPeek() {
       </div>`).join('')}
     </div>`;
   }).join('');
-  ov.classList.add('show');
+  const noTeam = agents.filter(a => !a.team);
+  const noTeamBlock = noTeam.length ? `<div class="peek-team">
+    <div class="peek-team-label" style="color:#888">Sans équipe</div>
+    ${noTeam.map(a => `<div class="peek-agent-row">
+      <span class="peek-code">${esc(a.agentName)}</span>
+      <span class="peek-real">(${esc(a.realName)})</span>
+    </div>`).join('')}
+  </div>` : '';
+  body.innerHTML = teamBlocks + noTeamBlock +
+    `<div class="peek-add-wrap">
+      <button class="peek-add-btn" onclick="_peekShowAddForm()">➕ Ajouter un agent</button>
+    </div>`;
+}
+
+function _peekShowAddForm() {
+  const body = document.getElementById('teams-peek-body');
+  body.innerHTML = `
+    <div class="peek-add-form">
+      <div class="peek-add-title">Nouvel agent</div>
+      <div class="peek-add-row">
+        <input id="peek-name-input" class="peek-input" type="text" placeholder="Prénom…"
+          maxlength="20" autocomplete="off" autocorrect="off" spellcheck="false"
+          onkeydown="if(event.key==='Enter') _peekSearch()"
+          oninput="this.value=this.value.slice(0,1).toUpperCase()+this.value.slice(1)">
+        <button class="peek-btn" onclick="_peekSearch()">Chercher</button>
+      </div>
+      <div id="peek-proposals"></div>
+      <button class="peek-cancel" onclick="_renderPeekBody()">← Retour</button>
+    </div>`;
+  setTimeout(() => document.getElementById('peek-name-input')?.focus(), 80);
+}
+
+function _peekSearch() {
+  const input = document.getElementById('peek-name-input');
+  const name = input?.value.trim();
+  if (!name) return;
+  const props = proposalsForLetter(name[0]);
+  const container = document.getElementById('peek-proposals');
+  container.innerHTML = `<div class="peek-props-label">Choisir un nom de code pour <strong>${esc(name)}</strong> :</div>` +
+    props.map(p => `<button class="peek-prop-btn" onclick="_peekPickName('${esc(name)}','${p}')">${p}</button>`).join('');
+}
+
+function _peekPickName(realName, agentName) {
+  const hasTeams = agents.some(a => a.team);
+  const body = document.getElementById('teams-peek-body');
+  body.innerHTML = `
+    <div class="peek-add-form">
+      <div class="peek-add-title">Équipe pour <span style="color:#00ff41">${esc(agentName)}</span></div>
+      <div class="peek-add-sub">${esc(realName)}</div>
+      <div class="peek-team-btns">
+        ${hasTeams ? `
+        <button class="peek-team-pick ombre" onclick="_peekConfirm('${esc(realName)}','${esc(agentName)}','ombre')">OMBRE</button>
+        <button class="peek-team-pick cobra" onclick="_peekConfirm('${esc(realName)}','${esc(agentName)}','cobra')">COBRA</button>` : ''}
+        <button class="peek-team-pick none" onclick="_peekConfirm('${esc(realName)}','${esc(agentName)}',null)">Sans équipe</button>
+      </div>
+      <button class="peek-cancel" onclick="_peekShowAddForm()">← Changer le nom</button>
+    </div>`;
+}
+
+function _peekConfirm(realName, agentName, team) {
+  agents.push({ realName, agentName, team: team || null });
+  _pushMissionState();
+  // Sync vers les autres appareils via runtimeAgents
+  fetch('/api/config').then(r => r.ok ? r.json() : null).then(remoteCfg => {
+    if (!remoteCfg) return;
+    remoteCfg.runtimeAgents = agents;
+    fetch('/api/config', { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(remoteCfg) });
+  }).catch(() => {});
+  _updateTeamsPeekBtn();
+  playTypeSound();
+  _renderPeekBody();
 }
 
 // ── Splash ─────────────────────────────────────────────
