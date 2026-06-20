@@ -102,26 +102,67 @@ function resumeFromPause() {
 // ── Intro overlay ───────────────────────────────────────
 let _introAnimTmr = null;
 
+const _ORDINALS_FR = ['UN','DEUX','TROIS','QUATRE','CINQ','SIX','SEPT','HUIT','NEUF','DIX'];
+function _speakChallenge(num) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const ord = _ORDINALS_FR[num - 1] || String(num);
+  const phrases = [
+    `Épreuve ${ord}. Agents, la menace est réelle. Bonne chance.`,
+    `Épreuve ${ord}. Le QG vous observe. Ne faiblissez pas.`,
+    `Épreuve ${ord}. Le temps est compté. La mission commence maintenant.`,
+    `Épreuve ${ord}. Concentrez-vous. L'organisation compte sur vous.`,
+  ];
+  const text = phrases[(num - 1) % phrases.length];
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'fr-FR'; u.rate = 0.78; u.pitch = 0.6; u.volume = 1;
+  window.speechSynthesis.speak(u);
+}
+
+function _dismissIntroOverlay(idx) {
+  const ov = document.getElementById('challenge-intro-overlay');
+  if (!ov) return;
+  if (_introAnimTmr) { clearInterval(_introAnimTmr); _introAnimTmr = null; }
+  ov.classList.add('ci-out');
+  setTimeout(() => { ov.classList.remove('show', 'ci-out'); showChallenge(idx); }, 380);
+}
+
 function showChallengeWithIntro(idx) {
   const ch = cfg.challenges[idx];
   const n  = _realCount();
   const ri = _realIdx(idx);
+  const roles = _challengeRoles[idx];
 
   let ov = document.getElementById('challenge-intro-overlay');
   if (!ov) {
     ov = document.createElement('div');
     ov.id = 'challenge-intro-overlay';
-    ov.innerHTML = '<div id="ci-num"></div><pre id="ci-ascii"></pre><div id="ci-title"></div>';
+    ov.innerHTML = [
+      '<div id="ci-num"></div>',
+      '<pre id="ci-ascii"></pre>',
+      '<div id="ci-title"></div>',
+      '<div id="ci-roles"></div>',
+      '<button id="ci-launch" onclick="_dismissIntroOverlay(_ciIdx)">▶ LANCER L\'ÉPREUVE</button>',
+    ].join('');
     document.body.appendChild(ov);
   }
   if (_introAnimTmr) { clearInterval(_introAnimTmr); _introAnimTmr = null; }
 
-  const numEl   = document.getElementById('ci-num');
-  const asciiEl = document.getElementById('ci-ascii');
-  const titleEl = document.getElementById('ci-title');
+  // Expose idx for the button onclick
+  window._ciIdx = idx;
+
+  const numEl    = document.getElementById('ci-num');
+  const asciiEl  = document.getElementById('ci-ascii');
+  const titleEl  = document.getElementById('ci-title');
+  const rolesEl  = document.getElementById('ci-roles');
+  const launchEl = document.getElementById('ci-launch');
+
   numEl.textContent   = `ÉPREUVE ${ri + 1} / ${n}`;
   asciiEl.textContent = '';
   titleEl.textContent = '';
+  rolesEl.innerHTML   = '';
+  rolesEl.style.opacity = '0';
+  if (launchEl) { launchEl.style.opacity = '0'; launchEl.style.pointerEvents = 'none'; }
 
   ov.classList.remove('ci-out');
   void ov.offsetWidth;
@@ -143,13 +184,27 @@ function showChallengeWithIntro(idx) {
 
   const raw = ch.title.split('—');
   const displayTitle = (raw[1] || ch.title).trim().toUpperCase();
-  setTimeout(() => matrixName(titleEl, displayTitle, null), 1100);
-
   setTimeout(() => {
-    if (_introAnimTmr) { clearInterval(_introAnimTmr); _introAnimTmr = null; }
-    ov.classList.add('ci-out');
-    setTimeout(() => { ov.classList.remove('show', 'ci-out'); showChallenge(idx); }, 380);
-  }, 3900);
+    matrixName(titleEl, displayTitle, null);
+    _speakChallenge(ri + 1);
+  }, 1100);
+
+  // Afficher les rôles + bouton après que le titre est lisible
+  setTimeout(() => {
+    if (rolesEl) {
+      let html = '';
+      if (roles?.lecteur)   html += `<span class="ci-role">📖 ${roles.lecteur}</span>`;
+      if (roles?.desarmeur) html += `<span class="ci-role">🔧 ${roles.desarmeur}</span>`;
+      rolesEl.innerHTML = html;
+      rolesEl.style.transition = 'opacity .5s';
+      rolesEl.style.opacity = '1';
+    }
+    if (launchEl) {
+      launchEl.style.transition = 'opacity .5s';
+      launchEl.style.opacity = '1';
+      launchEl.style.pointerEvents = 'auto';
+    }
+  }, 2400);
 }
 
 // ── Affichage épreuve ───────────────────────────────────
