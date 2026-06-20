@@ -22,7 +22,7 @@ function applyCfgToSplash() {
   }
 }
 
-// Poll remote toutes les 3s
+// Poll remote toutes les 15s
 let _lastRemoteCfgHash = '';
 
 function _cfgHash(data) {
@@ -52,7 +52,7 @@ setInterval(async () => {
     onCfgSync();
     if (!isFirst) showAdminSyncBanner();
   } catch(e) {}
-}, 3000);
+}, 15000);
 
 window.addEventListener('storage', e => {
   if (e.key === 'agent_config') {

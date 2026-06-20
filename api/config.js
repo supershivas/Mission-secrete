@@ -1,36 +1,32 @@
 export default async function handler(req, res) {
-  const KEY = process.env.JSONBIN_KEY;
-  const BIN = process.env.JSONBIN_BIN;
+  const url   = process.env.KV_REST_API_URL;
+  const token = process.env.KV_REST_API_TOKEN;
 
   res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Cache-Control', 'no-store');
   if (req.method === 'OPTIONS') return res.status(200).end();
+  if (!url || !token) return res.status(503).json({ error: 'KV not configured' });
 
-  if (!KEY || !BIN) return res.status(503).json({ error: 'env vars missing' });
-
-  const base = `https://api.jsonbin.io/v3/b/${BIN}`;
-  const authHeaders = { 'X-Master-Key': KEY };
+  const headers = { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' };
 
   if (req.method === 'GET') {
-    const r = await fetch(`${base}/latest?meta=false`, { headers: authHeaders });
-    if (!r.ok) {
-      const txt = await r.text();
-      return res.status(r.status).json({ error: txt });
-    }
-    const data = await r.json();
-    return res.status(200).json(data.record ?? data);
+    const r = await fetch(`${url}`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(['GET', 'agent_config'])
+    });
+    const { result } = await r.json();
+    if (!result) return res.status(404).json({ error: 'no config' });
+    return res.status(200).json(JSON.parse(result));
   }
 
   if (req.method === 'PUT') {
-    const body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
-    const r = await fetch(base, {
-      method: 'PUT',
-      headers: { ...authHeaders, 'Content-Type': 'application/json' },
-      body
+    const value = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+    await fetch(`${url}`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(['SET', 'agent_config', value])
     });
-    if (!r.ok) {
-      const txt = await r.text();
-      return res.status(r.status).json({ error: txt });
-    }
     return res.status(200).json({ ok: true });
   }
 
