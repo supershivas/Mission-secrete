@@ -409,7 +409,7 @@ CIPHER_PAGE_FN = {
 # ══════════════════════════════════════════════════════════════
 # PAGES CODES — 1 CHIFFREMENT PAR FEUILLET, 2 PAR A4
 # ══════════════════════════════════════════════════════════════
-def _code_half(c, y_top, y_bot, code_word, cipher='polybe'):
+def _code_half(c, y_top, y_bot, code_word, cipher='polybe', num=None):
     mx     = 1.8*cm
     half_h = y_top - y_bot - 4*mm
 
@@ -424,17 +424,25 @@ def _code_half(c, y_top, y_bot, code_word, cipher='polybe'):
     cw  = x1 - x0
     y   = y_top - 9*mm
 
-    # En-tête
-    _font(c, 'Courier', 6.5, LIGHT)
-    c.drawString(x0, y, 'TRANSMISSION CHIFFRÉE  ·  PRIORITÉ ABSOLUE')
-    c.drawRightString(x1, y, 'USAGE UNIQUE')
-    y -= 4*mm
-    _rule(c, y, x0, x1, w=0.5, color=INK)
-    y -= 7*mm
+    # ── Numéro d'épreuve (grand, en haut) ───────────────────
+    if num is not None:
+        _font(c, 'Courier-Bold', 22, INK)
+        c.drawCentredString(W/2, y, f'ÉPREUVE  {num}')
+        y -= 9*mm
+        _rule(c, y, x0, x1, w=0.6, color=INK)
+        y -= 5*mm
+    else:
+        # En-tête sans numéro
+        _font(c, 'Courier', 6.5, LIGHT)
+        c.drawString(x0, y, 'TRANSMISSION CHIFFRÉE  ·  PRIORITÉ ABSOLUE')
+        c.drawRightString(x1, y, 'USAGE UNIQUE')
+        y -= 4*mm
+        _rule(c, y, x0, x1, w=0.5, color=INK)
+        y -= 7*mm
 
-    # Titre chiffrement
+    # Sous-titre chiffrement
     label = CIPHER_LABELS.get(cipher, cipher.upper())
-    _font(c, 'Courier-Bold', 9, INK)
+    _font(c, 'Courier', 7.5, LIGHT)
     c.drawCentredString(W/2, y, f'— CHIFFREMENT {label} —')
     y -= 9*mm
 
@@ -526,7 +534,7 @@ def _code_half(c, y_top, y_bot, code_word, cipher='polybe'):
 
 
 def page_codes(c, code_items):
-    """code_items : liste de (code_word, cipher)"""
+    """code_items : liste de (code_word, cipher, num)"""
     pairs = [(code_items[i], code_items[i+1] if i+1 < len(code_items) else None)
              for i in range(0, len(code_items), 2)]
     for top, bot in pairs:
@@ -537,9 +545,9 @@ def page_codes(c, code_items):
         c.setDash()
         _font(c, 'Courier', 7, LIGHT)
         c.drawCentredString(W/2, mid_y+2*mm, '✂   DÉCOUPER ICI   ✂')
-        _code_half(c, H-5*mm, mid_y+6*mm, top[0], top[1])
+        _code_half(c, H-5*mm, mid_y+6*mm, top[0], top[1], top[2] if len(top) > 2 else None)
         if bot:
-            _code_half(c, mid_y-6*mm, 5*mm, bot[0], bot[1])
+            _code_half(c, mid_y-6*mm, 5*mm, bot[0], bot[1], bot[2] if len(bot) > 2 else None)
         c.showPage()
 
 
@@ -579,24 +587,26 @@ class handler(BaseHTTPRequestHandler):
         challenges = (cfg or {}).get('challenges', [])
         real       = [ch for ch in challenges if ch.get('type') != 'pause']
 
-        # Collecte (code, cipher) par épreuve
+        # Collecte (code, cipher, num) par épreuve
         code_items = []
+        num = 0
         for ch in real:
             code = ch.get('code', '').upper()
             if code:
+                num += 1
                 cipher = ch.get('cipher', 'polybe')
-                code_items.append((code, cipher))
+                code_items.append((code, cipher, num))
         if not code_items:
             code_items = [
-                ('LASER',    'polybe'),
-                ('ANTIDOTE', 'morse'),
-                ('COBRA',    'symboles'),
-                ('TRAHISON', 'atbash'),
+                ('LASER',    'polybe',   1),
+                ('ANTIDOTE', 'morse',    2),
+                ('COBRA',    'symboles', 3),
+                ('TRAHISON', 'atbash',   4),
             ]
 
         # Pages de tables : une par cipher unique utilisé (dans l'ordre d'apparition)
         seen = []
-        for _, cipher in code_items:
+        for _, cipher, _ in code_items:
             if cipher not in seen:
                 seen.append(cipher)
 
