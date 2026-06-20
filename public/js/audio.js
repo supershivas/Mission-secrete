@@ -388,6 +388,64 @@ function startChallengeAmbientLoop(animName) {
   } catch(e) {}
 }
 
+// ── Cascade pour pause fraîcheur ───────────────────────
+let _cascadeMaster = null;
+
+function startCascadeAmbient() {
+  stopCascadeAmbient();
+  try {
+    const ctx = getAudioCtx();
+    const master = ctx.createGain();
+    master.gain.value = 0;
+    master.connect(ctx.destination);
+    _cascadeMaster = master;
+    master.gain.linearRampToValueAtTime(1, ctx.currentTime + 2);
+
+    // Bruit blanc large → cascade principale
+    const buf = ctx.createBuffer(2, ctx.sampleRate * 4, ctx.sampleRate);
+    for (let c = 0; c < 2; c++) { const d = buf.getChannelData(c); for (let i = 0; i < d.length; i++) d[i] = Math.random()*2-1; }
+    const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+    // Filtre passe-bande centré sur le son "eau qui tombe" (~800Hz)
+    const f1 = ctx.createBiquadFilter(); f1.type='bandpass'; f1.frequency.value=800; f1.Q.value=0.6;
+    const f2 = ctx.createBiquadFilter(); f2.type='highpass'; f2.frequency.value=300;
+    // LFO pour simuler les vagues de la cascade
+    const lfo = ctx.createOscillator(), lfoG = ctx.createGain();
+    lfo.frequency.value = 0.35; lfoG.gain.value = 200;
+    lfo.connect(lfoG); lfoG.connect(f1.frequency); lfo.start();
+    const g = ctx.createGain(); g.gain.value = 0.18;
+    src.connect(f1); f1.connect(f2); f2.connect(g); g.connect(master); src.start();
+
+    // Couche graves : grondement sourd de l'eau
+    const buf2 = ctx.createBuffer(1, ctx.sampleRate * 3, ctx.sampleRate), d2 = buf2.getChannelData(0);
+    for (let i = 0; i < d2.length; i++) d2[i] = Math.random()*2-1;
+    const src2 = ctx.createBufferSource(); src2.buffer=buf2; src2.loop=true;
+    const fl = ctx.createBiquadFilter(); fl.type='lowpass'; fl.frequency.value=200;
+    const g2 = ctx.createGain(); g2.gain.value = 0.1;
+    src2.connect(fl); fl.connect(g2); g2.connect(master); src2.start();
+
+    // Gouttelettes : petits pops aigus aléatoires (éclaboussures)
+    const drip = () => {
+      if (!_cascadeMaster) return;
+      try {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type='sine'; o.frequency.value=1200+Math.random()*800;
+        g.gain.setValueAtTime(0.06, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.12);
+        o.connect(g); g.connect(master); o.start(); o.stop(ctx.currentTime+0.13);
+      } catch(e) {}
+      setTimeout(drip, 120+Math.random()*600);
+    };
+    drip();
+  } catch(e) {}
+}
+
+function stopCascadeAmbient() {
+  if (_cascadeMaster && audioCtx) {
+    try { _cascadeMaster.gain.setTargetAtTime(0, audioCtx.currentTime, 0.8); } catch(e) {}
+    _cascadeMaster = null;
+  }
+}
+
 function playChallengeAmbient(animName) {
   try {
     const ctx = getAudioCtx();

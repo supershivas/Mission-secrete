@@ -77,6 +77,7 @@ function showPause(idx) {
   }
 
   stopChallengeAmbientLoop();
+  startCascadeAmbient();
 
   let fi = 0;
   const waterEl = document.getElementById('pause-water');
@@ -95,6 +96,7 @@ function showPause(idx) {
 
 function resumeFromPause() {
   clearInterval(_waterTmr); _waterTmr = null;
+  stopCascadeAmbient();
   const nextIdx = currentChallenge + 1;
   if (nextIdx >= cfg.challenges.length) { startFinalCountdown(); return; }
   currentChallenge = nextIdx;
