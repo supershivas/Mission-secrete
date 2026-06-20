@@ -428,9 +428,12 @@
       </div>
     </div>
 
-    <!-- reset -->
-    <div style="display:flex;justify-content:flex-end">
-      <button class="btn btn-ghost" onclick="resetDefault()">↺ Valeurs par défaut</button>
+    <!-- reset usine -->
+    <div style="display:flex;justify-content:flex-end;padding-top:.5rem;border-top:1px solid var(--border);margin-top:.5rem">
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.3rem">
+        <button class="btn btn-danger btn-sm" onclick="resetDefault()">↺ Réinitialisation usine</button>
+        <div style="font-size:11px;color:var(--muted)">Remet tous les réglages par défaut sur tous les appareils</div>
+      </div>
     </div>
 
   </div><!-- /main-wrap -->
@@ -536,10 +539,10 @@ function checkAdmin() {
   if (document.getElementById('admin-pass').value === ADMIN_PASS) {
     document.getElementById('auth-screen').style.display = 'none';
     document.getElementById('main-screen').classList.add('active');
-    loadConfig();
-    // écoute tous les changements dans le formulaire
+    // écoute tous les changements dans le formulaire (avant loadConfig pour éviter les faux markDirty)
     document.getElementById('main-screen').addEventListener('input', markDirty);
     document.getElementById('main-screen').addEventListener('change', markDirty);
+    loadConfig();
   } else {
     const e = document.getElementById('auth-err');
     e.textContent = '✗ Mot de passe incorrect';
@@ -548,12 +551,35 @@ function checkAdmin() {
   }
 }
 
-// ── LOAD ──────────────────────────────────────
-function loadConfig() {
+// ── LOAD — remote en priorité, localStorage en fallback ──
+async function loadConfig() {
+  // 1. Tenter de charger depuis le serveur (KV)
+  let remoteOk = false;
   try {
-    const s = localStorage.getItem('agent_config');
-    if (s) cfg = { ...DEFAULT_CFG, ...JSON.parse(s) };
+    const res = await fetch('/api/config');
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.challenges) {
+        cfg = { ...DEFAULT_CFG, ...data };
+        localStorage.setItem('agent_config', JSON.stringify(cfg));
+        remoteOk = true;
+        showToast('✓ Config chargée depuis le serveur', 'ok', 2500);
+      }
+    }
   } catch(e) {}
+
+  // 2. Fallback localStorage si pas de remote
+  if (!remoteOk) {
+    try {
+      const s = localStorage.getItem('agent_config');
+      if (s) { cfg = { ...DEFAULT_CFG, ...JSON.parse(s) }; showToast('Config locale chargée (serveur injoignable)', 'info', 2500); }
+    } catch(e) {}
+  }
+
+  _populateForm();
+}
+
+function _populateForm() {
   document.getElementById('f-name').value = cfg.missionName || 'HELIE10';
   document.getElementById('f-dur').value = Math.round(cfg.duration / 60);
   document.getElementById('f-test-mode').checked = !!cfg.testMode;
@@ -564,6 +590,7 @@ function loadConfig() {
   updatePinPreview();
   refreshLiveTimer();
   refreshLiveAgents();
+  markClean();
 }
 
 // ── TABS ──────────────────────────────────────
@@ -894,12 +921,14 @@ function saveConfig() {
   });
 }
 
-function resetDefault() {
-  if(!confirm('Rétablir tous les réglages par défaut ?')) return;
-  localStorage.removeItem('agent_config');
-  cfg=JSON.parse(JSON.stringify(DEFAULT_CFG));
-  activeTab=0; loadConfig();
-  showToast('↺ Réglages réinitialisés', 'info');
+async function resetDefault() {
+  if(!confirm('Revenir aux réglages d\'usine ?\nCette action remplace la config sur TOUS les appareils.')) return;
+  cfg = JSON.parse(JSON.stringify(DEFAULT_CFG));
+  localStorage.setItem('agent_config', JSON.stringify(cfg));
+  activeTab = 0;
+  _populateForm();
+  const ok = await pushConfigRemote(cfg);
+  showToast(ok ? '↺ Réglages usine restaurés sur le serveur' : '↺ Réglages usine restaurés (hors ligne)', ok ? 'ok' : 'info');
 }
 
 // ── Contrôle en direct ────────────────────────────────
