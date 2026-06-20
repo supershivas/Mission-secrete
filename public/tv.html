@@ -179,10 +179,16 @@ function render(st) {
   if (_timerInterval) clearInterval(_timerInterval);
   _timerInterval = setInterval(() => {
     if (!_state?.missionStart) return;
+    const dur = _state.duration || 3600;
     const elapsed = (Date.now() - _state.missionStart) / 1000;
-    const left = Math.max(0, (_state.duration || 3600) - elapsed);
+    const left = Math.max(0, dur - elapsed);
     timer.textContent = fmt(left);
     timer.classList.toggle('urgent', left < 300);
+    // Mise à jour barre temps restant
+    const fill = document.getElementById('tv-progress-fill');
+    if (fill && document.getElementById('tv-progress-wrap').style.display !== 'none') {
+      fill.style.width = Math.max(0, (left / dur) * 100) + '%';
+    }
   }, 500);
   const elapsed = (Date.now() - st.missionStart) / 1000;
   const left = Math.max(0, (st.duration || 3600) - elapsed);
@@ -192,16 +198,22 @@ function render(st) {
   if (phase === 'phase-message' || phase === 'phase-teams') {
     phaseEl.textContent = 'BRIEFING EN COURS…';
   } else if (phase === 'phase-challenge' || phase === 'phase-reveal') {
-    const idx = st.challengeIdx || 0;
-    const total = st.challengeTotal || 4;
-    phaseEl.textContent = st.challengeTitle || `ÉPREUVE ${idx + 1}`;
-    // Barre de progression
+    phaseEl.textContent = st.challengeTitle || 'ÉPREUVE EN COURS';
+    // Barre de progression = temps restant
     progress.style.display = 'flex';
-    document.getElementById('tv-progress-label').textContent = `ÉPREUVE ${idx + 1} / ${total}`;
-    const pct = (idx / total) * 100 + (phase === 'phase-reveal' ? (1/total)*100 : 0);
-    document.getElementById('tv-progress-fill').style.width = pct + '%';
+    const dur = st.duration || 3600;
+    const elapsed2 = (Date.now() - st.missionStart) / 1000;
+    const leftPct = Math.max(0, ((dur - elapsed2) / dur) * 100);
+    document.getElementById('tv-progress-label').textContent = 'TEMPS RESTANT';
+    document.getElementById('tv-progress-fill').style.width = leftPct + '%';
   } else if (phase === 'phase-countdown') {
     phaseEl.textContent = 'DÉSAMORÇAGE EN COURS…';
+    progress.style.display = 'flex';
+    const dur2 = st.duration || 3600;
+    const elapsed3 = (Date.now() - st.missionStart) / 1000;
+    const leftPct2 = Math.max(0, ((dur2 - elapsed3) / dur2) * 100);
+    document.getElementById('tv-progress-label').textContent = 'TEMPS RESTANT';
+    document.getElementById('tv-progress-fill').style.width = leftPct2 + '%';
   }
 
   renderTeamsOrAgents(st);
