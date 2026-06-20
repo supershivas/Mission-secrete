@@ -25,6 +25,12 @@ function resumeMission() {
   totalSeconds     = s.totalSeconds || cfg.duration;
   missionStart     = s.missionStart || Date.now();
   startAmbientMusic();
+  // Restore challenge theme immediately to avoid flash of default green
+  if (['phase-challenge','phase-reveal'].includes(s.phase)) {
+    const ch = cfg.challenges[currentChallenge];
+    const themeIdx = (ch?.theme !== undefined && ch?.theme !== '') ? +ch.theme : currentChallenge;
+    applyTheme(themeIdx);
+  }
   if (s.phase === 'phase-challenge' || s.phase === 'phase-reveal') {
     countdownTimer = setInterval(globalTick, 1000);
     showChallenge(currentChallenge);

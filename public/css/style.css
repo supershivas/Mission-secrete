@@ -135,7 +135,7 @@ body{font-family:'Share Tech Mono','Courier New',monospace;color:#00ff41;display
 /* ══ MESSAGE ═══════════════════════════════════════════ */
 /* ══ MODE TEST — barre fixe ══════════════════════════ */
 /* ══ BOUTON ÉQUIPES FLOTTANT ═══════════════════════════ */
-#teams-peek-btn{position:fixed;bottom:1.2rem;left:1rem;z-index:1100;background:rgba(0,0,0,.7);border:1px solid #003a0d;color:#00ff41;font-size:20px;width:42px;height:42px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:background .15s}
+#teams-peek-btn{position:fixed;bottom:1.2rem;left:1rem;z-index:1100;background:rgba(0,10,0,.85);border:1px solid #00ff41;color:#00ff41;font-size:11px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;display:flex;align-items:center;gap:.35rem;padding:.45rem .8rem;border-radius:3px;box-shadow:0 0 8px rgba(0,255,65,.15);transition:background .15s,box-shadow .15s;white-space:nowrap}
 #teams-peek-btn:active{background:rgba(0,255,65,.15)}
 #teams-peek-overlay{position:fixed;inset:0;z-index:1150;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center}
 #teams-peek-overlay.show{display:flex}
@@ -157,6 +157,8 @@ body{font-family:'Share Tech Mono','Courier New',monospace;color:#00ff41;display
   100% {background:#000}
 }
 #phase-splash.hue-cycle{animation:splash-hue 18s ease-in-out infinite}
+@keyframes splash-tap{0%{background:rgba(0,255,65,.07)}100%{background:transparent}}
+#phase-splash.tapped{animation:splash-tap .3s ease forwards}
 
 #test-mode-bar{position:fixed;top:0;right:0;z-index:1200;display:flex;align-items:center;gap:.5rem;padding:.3rem .7rem .3rem .5rem;background:rgba(180,80,0,.92);border-bottom-left-radius:6px;pointer-events:auto}
 #test-mode-label{font-size:9px;letter-spacing:.2em;color:#ffe0b0;text-transform:uppercase;font-weight:700}
@@ -212,6 +214,7 @@ body{font-family:'Share Tech Mono','Courier New',monospace;color:#00ff41;display
 #code-input:focus{border-color:#00ff41;box-shadow:0 0 0 1px rgba(0,255,65,.2)}
 #code-submit{background:transparent;border:1px solid #00ff41;color:#00ff41;font-family:inherit;font-size:13px;letter-spacing:.15em;padding:.65rem 1.4rem;cursor:pointer;text-transform:uppercase;white-space:nowrap}
 #code-submit:hover{background:rgba(0,255,65,.08)}
+@media(max-width:480px){.code-field-row{flex-direction:column}#code-submit{width:100%;padding:.8rem;font-size:15px}}
 #code-error{font-size:13px;color:#ff0024;letter-spacing:.15em;min-height:18px;text-transform:uppercase}
 
 /* ══ INDICE ════════════════════════════════════════════ */

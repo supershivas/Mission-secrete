@@ -109,6 +109,15 @@ function showChallenge(idx) {
     hz.classList.remove('visible');
   }
 
+  // Adapt code label to challenge type
+  const codeLabel = document.querySelector('.code-label');
+  if (codeLabel) {
+    if (ch.type === 'qr') codeLabel.textContent = 'Code détecté (ou saisie manuelle)';
+    else if (ch.type === 'morse') codeLabel.textContent = 'Code déchiffré en morse';
+    else if (ch.type === 'talkie') codeLabel.textContent = 'Code reçu par radio';
+    else codeLabel.textContent = 'Entrez le code découvert';
+  }
+
   startChallengeDisplay(ch.type || 'libre', ch.code);
   if (ch.animation && ch.animation !== 'none') startChallengeAnim(ch.animation);
   else stopChallengeAnim();

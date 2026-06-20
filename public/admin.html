@@ -287,6 +287,7 @@
   <div class="topbar">
     <div class="topbar-title">⬛ Backoffice Mission Secrète</div>
     <div class="topbar-badge">Helie10</div>
+    <a href="/livret.html" target="_blank" style="font-size:12px;color:var(--muted);text-decoration:none">📄 Livret</a>
     <a href="/" style="font-size:12px;color:var(--muted);text-decoration:none">← App</a>
   </div>
 
@@ -355,8 +356,12 @@
       <div class="card-body">
         <div class="field">
           <label>Texte (machine à écrire)</label>
-          <textarea id="f-msg" rows="10" class="mono" spellcheck="false"></textarea>
+          <textarea id="f-msg" rows="10" class="mono" spellcheck="false" oninput="updateMsgPreview()"></textarea>
           <div class="hint">Les points et virgules créent des pauses dramatiques · Les sauts de ligne sont conservés</div>
+        </div>
+        <div class="field">
+          <label>Aperçu rendu</label>
+          <div id="msg-preview" style="font-family:var(--mono);font-size:13px;line-height:1.9;white-space:pre-wrap;background:#111;color:#00ff41;border:1px solid #1a1a1a;border-radius:4px;padding:.75rem 1rem;min-height:3rem;max-height:200px;overflow-y:auto"></div>
         </div>
       </div>
     </div>
@@ -542,6 +547,7 @@ function loadConfig() {
   document.getElementById('f-dur').value = Math.round(cfg.duration / 60);
   document.getElementById('f-test-mode').checked = !!cfg.testMode;
   document.getElementById('f-msg').value = cfg.message;
+  updateMsgPreview();
   updateDurHint();
   renderTabs();
   updatePinPreview();
@@ -759,6 +765,12 @@ function updateDurHint() {
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
 
+function updateMsgPreview() {
+  const val = document.getElementById('f-msg')?.value || '';
+  const pre = document.getElementById('msg-preview');
+  if (pre) pre.textContent = val;
+}
+
 function showToast(msg, type='info', duration=3000) {
   const container = document.getElementById('toast-container');
   const t = document.createElement('div');
@@ -774,17 +786,23 @@ function showToast(msg, type='info', duration=3000) {
 
 function saveConfig() {
   const mins=parseInt(document.getElementById('f-dur').value,10);
-  if(isNaN(mins)||mins<1||mins>180){alert('Durée invalide (1–180 min)');return;}
+  if(isNaN(mins)||mins<1||mins>180){showToast('Durée invalide (1–180 min)', 'err'); return;}
+  const errors = [];
   cfg.challenges.forEach((ch,i)=>{
     ch.title  = document.getElementById(`ch-title-${i}`)?.value||ch.title;
     ch.brief  = document.getElementById(`ch-brief-${i}`)?.value||ch.brief;
-    ch.code   = (document.getElementById(`ch-code-${i}`)?.value||ch.code).toUpperCase();
-    ch.digit  = (document.getElementById(`ch-digit-${i}`)?.value||ch.digit).replace(/\D/g,'').slice(0,1);
+    const rawCode = (document.getElementById(`ch-code-${i}`)?.value||'').trim();
+    if (!rawCode) errors.push(`Épreuve ${i+1} : code manquant`);
+    ch.code   = (rawCode || ch.code).toUpperCase();
+    const rawDigit = (document.getElementById(`ch-digit-${i}`)?.value||'').replace(/\D/g,'').slice(0,1);
+    if (!rawDigit) errors.push(`Épreuve ${i+1} : chiffre PIN manquant`);
+    ch.digit  = rawDigit || ch.digit;
     ch.hint      = (document.getElementById(`ch-hint-${i}`)?.value||ch.hint||'').trim();
     ch.type      = document.getElementById(`ch-type-${i}`)?.value||ch.type||'libre';
     ch.animation = document.getElementById(`ch-anim-${i}`)?.value||ch.animation||'none';
     // theme persisted via setChTheme directly on cfg.challenges[i].theme
   });
+  if (errors.length) { showToast(errors[0], 'err', 4000); return; }
   cfg.missionName = (document.getElementById('f-name').value.trim().toUpperCase()) || 'HELIE10';
   cfg.duration=mins*60;
   cfg.testMode = document.getElementById('f-test-mode').checked;

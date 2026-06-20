@@ -157,6 +157,10 @@ function toggleTeamsPeek() {
 // ── Splash ─────────────────────────────────────────────
 function onSplashTap() {
   getAudioCtx();
+  const splash = document.getElementById('phase-splash');
+  splash.classList.remove('tapped');
+  void splash.offsetWidth;
+  splash.classList.add('tapped');
   stopSplashRotation();
   triggerPhaseFlash();
   playRevealSound();
@@ -450,6 +454,13 @@ function onCfgSync() {
   // Mise à jour agents/équipes injectée par l'admin en direct
   if (cfg.runtimeAgents && missionStart > 0) {
     agents = cfg.runtimeAgents;
+    // Consume runtimeAgents so it doesn't persist across reloads
+    delete cfg.runtimeAgents;
+    try {
+      const stored = JSON.parse(localStorage.getItem('agent_config') || '{}');
+      delete stored.runtimeAgents;
+      localStorage.setItem('agent_config', JSON.stringify(stored));
+    } catch(e) {}
     _pushMissionState();
     if (['phase-challenge','phase-reveal','phase-countdown'].includes(currentPhase))
       _updateTeamsPeekBtn();
@@ -501,6 +512,7 @@ function debugSim() {
   document.getElementById('particles').innerHTML = '';
 
   agents = names; revealedDigits = []; currentChallenge = 0; pinInput = '';
+  document.body.classList.remove('time-danger');
   secondsLeft = cfg.duration; totalSeconds = cfg.duration;
   missionStart = Date.now();
   countdownTimer = setInterval(globalTick, 1000);
