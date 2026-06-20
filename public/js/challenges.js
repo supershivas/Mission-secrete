@@ -169,6 +169,9 @@ function showChallengeWithIntro(idx) {
   }
   if (_introAnimTmr) { clearInterval(_introAnimTmr); _introAnimTmr = null; }
 
+  // Masquer toutes les phases derrière l'overlay (évite le flash pause→épreuve)
+  document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
+
   // Expose idx for the button onclick
   window._ciIdx = idx;
 
