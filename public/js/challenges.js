@@ -6,7 +6,20 @@ function buildStepDots(active) {
   ).join('');
 }
 
-function startChallenges() { currentChallenge = 0; revealedDigits = []; showChallengeWithIntro(0); }
+let _challengeAgents = [];
+
+function _assignChallengeAgents() {
+  const pool = agents.map(a => a.agentName || a.realName).filter(Boolean);
+  const n = cfg.challenges.length;
+  _challengeAgents = [];
+  if (pool.length === 0) return;
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  for (let i = 0; i < n; i++) {
+    _challengeAgents.push(shuffled[i % shuffled.length]);
+  }
+}
+
+function startChallenges() { currentChallenge = 0; revealedDigits = []; _assignChallengeAgents(); showChallengeWithIntro(0); }
 
 let _introAnimTmr = null;
 
@@ -75,6 +88,17 @@ function showChallenge(idx) {
   } else {
     banner.style.display = 'none';
   }
+  const badge = document.getElementById('ch-agent-badge');
+  const assignedAgent = _challengeAgents[idx];
+  if (badge) {
+    if (assignedAgent) {
+      badge.textContent = `⬛ Agent chargé du désarmement : ${assignedAgent}`;
+      badge.style.display = '';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
   document.getElementById('code-input').value      = '';
   document.getElementById('code-error').textContent = '';
 

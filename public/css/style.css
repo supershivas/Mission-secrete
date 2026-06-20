@@ -339,6 +339,7 @@ body.splash-tapped{animation:splash-tap .35s ease forwards}
 @keyframes fly{0%{transform:translate(0,0) scale(1);opacity:1}100%{transform:translate(var(--tx),var(--ty)) scale(.1);opacity:0}}
 
 /* ══ BANNER ÉQUIPE (phase challenge) ═══════════════════ */
+#ch-agent-badge{width:100%;padding:.35rem 1rem;font-size:11px;letter-spacing:.2em;text-transform:uppercase;text-align:center;color:#00cc33;border:1px dashed #004a10;background:rgba(0,255,65,.04);animation:fadein .4s ease}
 .ch-team-banner{width:100%;padding:.45rem 1rem;font-size:13px;letter-spacing:.3em;text-transform:uppercase;text-align:center;border:1px solid;animation:fadein .4s ease}
 .ch-team-banner.ombre{color:#00ff41;border-color:#00ff41;background:rgba(0,255,65,.06);text-shadow:0 0 8px rgba(0,255,65,.4)}
 .ch-team-banner.cobra{color:#ff6b00;border-color:#ff6b00;background:rgba(255,107,0,.06);text-shadow:0 0 8px rgba(255,107,0,.4)}
