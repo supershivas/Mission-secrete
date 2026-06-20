@@ -1,7 +1,7 @@
 /* ══ RESET & BASE ══════════════════════════════════════ */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{width:100%;min-height:100%;background:#000;overflow-x:hidden}
-body{font-family:'Share Tech Mono','Courier New',monospace;color:#00ff41;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:17px;transition:background 1.2s ease}
+html,body{width:100%;background:#000;overflow-x:hidden}
+body{font-family:'Share Tech Mono','Courier New',monospace;color:#00ff41;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-size:17px;transition:background 1.2s ease}
 
 /* ══ THÈME PAR ÉPREUVE ═════════════════════════════════ */
 :root{
