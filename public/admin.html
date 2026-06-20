@@ -626,6 +626,11 @@ function renderTabs() {
         <label>Titre de la pause</label>
         <input type="text" id="ch-title-${i}" value="${esc(ch.title||'Pause fraîcheur')}" oninput="syncCh(${i})">
       </div>
+      <div class="field" style="margin-top:.75rem">
+        <label>Texte synthèse vocale</label>
+        <input type="text" id="ch-speech-${i}" value="${esc(ch.speechText||"AAAAAh, j'ai soif !")}" oninput="syncCh(${i})">
+        <div class="hint">Lu à voix haute au début de la pause · laissez vide pour désactiver</div>
+      </div>
       <div style="margin-top:.25rem">
         <button class="btn btn-danger btn-sm" onclick="removePause(${i})">✕ Supprimer cette pause</button>
       </div>
@@ -673,6 +678,11 @@ function renderTabs() {
         <label>Indice (affiché après 3 minutes de blocage)</label>
         <textarea id="ch-hint-${i}" rows="2" spellcheck="false" oninput="syncCh(${i})">${esc(ch.hint||'')} </textarea>
         <div class="hint">Laissez vide pour désactiver l'indice sur cette épreuve</div>
+      </div>
+      <div class="field">
+        <label>Texte synthèse vocale (lu au début de l'épreuve)</label>
+        <input type="text" id="ch-speech-${i}" value="${esc(ch.speechText||'')}" oninput="syncCh(${i})">
+        <div class="hint">Laissez vide pour désactiver la voix sur cette épreuve</div>
       </div>
       <div class="row">
         <div class="field">
@@ -786,7 +796,8 @@ function setChTheme(i, val) {
 function syncCh(i) {
   const ch = cfg.challenges[i];
   if (ch.type === 'pause') {
-    ch.title = document.getElementById(`ch-title-${i}`)?.value || 'Pause fraîcheur';
+    ch.title      = document.getElementById(`ch-title-${i}`)?.value || 'Pause fraîcheur';
+    ch.speechText = document.getElementById(`ch-speech-${i}`)?.value ?? "AAAAAh, j'ai soif !";
     markDirty(); return;
   }
   ch.title     = document.getElementById(`ch-title-${i}`).value;
@@ -797,7 +808,8 @@ function syncCh(i) {
   ch.cipher    = document.getElementById(`ch-cipher-${i}`)?.value||'polybe';
   ch.type      = document.getElementById(`ch-type-${i}`)?.value||'libre';
   ch.animation = document.getElementById(`ch-anim-${i}`)?.value||'none';
-  ch.teamPlay  = document.getElementById(`ch-team-${i}`)?.checked||false;
+  ch.teamPlay   = document.getElementById(`ch-team-${i}`)?.checked||false;
+  ch.speechText = (document.getElementById(`ch-speech-${i}`)?.value||'').trim();
   const cb=document.getElementById(`cb-${i}`); if(cb) cb.textContent=ch.code||'—';
   const db=document.getElementById(`db-${i}`); if(db){db.textContent=ch.digit||'?';db.className='digit-tag'+(ch.digit?' set':'');}
   updatePinPreview();

@@ -89,7 +89,8 @@ function showPause(idx) {
   document.getElementById('phase-pause').classList.add('active');
   document.body.style.background = '#00090f';
 
-  _speak('AAAAAh, j\'ai soif !', { rate: 0.72, pitch: 1.3 });
+  const pauseSpeech = (cfg.challenges[idx]?.speechText || "AAAAAh, j'ai soif !").trim();
+  if (pauseSpeech) _speak(pauseSpeech, { rate: 0.72, pitch: 1.3 });
 
   const roles = _challengeRoles[idx];
   const badge = document.getElementById('pause-agent-badge');
@@ -129,15 +130,11 @@ function resumeFromPause() {
 let _introAnimTmr = null;
 
 const _ORDINALS_FR = ['UN','DEUX','TROIS','QUATRE','CINQ','SIX','SEPT','HUIT','NEUF','DIX'];
-function _speakChallenge(num) {
-  const ord = _ORDINALS_FR[num - 1] || String(num);
-  const phrases = [
-    `Épreuve ${ord}. Agents, la menace est réelle. Bonne chance.`,
-    `Épreuve ${ord}. Le QG vous observe. Ne faiblissez pas.`,
-    `Épreuve ${ord}. Le temps est compté. La mission commence maintenant.`,
-    `Épreuve ${ord}. Concentrez-vous. L'organisation compte sur vous.`,
-  ];
-  _speak(phrases[(num - 1) % phrases.length]);
+function _speakChallenge(idx) {
+  const ch = cfg.challenges[idx];
+  const text = ch?.speechText?.trim();
+  if (!text) return;
+  _speak(text, { rate: 0.82, pitch: 0.1 });
 }
 
 function _dismissIntroOverlay(idx) {
@@ -210,7 +207,7 @@ function showChallengeWithIntro(idx) {
   const displayTitle = (raw[1] || ch.title).trim().toUpperCase();
   setTimeout(() => {
     matrixName(titleEl, displayTitle, null);
-    _speakChallenge(ri + 1);
+    _speakChallenge(idx);
   }, 1100);
 
   // Afficher les rôles + bouton après que le titre est lisible
