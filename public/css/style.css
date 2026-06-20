@@ -193,7 +193,7 @@ body.splash-tapped{animation:splash-tap .35s ease forwards}
 /* ══ ÉCRAN CONNEXION ════════════════════════════════ */
 #connect-bxl{
   font-size:clamp(8px,1.8vw,13px);line-height:1.25;letter-spacing:.08em;
-  color:#00ff41;text-align:center;white-space:pre;
+  color:#00ff41;text-align:left;white-space:pre;display:inline-block;
   text-shadow:0 0 10px rgba(0,255,65,.55),0 0 28px rgba(0,255,65,.2);
   animation:fadein .6s ease both;
   margin-bottom:.6rem;
