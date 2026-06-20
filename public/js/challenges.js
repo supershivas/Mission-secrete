@@ -65,6 +65,13 @@ function showPause(idx) {
   document.getElementById('phase-pause').classList.add('active');
   document.body.style.background = '#00090f';
 
+  if (window.speechSynthesis) {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance('AAAAAh, j\'ai soif !');
+    u.lang = 'fr-FR'; u.rate = 0.72; u.pitch = 1.3; u.volume = 1;
+    window.speechSynthesis.speak(u);
+  }
+
   const roles = _challengeRoles[idx];
   const badge = document.getElementById('pause-agent-badge');
   if (badge) {
