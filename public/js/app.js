@@ -365,13 +365,40 @@ function startConnect() {
     showStar = false;
     playTypeSound();
   });
-  sc(4700, () => {
+  // ── Easter eggs Minecraft ──────────────────────────────
+  sc(4750, () => {
+    fixed.push('──────────────────────────────────────');
+    fixed.push('<span class="ct-warn">⚠ ANOMALIE DÉTECTÉE DANS LE SYSTÈME</span>');
+    playTypeSound();
+  });
+  sc(5050, () => {
+    fixed.push('SCAN ENVIRONNEMENT...');
+    playTypeSound();
+  });
+  sc(5350, () => {
+    fixed[fixed.length-1] = '<span class="ct-warn">CREEPER DÉTECTÉ À PROXIMITÉ  ⚠</span>';
+    playTypeSound();
+  });
+  sc(5650, () => {
+    fixed.push('<span class="ct-dim">MINECRAFT v1.21.4  |  SEED: 2016HELIE  |  MODE: SURVIE</span>');
+    playTypeSound();
+  });
+  sc(5900, () => {
+    fixed.push('<span class="ct-dim">INVENTAIRE : 64× TNT  ·  32× DIAMANT  ·  1× ÉPÉE EN OR</span>');
+    playTypeSound();
+  });
+  sc(6200, () => {
+    fixed.push('<span class="ct-dim">CREEPER NEUTRALISÉ PAR L\'AGENT HÉLIE  ✓</span>');
+    playTypeSound();
+  });
+  sc(6500, () => {
+    fixed.push('──────────────────────────────────────');
     fixed.push('');
-    fixed.push('▶  ENRÔLEMENT DES AGENTS REQUIS');
+    fixed.push('<span class="ct-cta">▶  ENRÔLEMENT DES AGENTS REQUIS</span>');
     playTypeSound();
     render();
   });
-  sc(5600, () => {
+  sc(8200, () => {
     terminated = true;
     clearInterval(_connectAnimInt);
     _connectAnimInt = null;

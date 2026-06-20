@@ -214,6 +214,9 @@ body.splash-tapped{animation:splash-tap .35s ease forwards}
 .ct-matrix{color:#004d1a;font-size:.85em;letter-spacing:.06em}
 .ct-prog{color:#00ff41;letter-spacing:.04em}
 .ct-cnt{color:#555;font-size:.88em}
+.ct-warn{color:#ffb300;text-shadow:0 0 8px rgba(255,179,0,.5)}
+.ct-dim{color:#007a1f;font-size:.88em}
+.ct-cta{color:#00e5ff;text-shadow:0 0 10px rgba(0,229,255,.6);letter-spacing:.06em;font-weight:bold}
 #typewriter-text{font-size:clamp(17px,2.5vw,21px);line-height:1.95;color:#00cc35;width:100%;white-space:pre-wrap}
 #autodestruct-bar-wrap{width:100%;display:none;flex-direction:column;gap:.5rem}
 #autodestruct-bar-wrap.visible{display:flex}
