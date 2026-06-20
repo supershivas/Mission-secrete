@@ -95,10 +95,8 @@ function resumeFromPause() {
   clearInterval(_waterTmr); _waterTmr = null;
   const nextIdx = currentChallenge + 1;
   if (nextIdx >= cfg.challenges.length) { startFinalCountdown(); return; }
-  triggerPhaseFlash(() => {
-    currentChallenge = nextIdx;
-    showNextItem(nextIdx);
-  });
+  currentChallenge = nextIdx;
+  showNextItem(nextIdx);
 }
 
 // ── Intro overlay ───────────────────────────────────────
