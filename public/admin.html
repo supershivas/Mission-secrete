@@ -622,7 +622,18 @@ function renderTabs() {
             oninput="syncCh(${i})" autocomplete="off" autocorrect="off" spellcheck="false">
           <div class="hint">Lettres et/ou chiffres · insensible à la casse</div>
         </div>
-        <div class="field" style="max-width:140px">
+        <div class="field" style="max-width:200px">
+          <label>Chiffrement du code (PDF)</label>
+          <select id="ch-cipher-${i}" onchange="syncCh(${i})">
+            <option value="polybe"  ${(ch.cipher||'polybe')==='polybe'  ?' selected':''}>🔢 Polybe 5×5</option>
+            <option value="morse"   ${ch.cipher==='morse'   ?' selected':''}>📡 Morse</option>
+            <option value="symboles"${ch.cipher==='symboles'?' selected':''}>🔣 Symboles</option>
+            <option value="atbash"  ${ch.cipher==='atbash'  ?' selected':''}>🔄 Atbash (A=Z)</option>
+            <option value="cesar"   ${ch.cipher==='cesar'   ?' selected':''}>⏩ César +3</option>
+          </select>
+          <div class="hint">Table de déchiffrement utilisée dans le PDF</div>
+        </div>
+        <div class="field" style="max-width:110px">
           <label>Chiffre révélé (0–9)</label>
           <input type="text" id="ch-digit-${i}" value="${esc(ch.digit)}"
             class="mono" maxlength="1"
@@ -756,6 +767,7 @@ function syncCh(i) {
   ch.code      = document.getElementById(`ch-code-${i}`).value.toUpperCase();
   ch.digit     = document.getElementById(`ch-digit-${i}`).value.replace(/\D/g,'').slice(0,1);
   ch.hint      = (document.getElementById(`ch-hint-${i}`)?.value||'').trim();
+  ch.cipher    = document.getElementById(`ch-cipher-${i}`)?.value||'polybe';
   ch.type      = document.getElementById(`ch-type-${i}`)?.value||'libre';
   ch.animation = document.getElementById(`ch-anim-${i}`)?.value||'none';
   ch.teamPlay  = document.getElementById(`ch-team-${i}`)?.checked||false;
@@ -865,6 +877,7 @@ function saveConfig() {
     if (!rawDigit) errors.push(`Épreuve ${realNum} : chiffre PIN manquant`);
     ch.digit  = rawDigit || ch.digit;
     ch.hint      = (document.getElementById(`ch-hint-${i}`)?.value||ch.hint||'').trim();
+    ch.cipher    = document.getElementById(`ch-cipher-${i}`)?.value||ch.cipher||'polybe';
     ch.type      = document.getElementById(`ch-type-${i}`)?.value||ch.type||'libre';
     ch.animation = document.getElementById(`ch-anim-${i}`)?.value||ch.animation||'none';
   });

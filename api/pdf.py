@@ -8,21 +8,23 @@ import os, json, io, urllib.request
 
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm, mm
-from reportlab.lib.colors import HexColor, black
+from reportlab.lib.colors import HexColor
 from reportlab.pdfgen import canvas as rl_canvas
 
 W, H = A4
 
 # ══════════════════════════════════════════════════════════════
-# POLYBE 5×5
+# ALPHABETS & ENCODAGES
 # ══════════════════════════════════════════════════════════════
 ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+
+# ── Polybe 5×5 ──────────────────────────────────────────────
 POLYBE = {}
-for i, ch in enumerate(ALPHABET[:25]):
-    POLYBE[ch] = f'{i//5+1}{i%5+1}'
+for _i, _ch in enumerate(ALPHABET[:25]):
+    POLYBE[_ch] = f'{_i//5+1}{_i%5+1}'
 POLYBE['Z'] = POLYBE['Y']
 
-GRID = [
+POLYBE_GRID = [
     ['', '1', '2', '3', '4', '5'],
     ['1', 'A', 'B', 'C', 'D', 'E'],
     ['2', 'F', 'G', 'H', 'I', 'J'],
@@ -34,9 +36,7 @@ GRID = [
 def encode_polybe(word):
     return '  '.join(POLYBE.get(c, '??') for c in word.upper() if c.isalpha())
 
-# ══════════════════════════════════════════════════════════════
-# MORSE
-# ══════════════════════════════════════════════════════════════
+# ── Morse ────────────────────────────────────────────────────
 MORSE = {
     'A':'.-',   'B':'-...', 'C':'-.-.', 'D':'-..',  'E':'.',
     'F':'..-.', 'G':'--.',  'H':'....', 'I':'..',   'J':'.---',
@@ -46,12 +46,40 @@ MORSE = {
     'Z':'--..',
 }
 
-def encode_morse(word):
-    return '  /  '.join(MORSE.get(c, '?') for c in word.upper() if c.isalpha())
-
 def morse_display(code):
-    """Remplace . par · et - par —"""
     return code.replace('.', '·').replace('-', '—')
+
+def encode_morse_display(word):
+    return '  /  '.join(morse_display(MORSE.get(c, '?')) for c in word.upper() if c.isalpha())
+
+# ── Atbash (A=Z, B=Y…) ──────────────────────────────────────
+ATBASH = {chr(65+i): chr(90-i) for i in range(26)}
+
+def encode_atbash(word):
+    return ''.join(ATBASH.get(c, c) for c in word.upper() if c.isalpha())
+
+# ── César +3 ─────────────────────────────────────────────────
+CESAR_SHIFT = 3
+
+def encode_cesar(word):
+    return ''.join(chr((ord(c)-65+CESAR_SHIFT)%26+65) for c in word.upper() if c.isalpha())
+
+# Dispatch
+CIPHER_ENCODE = {
+    'polybe':   encode_polybe,
+    'morse':    encode_morse_display,
+    'atbash':   encode_atbash,
+    'cesar':    encode_cesar,
+    'symboles': lambda w: w.upper(),   # symboles dessinés — handled specially
+}
+
+CIPHER_LABELS = {
+    'polybe':   'POLYBE 5×5',
+    'morse':    'CODE MORSE',
+    'atbash':   'ATBASH  (A=Z, B=Y…)',
+    'cesar':    'CÉSAR +3  (A=D, B=E…)',
+    'symboles': 'ALPHABET SYMBOLIQUE',
+}
 
 # ══════════════════════════════════════════════════════════════
 # COULEURS / HELPERS
@@ -61,7 +89,6 @@ LIGHT = HexColor('#888888')
 RULE  = HexColor('#cccccc')
 STAMP = HexColor('#9b1c1c')
 BOX   = HexColor('#f0f0f0')
-BOX2  = HexColor('#f5f5f5')
 
 def _font(c, name='Courier', size=10, color=INK):
     c.setFont(name, size)
@@ -86,6 +113,26 @@ def _stamp(c, x, y, text, angle=-12):
     c.drawCentredString(0, -1.2*mm, text)
     c.restoreState()
 
+def _page_header(c, title, subtitle=''):
+    """Dessine l'en-tête commun + bordure, retourne cur_y de départ."""
+    _border(c)
+    _font(c, 'Courier', 6.5, LIGHT)
+    c.drawString(1.5*cm, H-1.3*cm, 'BUREAU CLANDESTIN BXL  ·  SECTION HÊLIE')
+    c.drawRightString(W-1.5*cm, H-1.3*cm, 'CLASSIFIÉ — NE PAS REPRODUIRE')
+    _rule(c, H-1.6*cm, w=0.3)
+    _font(c, 'Courier-Bold', 14, INK)
+    c.drawCentredString(W/2, H-2.8*cm, title)
+    if subtitle:
+        _font(c, 'Courier', 8, LIGHT)
+        c.drawCentredString(W/2, H-3.5*cm, subtitle)
+    _rule(c, H-(3.8 if subtitle else 3.2)*cm, w=0.6, color=INK)
+    _rule(c, 1.5*cm, w=0.3)
+    _font(c, 'Courier', 6.5, LIGHT)
+    c.drawCentredString(W/2, 1.15*cm, 'OPÉRATION HÊLIE — NE PAS COMMUNIQUER EN DEHORS DU GROUPE')
+    _stamp(c, W-3.5*cm, 2.2*cm, 'CONFIDENTIEL')
+    return H - (4.3 if subtitle else 3.7)*cm
+
+
 # ══════════════════════════════════════════════════════════════
 # SYMBOLES — dessinés au trait
 # ══════════════════════════════════════════════════════════════
@@ -98,71 +145,71 @@ def draw_sym(c, letter, cx, cy, s=4*mm):
     r = s * 0.45
     p = c.beginPath()
 
-    if letter == 'A':   # ∧ chevron haut
+    if letter == 'A':
         p.moveTo(cx-r, cy-r*.5); p.lineTo(cx, cy+r*.8); p.lineTo(cx+r, cy-r*.5)
-    elif letter == 'B': # crochet ouvert gauche
+    elif letter == 'B':
         p.moveTo(cx+r*.2, cy+r*.8); p.lineTo(cx+r*.2, cy-r*.3)
         p.curveTo(cx+r*.2, cy-r*.9, cx-r*.6, cy-r*.9, cx-r*.6, cy-r*.4)
-    elif letter == 'C': # arc ⊂
+    elif letter == 'C':
         p.moveTo(cx+r*.3, cy+r*.8)
         p.curveTo(cx-r*.8, cy+r*.8, cx-r*.8, cy-r*.8, cx+r*.3, cy-r*.8)
-    elif letter == 'D': # arc ⊃
+    elif letter == 'D':
         p.moveTo(cx-r*.3, cy+r*.8)
         p.curveTo(cx+r*.8, cy+r*.8, cx+r*.8, cy-r*.8, cx-r*.3, cy-r*.8)
-    elif letter == 'E': # angle haut-gauche Γ
+    elif letter == 'E':
         p.moveTo(cx+r*.5, cy+r*.7); p.lineTo(cx-r*.5, cy+r*.7); p.lineTo(cx-r*.5, cy-r*.7)
-    elif letter == 'F': # angle haut-droit ⌐
+    elif letter == 'F':
         p.moveTo(cx-r*.5, cy+r*.7); p.lineTo(cx+r*.5, cy+r*.7); p.lineTo(cx+r*.5, cy-r*.7)
-    elif letter == 'G': # angle avec crochet
+    elif letter == 'G':
         p.moveTo(cx+r*.5, cy+r*.7); p.lineTo(cx-r*.5, cy+r*.7); p.lineTo(cx-r*.5, cy-r*.1)
         p.curveTo(cx-r*.5, cy-r*.8, cx+r*.3, cy-r*.8, cx+r*.3, cy-r*.4)
-    elif letter == 'H': # deux barres verticales ||
+    elif letter == 'H':
         p.moveTo(cx-r*.35, cy+r*.8); p.lineTo(cx-r*.35, cy-r*.8)
         p.moveTo(cx+r*.35, cy+r*.8); p.lineTo(cx+r*.35, cy-r*.8)
-    elif letter == 'I': # | barre verticale
+    elif letter == 'I':
         p.moveTo(cx, cy+r*.8); p.lineTo(cx, cy-r*.8)
-    elif letter == 'J': # J
+    elif letter == 'J':
         p.moveTo(cx+r*.3, cy+r*.8); p.lineTo(cx+r*.3, cy-r*.3)
         p.curveTo(cx+r*.3, cy-r*.9, cx-r*.5, cy-r*.9, cx-r*.5, cy-r*.4)
-    elif letter == 'K': # < chevron gauche
+    elif letter == 'K':
         p.moveTo(cx+r*.4, cy+r*.7); p.lineTo(cx-r*.4, cy); p.lineTo(cx+r*.4, cy-r*.7)
-    elif letter == 'L': # angle bas-gauche └
+    elif letter == 'L':
         p.moveTo(cx-r*.5, cy+r*.7); p.lineTo(cx-r*.5, cy-r*.7); p.lineTo(cx+r*.5, cy-r*.7)
-    elif letter == 'M': # angle haut-droit ┐
+    elif letter == 'M':
         p.moveTo(cx-r*.5, cy+r*.7); p.lineTo(cx+r*.5, cy+r*.7); p.lineTo(cx+r*.5, cy-r*.7)
-    elif letter == 'N': # Z penché
+    elif letter == 'N':
         p.moveTo(cx-r*.5, cy+r*.7); p.lineTo(cx+r*.5, cy+r*.1)
         p.lineTo(cx-r*.2, cy-r*.1); p.lineTo(cx+r*.4, cy-r*.7)
-    elif letter == 'O': # cercle ○
+    elif letter == 'O':
         p.circle(cx, cy, r*.75)
         c.drawPath(p, fill=0, stroke=1); return
-    elif letter == 'P': # arc sourire ⌣
+    elif letter == 'P':
         p.moveTo(cx-r*.7, cy+r*.2)
         p.curveTo(cx-r*.7, cy-r*.9, cx+r*.7, cy-r*.9, cx+r*.7, cy+r*.2)
-    elif letter == 'Q': # arc ⌢
+    elif letter == 'Q':
         p.moveTo(cx-r*.6, cy-r*.3)
         p.curveTo(cx-r*.6, cy+r*.7, cx+r*.6, cy+r*.7, cx+r*.6, cy-r*.3)
-    elif letter == 'R': # \ antislash
+    elif letter == 'R':
         p.moveTo(cx-r*.5, cy+r*.7); p.lineTo(cx+r*.5, cy-r*.7)
-    elif letter == 'S': # / slash
+    elif letter == 'S':
         p.moveTo(cx+r*.5, cy+r*.7); p.lineTo(cx-r*.5, cy-r*.7)
-    elif letter == 'T': # — tiret
+    elif letter == 'T':
         p.moveTo(cx-r*.7, cy); p.lineTo(cx+r*.7, cy)
-    elif letter == 'U': # ∪
+    elif letter == 'U':
         p.moveTo(cx-r*.6, cy+r*.7); p.lineTo(cx-r*.6, cy)
         p.curveTo(cx-r*.6, cy-r*.9, cx+r*.6, cy-r*.9, cx+r*.6, cy)
         p.lineTo(cx+r*.6, cy+r*.7)
-    elif letter == 'V': # ∨ chevron bas
+    elif letter == 'V':
         p.moveTo(cx-r*.6, cy+r*.5); p.lineTo(cx, cy-r*.7); p.lineTo(cx+r*.6, cy+r*.5)
-    elif letter == 'W': # ∩ arche
+    elif letter == 'W':
         p.moveTo(cx-r*.6, cy-r*.7); p.lineTo(cx-r*.6, cy)
         p.curveTo(cx-r*.6, cy+r*.9, cx+r*.6, cy+r*.9, cx+r*.6, cy)
         p.lineTo(cx+r*.6, cy-r*.7)
-    elif letter == 'X': # > chevron droit
+    elif letter == 'X':
         p.moveTo(cx-r*.4, cy+r*.7); p.lineTo(cx+r*.4, cy); p.lineTo(cx-r*.4, cy-r*.7)
-    elif letter == 'Y': # angle bas-droit ⌋
+    elif letter == 'Y':
         p.moveTo(cx+r*.5, cy+r*.7); p.lineTo(cx+r*.5, cy-r*.7); p.lineTo(cx-r*.5, cy-r*.7)
-    elif letter == 'Z': # Z zigzag
+    elif letter == 'Z':
         p.moveTo(cx-r*.5, cy+r*.7); p.lineTo(cx+r*.5, cy+r*.7)
         p.lineTo(cx-r*.5, cy-r*.7); p.lineTo(cx+r*.5, cy-r*.7)
     else:
@@ -171,43 +218,26 @@ def draw_sym(c, letter, cx, cy, s=4*mm):
 
 
 # ══════════════════════════════════════════════════════════════
-# PAGE 1 — TROIS TABLES DE CHIFFREMENT
+# PAGES TABLE DE CHIFFREMENT (une par type)
 # ══════════════════════════════════════════════════════════════
-def page_cipher(c):
-    _border(c)
 
-    # ── En-tête compact ──────────────────────────────────────
-    _font(c, 'Courier', 6.5, LIGHT)
-    c.drawString(1.5*cm, H-1.3*cm, 'BUREAU CLANDESTIN BXL  ·  SECTION HÊLIE')
-    c.drawRightString(W-1.5*cm, H-1.3*cm, 'CLASSIFIÉ — NE PAS REPRODUIRE')
-    _rule(c, H-1.6*cm, w=0.3)
-    _font(c, 'Courier-Bold', 13, INK)
-    c.drawCentredString(W/2, H-2.7*cm, 'TABLES DE CHIFFREMENT — OPÉRATION HÊLIE')
-    _rule(c, H-3.2*cm, w=0.5, color=INK)
+def page_symboles(c):
+    cur_y = _page_header(c, 'TABLE DE CHIFFREMENT — SYMBOLES',
+                         'Chaque lettre est représentée par un symbole unique')
 
-    cur_y = H - 3.8*cm   # curseur vertical
-
-    # ══ 1. TABLE DE SYMBOLES ════════════════════════════════
-    _font(c, 'Courier-Bold', 8, INK)
-    c.drawString(1.5*cm, cur_y, '① ALPHABET SYMBOLIQUE')
-    _font(c, 'Courier', 6.5, LIGHT)
-    c.drawRightString(W-1.5*cm, cur_y, 'Chaque lettre est représentée par un symbole unique')
-    cur_y -= 0.5*cm
-
-    row_h  = 0.78*cm
-    col_w  = (W - 3.0*cm) / 2   # 2 colonnes
-    sym_s  = 2.7*mm              # taille symbole
-    n_rows = 13                  # 13 lettres par colonne
+    row_h = 0.9*cm
+    col_w = (W - 3.0*cm) / 2
+    sym_s = 3.2*mm
+    n_rows = 13
 
     for col_i in range(2):
         letters = ALPHABET[col_i*n_rows : (col_i+1)*n_rows]
-        x0 = 1.5*cm + col_i * (col_w + 0*cm)
-        lw = col_w / 3           # largeur colonne lettre
-        sw = col_w * 2/3         # largeur colonne symbole
+        x0 = 1.5*cm + col_i * col_w
+        lw = col_w / 3
+        sw = col_w * 2/3
 
-        # En-têtes colonnes
-        _font(c, 'Courier', 6, LIGHT)
-        c.drawCentredString(x0 + lw/2, cur_y + 0.15*cm, 'LET.')
+        _font(c, 'Courier', 6.5, LIGHT)
+        c.drawCentredString(x0 + lw/2, cur_y + 0.15*cm, 'LETTRE')
         c.drawCentredString(x0 + lw + sw/2, cur_y + 0.15*cm, 'SYMBOLE')
         c.setStrokeColor(RULE); c.setLineWidth(0.3)
         c.line(x0, cur_y, x0+col_w, cur_y)
@@ -215,100 +245,172 @@ def page_cipher(c):
         for ri, letter in enumerate(letters):
             ry   = cur_y - (ri+1)*row_h
             cy_c = ry + row_h/2
-
-            # Fond alterné
             if ri % 2 == 0:
                 c.setFillColor(BOX); c.rect(x0, ry, col_w, row_h, fill=1, stroke=0)
-
-            # Bordures
             c.setStrokeColor(RULE); c.setLineWidth(0.25)
             c.rect(x0, ry, col_w, row_h, fill=0, stroke=1)
             c.line(x0+lw, ry, x0+lw, ry+row_h)
-
-            _font(c, 'Courier-Bold', 9, INK)
-            c.drawCentredString(x0 + lw/2, cy_c - 3, letter)
+            _font(c, 'Courier-Bold', 11, INK)
+            c.drawCentredString(x0 + lw/2, cy_c - 3.5, letter)
             draw_sym(c, letter, x0 + lw + sw/2, cy_c, sym_s)
 
-    cur_y -= n_rows * row_h + 0.5*cm
 
-    # ══ 2. TABLE MORSE ══════════════════════════════════════
-    _rule(c, cur_y, w=0.5, color=INK)
-    cur_y -= 0.45*cm
-    _font(c, 'Courier-Bold', 8, INK)
-    c.drawString(1.5*cm, cur_y, '② CODE MORSE')
-    _font(c, 'Courier', 6.5, LIGHT)
-    c.drawRightString(W-1.5*cm, cur_y, '· = point court  —  = trait long   /  = séparation de lettres')
-    cur_y -= 0.5*cm
+def page_morse(c):
+    cur_y = _page_header(c, 'TABLE DE CHIFFREMENT — MORSE',
+                         '· = point court   —  = trait long   /  = séparation entre lettres')
 
-    morse_row_h = 0.6*cm
-    m_cols = 6   # 6 colonnes pour tenir tout sur la largeur
-    letters_per_col = 5  # 26/6 ≈ 5 (avec reste)
-
-    m_col_w = (W - 3.0*cm) / m_cols
-    mx0 = 1.5*cm
+    row_h  = 0.72*cm
+    m_cols = 6
+    lpc    = 5   # letters per column (5×6=30, enough for 26)
+    cw     = (W - 3.0*cm) / m_cols
+    mx0    = 1.5*cm
 
     for i, letter in enumerate(ALPHABET):
-        col_i = i // letters_per_col if i < 25 else 5
-        row_i = i % letters_per_col
-        if col_i >= m_cols: col_i = m_cols - 1
-        x0 = mx0 + col_i * m_col_w
-        ry = cur_y - (row_i + 1) * morse_row_h
-        cy_c = ry + morse_row_h / 2
-
+        col_i = min(i // lpc, m_cols-1)
+        row_i = i % lpc
+        x0  = mx0 + col_i * cw
+        ry  = cur_y - (row_i+1)*row_h
+        cy_c = ry + row_h/2
         if row_i % 2 == 0:
-            c.setFillColor(BOX); c.rect(x0, ry, m_col_w, morse_row_h, fill=1, stroke=0)
+            c.setFillColor(BOX); c.rect(x0, ry, cw, row_h, fill=1, stroke=0)
         c.setStrokeColor(RULE); c.setLineWidth(0.2)
-        c.rect(x0, ry, m_col_w, morse_row_h, fill=0, stroke=1)
+        c.rect(x0, ry, cw, row_h, fill=0, stroke=1)
+        _font(c, 'Courier-Bold', 9, INK)
+        c.drawString(x0+2*mm, cy_c-3, letter)
+        code_str = morse_display(MORSE.get(letter,'?'))
+        _font(c, 'Courier', 8, LIGHT)
+        tw = c.stringWidth(code_str, 'Courier', 8)
+        if tw > cw - 0.8*cm:
+            _font(c, 'Courier', 6.5, LIGHT)
+        c.drawString(x0+0.6*cm, cy_c-3, code_str)
 
-        _font(c, 'Courier-Bold', 7.5, INK)
-        c.drawString(x0 + 1.5*mm, cy_c - 2.5, letter)
-        code_str = morse_display(MORSE.get(letter, '?'))
-        _font(c, 'Courier', 7, LIGHT)
-        tw = c.stringWidth(code_str, 'Courier', 7)
-        if tw > m_col_w - 1*cm:
-            _font(c, 'Courier', 5.5, LIGHT)
-        c.drawString(x0 + 0.5*cm, cy_c - 2.5, code_str)
+    # Grand exemple visuel
+    ex_y = cur_y - lpc*row_h - 1.2*cm
+    _rule(c, ex_y+0.4*cm, w=0.4, color=INK)
+    _font(c, 'Courier', 7.5, LIGHT)
+    c.drawCentredString(W/2, ex_y, 'EXEMPLE :   S · O · S   =    ·  ·  ·  / — — — / ·  ·  ·')
 
-    cur_y -= 5 * morse_row_h + 0.5*cm   # 5 lignes max
 
-    # ══ 3. GRILLE POLYBE 5×5 ════════════════════════════════
-    _rule(c, cur_y, w=0.5, color=INK)
-    cur_y -= 0.45*cm
-    _font(c, 'Courier-Bold', 8, INK)
-    c.drawString(1.5*cm, cur_y, '③ GRILLE POLYBE  (LIGNE × COLONNE)')
-    _font(c, 'Courier', 6.5, LIGHT)
-    c.drawRightString(W-1.5*cm, cur_y, 'Lisez LIGNE puis COLONNE  —  ex: A=11  L=32  Z=55')
-    cur_y -= 0.5*cm
+def page_polybe(c):
+    cur_y = _page_header(c, 'TABLE DE CHIFFREMENT — POLYBE 5×5',
+                         'Lisez LIGNE puis COLONNE  —  ex: A=11   L=32   Z=55')
 
-    cell_w, cell_h = 1.55*cm, 0.85*cm
-    gx0 = (W - 6 * cell_w) / 2
+    cell_w, cell_h = 1.9*cm, 1.05*cm
+    gx0 = (W - 6*cell_w) / 2
+    gy0 = cur_y - 0.5*cm
 
-    for ri, row in enumerate(GRID):
+    for ri, row in enumerate(POLYBE_GRID):
         for ci, val in enumerate(row):
-            x = gx0 + ci * cell_w
-            y = cur_y - (ri+1) * cell_h
+            x = gx0 + ci*cell_w
+            y = gy0 - (ri+1)*cell_h
             if ri == 0 or ci == 0:
                 c.setFillColor(BOX); c.rect(x, y, cell_w, cell_h, fill=1, stroke=0)
-            c.setStrokeColor(RULE); c.setLineWidth(0.3)
+            c.setStrokeColor(RULE); c.setLineWidth(0.4)
             c.rect(x, y, cell_w, cell_h, fill=0, stroke=1)
             if val:
-                _font(c, 'Courier-Bold' if (ri==0 or ci==0) else 'Courier', 9.5, INK)
-                c.drawCentredString(x+cell_w/2, y+cell_h*0.28, val)
+                _font(c, 'Courier-Bold' if (ri==0 or ci==0) else 'Courier', 12, INK)
+                c.drawCentredString(x+cell_w/2, y+cell_h*0.3, val)
 
-    cur_y -= 6 * cell_h + 0.4*cm
+    # Légende
+    leg_y = gy0 - 7*cell_h - 1.2*cm
+    _rule(c, leg_y + 0.4*cm, w=0.4, color=INK)
+    _font(c, 'Courier', 8, LIGHT)
+    c.drawCentredString(W/2, leg_y, 'TRAHISON  →  T=44   R=42   A=11   H=23   I=24   S=43   O=35   N=34')
 
-    # Pied
-    _rule(c, 1.5*cm, w=0.3)
-    _font(c, 'Courier', 6.5, LIGHT)
-    c.drawCentredString(W/2, 1.15*cm, 'OPÉRATION HÊLIE — NE PAS COMMUNIQUER EN DEHORS DU GROUPE')
-    _stamp(c, W-3.5*cm, 2.2*cm, 'CONFIDENTIEL')
+
+def page_atbash(c):
+    cur_y = _page_header(c, 'TABLE DE CHIFFREMENT — ATBASH',
+                         'Chaque lettre est remplacée par son miroir dans l\'alphabet  —  A=Z, B=Y, M=N…')
+
+    row_h = 0.9*cm
+    col_w = (W - 3.0*cm) / 2
+    n_rows = 13
+
+    for col_i in range(2):
+        letters = ALPHABET[col_i*n_rows : (col_i+1)*n_rows]
+        x0  = 1.5*cm + col_i*col_w
+        lw  = col_w / 3
+        cw2 = col_w * 2/3
+
+        _font(c, 'Courier', 6.5, LIGHT)
+        c.drawCentredString(x0+lw/2, cur_y+0.15*cm, 'LETTRE')
+        c.drawCentredString(x0+lw+cw2/2, cur_y+0.15*cm, 'CODE ATBASH')
+        c.setStrokeColor(RULE); c.setLineWidth(0.3)
+        c.line(x0, cur_y, x0+col_w, cur_y)
+
+        for ri, letter in enumerate(letters):
+            ry   = cur_y - (ri+1)*row_h
+            cy_c = ry + row_h/2
+            if ri % 2 == 0:
+                c.setFillColor(BOX); c.rect(x0, ry, col_w, row_h, fill=1, stroke=0)
+            c.setStrokeColor(RULE); c.setLineWidth(0.25)
+            c.rect(x0, ry, col_w, row_h, fill=0, stroke=1)
+            c.line(x0+lw, ry, x0+lw, ry+row_h)
+            _font(c, 'Courier-Bold', 14, INK)
+            c.drawCentredString(x0+lw/2, cy_c-5, letter)
+            _font(c, 'Courier-Bold', 20, STAMP)
+            c.drawCentredString(x0+lw+cw2/2, cy_c-7, ATBASH[letter])
+
+    # Astuce
+    tip_y = cur_y - n_rows*row_h - 1.2*cm
+    _rule(c, tip_y+0.4*cm, w=0.4, color=INK)
+    _font(c, 'Courier', 8, LIGHT)
+    c.drawCentredString(W/2, tip_y, 'ASTUCE : la table est symétrique — A=Z signifie aussi Z=A !')
+
+
+def page_cesar(c):
+    cur_y = _page_header(c, 'TABLE DE CHIFFREMENT — CÉSAR +3',
+                         'Chaque lettre est décalée de 3 rangs vers l\'avant  —  A=D, B=E, X=A, Y=B, Z=C')
+
+    row_h = 0.9*cm
+    col_w = (W - 3.0*cm) / 2
+    n_rows = 13
+
+    for col_i in range(2):
+        letters = ALPHABET[col_i*n_rows : (col_i+1)*n_rows]
+        x0  = 1.5*cm + col_i*col_w
+        lw  = col_w / 3
+        cw2 = col_w * 2/3
+
+        _font(c, 'Courier', 6.5, LIGHT)
+        c.drawCentredString(x0+lw/2, cur_y+0.15*cm, 'LETTRE')
+        c.drawCentredString(x0+lw+cw2/2, cur_y+0.15*cm, 'CODE CÉSAR')
+        c.setStrokeColor(RULE); c.setLineWidth(0.3)
+        c.line(x0, cur_y, x0+col_w, cur_y)
+
+        for ri, letter in enumerate(letters):
+            ry   = cur_y - (ri+1)*row_h
+            cy_c = ry + row_h/2
+            coded = chr((ord(letter)-65+CESAR_SHIFT)%26+65)
+            if ri % 2 == 0:
+                c.setFillColor(BOX); c.rect(x0, ry, col_w, row_h, fill=1, stroke=0)
+            c.setStrokeColor(RULE); c.setLineWidth(0.25)
+            c.rect(x0, ry, col_w, row_h, fill=0, stroke=1)
+            c.line(x0+lw, ry, x0+lw, ry+row_h)
+            _font(c, 'Courier-Bold', 14, INK)
+            c.drawCentredString(x0+lw/2, cy_c-5, letter)
+            _font(c, 'Courier-Bold', 20, HexColor('#1a4b8a'))
+            c.drawCentredString(x0+lw+cw2/2, cy_c-7, coded)
+
+    tip_y = cur_y - n_rows*row_h - 1.2*cm
+    _rule(c, tip_y+0.4*cm, w=0.4, color=INK)
+    _font(c, 'Courier', 8, LIGHT)
+    c.drawCentredString(W/2, tip_y, 'DÉCALAGE +3 : comptez 3 lettres vers l\'avant dans l\'alphabet')
+
+CIPHER_PAGE_FN = {
+    'symboles': page_symboles,
+    'morse':    page_morse,
+    'polybe':   page_polybe,
+    'atbash':   page_atbash,
+    'cesar':    page_cesar,
+}
 
 
 # ══════════════════════════════════════════════════════════════
-# PAGES CODES — 3 ENCODAGES PAR FEUILLET, 2 PAR A4
+# PAGES CODES — 1 CHIFFREMENT PAR FEUILLET, 2 PAR A4
 # ══════════════════════════════════════════════════════════════
-def _code_half(c, y_top, y_bot, code_word):
-    mx = 1.8*cm
+def _code_half(c, y_top, y_bot, code_word, cipher='polybe'):
+    mx     = 1.8*cm
     half_h = y_top - y_bot - 4*mm
 
     c.setStrokeColor(INK); c.setLineWidth(0.8)
@@ -328,77 +430,106 @@ def _code_half(c, y_top, y_bot, code_word):
     c.drawRightString(x1, y, 'USAGE UNIQUE')
     y -= 4*mm
     _rule(c, y, x0, x1, w=0.5, color=INK)
-    y -= 6*mm
+    y -= 7*mm
+
+    # Titre chiffrement
+    label = CIPHER_LABELS.get(cipher, cipher.upper())
+    _font(c, 'Courier-Bold', 9, INK)
+    c.drawCentredString(W/2, y, f'— CHIFFREMENT {label} —')
+    y -= 9*mm
 
     letters = [ch for ch in code_word.upper() if ch.isalpha()]
     n = len(letters)
 
-    # ── ① Symboles ─────────────────────────────────────────
-    _font(c, 'Courier', 6.5, LIGHT)
-    c.drawString(x0, y, '① SYMBOLES :')
-    y -= 1*mm
+    # ── Représentation chiffrée ──────────────────────────────
+    if cipher == 'symboles':
+        sym_s   = min(5*mm, (cw * 0.9) / max(n, 1) / 2)
+        total_w = n * sym_s * 2.2
+        sx = x0 + (cw - total_w) / 2
+        for letter in letters:
+            draw_sym(c, letter, sx + sym_s, y - sym_s*1.1, sym_s)
+            sx += sym_s * 2.2
+        y -= sym_s * 2.4 + 3*mm
 
-    sym_s   = 3.8*mm
-    sym_gap = (cw - n * sym_s * 2.2) / max(n-1, 1) if n > 1 else 0
-    sym_gap = max(sym_gap, 1*mm)
-    sx = x0 + (cw - (n * sym_s * 2.2 + (n-1) * sym_gap)) / 2
+    elif cipher == 'morse':
+        parts = [morse_display(MORSE.get(l, '?')) for l in letters]
+        morse_str = '  /  '.join(parts)
+        # essaie de tenir sur une ligne; sinon deux
+        _font(c, 'Courier-Bold', 12, INK)
+        tw = c.stringWidth(morse_str, 'Courier-Bold', 12)
+        if tw > cw:
+            _font(c, 'Courier-Bold', 9, INK)
+            tw = c.stringWidth(morse_str, 'Courier-Bold', 9)
+        if tw > cw:  # encore trop long → deux lignes
+            mid = n // 2
+            line1 = '  /  '.join(parts[:mid])
+            line2 = '  /  '.join(parts[mid:])
+            _font(c, 'Courier-Bold', 9, INK)
+            c.drawCentredString(W/2, y - 5*mm, line1)
+            c.drawCentredString(W/2, y - 12*mm, line2)
+            y -= 20*mm
+        else:
+            c.drawCentredString(W/2, y - 5*mm, morse_str)
+            y -= 14*mm
 
-    for letter in letters:
-        draw_sym(c, letter, sx + sym_s, y - sym_s, sym_s)
-        sx += sym_s * 2.2 + sym_gap
-    y -= sym_s * 2.2 + 1.5*mm
+    elif cipher == 'polybe':
+        polybe_str = encode_polybe(code_word)
+        _font(c, 'Courier-Bold', 18, INK)
+        tw = c.stringWidth(polybe_str, 'Courier-Bold', 18)
+        if tw > cw:
+            _font(c, 'Courier-Bold', 13, INK)
+        c.drawCentredString(W/2, y - 7*mm, polybe_str)
+        _font(c, 'Courier', 7, LIGHT)
+        c.drawCentredString(W/2, y - 14*mm, 'LIGNE puis COLONNE — utilisez la grille POLYBE')
+        y -= 20*mm
 
-    # ── ② Morse ─────────────────────────────────────────────
-    _rule(c, y, x0, x1, w=0.25)
-    y -= 5*mm
-    _font(c, 'Courier', 6.5, LIGHT)
-    c.drawString(x0, y, '② MORSE :')
-    y -= 0.5*mm
-    morse_parts = [morse_display(MORSE.get(l, '?')) for l in letters]
-    morse_str = '   /   '.join(morse_parts)
-    _font(c, 'Courier-Bold', 9, INK)
-    tw = c.stringWidth(morse_str, 'Courier-Bold', 9)
-    if tw > cw:
-        _font(c, 'Courier-Bold', 7.5, INK)
-    c.drawCentredString(W/2, y - 5*mm, morse_str)
-    y -= 12*mm
+    elif cipher == 'atbash':
+        encoded = encode_atbash(code_word)
+        _font(c, 'Courier-Bold', 26, INK)
+        tw = c.stringWidth(encoded, 'Courier-Bold', 26)
+        if tw > cw:
+            _font(c, 'Courier-Bold', 18, INK)
+        c.drawCentredString(W/2, y - 9*mm, encoded)
+        _font(c, 'Courier', 7, LIGHT)
+        c.drawCentredString(W/2, y - 16*mm, 'Chaque lettre est son miroir — utilisez la table ATBASH')
+        y -= 23*mm
 
-    # ── ③ Polybe ─────────────────────────────────────────────
-    _rule(c, y, x0, x1, w=0.25)
-    y -= 5*mm
-    _font(c, 'Courier', 6.5, LIGHT)
-    c.drawString(x0, y, '③ POLYBE :')
-    y -= 0.5*mm
-    polybe_str = encode_polybe(code_word)
-    _font(c, 'Courier-Bold', 13, INK)
-    c.drawCentredString(W/2, y - 6*mm, polybe_str)
-    y -= 14*mm
+    elif cipher == 'cesar':
+        encoded = encode_cesar(code_word)
+        _font(c, 'Courier-Bold', 26, INK)
+        tw = c.stringWidth(encoded, 'Courier-Bold', 26)
+        if tw > cw:
+            _font(c, 'Courier-Bold', 18, INK)
+        c.drawCentredString(W/2, y - 9*mm, encoded)
+        _font(c, 'Courier', 7, LIGHT)
+        c.drawCentredString(W/2, y - 16*mm, 'Décalage de 3 rangs — utilisez la table CÉSAR +3')
+        y -= 23*mm
 
     # ── Cases réponse ────────────────────────────────────────
     _rule(c, y, x0, x1, w=0.3)
-    y -= 7*mm
+    y -= 6*mm
     _font(c, 'Courier', 6.5, LIGHT)
     c.drawCentredString(W/2, y, 'RÉPONSE :')
     y -= 6*mm
-    bw = min(1.1*cm, cw / (n + 0.5))
-    total = n * bw + (n-1)*2*mm
-    bx = (W - total) / 2
+    bw    = min(1.1*cm, cw / (n + 0.5))
+    total = n*bw + (n-1)*2*mm
+    bx    = (W - total) / 2
     for _ in letters:
         c.setStrokeColor(INK); c.setLineWidth(0.5)
         c.rect(bx, y-0.85*cm, bw, 0.85*cm, fill=0, stroke=1)
         bx += bw + 2*mm
 
     _stamp(c, x1-4*mm, y_bot + half_h*0.38, 'CLASSIFIÉ', angle=14)
-
     _rule(c, y_bot+9*mm, x0, x1, w=0.3)
     _font(c, 'Courier', 6, LIGHT)
     c.drawCentredString(W/2, y_bot+5*mm, 'BUREAU CLANDESTIN BXL  ·  SECTION HÊLIE')
 
 
-def page_codes(c, codes):
-    pairs = [(codes[i], codes[i+1] if i+1 < len(codes) else None)
-             for i in range(0, len(codes), 2)]
-    for top_code, bot_code in pairs:
+def page_codes(c, code_items):
+    """code_items : liste de (code_word, cipher)"""
+    pairs = [(code_items[i], code_items[i+1] if i+1 < len(code_items) else None)
+             for i in range(0, len(code_items), 2)]
+    for top, bot in pairs:
         _border(c)
         mid_y = H / 2
         c.setStrokeColor(LIGHT); c.setLineWidth(0.5); c.setDash(3, 4)
@@ -406,9 +537,9 @@ def page_codes(c, codes):
         c.setDash()
         _font(c, 'Courier', 7, LIGHT)
         c.drawCentredString(W/2, mid_y+2*mm, '✂   DÉCOUPER ICI   ✂')
-        _code_half(c, H-5*mm, mid_y+6*mm, top_code)
-        if bot_code:
-            _code_half(c, mid_y-6*mm, 5*mm, bot_code)
+        _code_half(c, H-5*mm, mid_y+6*mm, top[0], top[1])
+        if bot:
+            _code_half(c, mid_y-6*mm, 5*mm, bot[0], bot[1])
         c.showPage()
 
 
@@ -447,15 +578,38 @@ class handler(BaseHTTPRequestHandler):
         cfg        = get_config()
         challenges = (cfg or {}).get('challenges', [])
         real       = [ch for ch in challenges if ch.get('type') != 'pause']
-        codes      = [ch.get('code', '').upper() for ch in real if ch.get('code')]
-        if not codes:
-            codes = ['LASER', 'ANTIDOTE', 'COBRA', 'TRAHISON']
+
+        # Collecte (code, cipher) par épreuve
+        code_items = []
+        for ch in real:
+            code = ch.get('code', '').upper()
+            if code:
+                cipher = ch.get('cipher', 'polybe')
+                code_items.append((code, cipher))
+        if not code_items:
+            code_items = [
+                ('LASER',    'polybe'),
+                ('ANTIDOTE', 'morse'),
+                ('COBRA',    'symboles'),
+                ('TRAHISON', 'atbash'),
+            ]
+
+        # Pages de tables : une par cipher unique utilisé (dans l'ordre d'apparition)
+        seen = []
+        for _, cipher in code_items:
+            if cipher not in seen:
+                seen.append(cipher)
 
         buf = io.BytesIO()
         c   = rl_canvas.Canvas(buf, pagesize=A4)
-        page_cipher(c)
-        c.showPage()
-        page_codes(c, codes)
+
+        for cipher in seen:
+            fn = CIPHER_PAGE_FN.get(cipher)
+            if fn:
+                fn(c)
+                c.showPage()
+
+        page_codes(c, code_items)
         c.save()
 
         pdf_bytes = buf.getvalue()
