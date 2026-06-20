@@ -138,6 +138,8 @@
     .live-team-toggle { font-size:11px;padding:.25rem .55rem;border-radius:4px;border:1px solid #ccc;cursor:pointer;font-family:inherit;white-space:nowrap }
     .live-team-toggle.ombre { background:#e8f5ee;border-color:var(--accent);color:var(--accent) }
     .live-team-toggle.cobra { background:#fff4e0;border-color:#c07000;color:#c07000 }
+    .live-agent-test { background:#fff8f0;border-radius:4px;padding:.3rem .4rem;border:1px dashed #e0a040 }
+    .live-test-hint { font-size:10px;color:#b35c00;letter-spacing:.02em;padding:.1rem .4rem .4rem;grid-column:1/-1 }
     .pdf-card { display:flex;flex-direction:column;gap:.35rem;padding:1rem;border:1px solid var(--border2);border-radius:8px;background:var(--bg);text-decoration:none;color:inherit;transition:box-shadow .15s,border-color .15s }
     .pdf-card:hover { border-color:#b0b0b0;box-shadow:0 2px 8px rgba(0,0,0,.08) }
     .pdf-icon { font-size:28px }
@@ -893,13 +895,16 @@ function renderLiveAgents() {
     <div style="display:grid;grid-template-columns:auto 1fr 1fr auto;gap:.3rem .5rem;align-items:center;font-size:11px;color:var(--muted);font-weight:600;padding:.2rem 0 .4rem">
       <div>#</div><div>Prénom réel</div><div>Nom de code</div><div>Équipe</div>
     </div>
-    ${_liveAgents.map((a, i) => `
-    <div class="live-agent-row" style="grid-template-columns:auto 1fr 1fr auto">
-      <span style="font-size:11px;color:var(--muted)">${i+1}</span>
-      <input value="${esc(a.realName)}" oninput="_liveAgents[${i}].realName=this.value" placeholder="Prénom">
-      <input value="${esc(a.agentName)}" oninput="_liveAgents[${i}].agentName=this.value" placeholder="Code">
+    ${_liveAgents.map((a, i) => {
+      const isTest = a.realName === 'TEST' && a.agentName === 'AGENT TEST';
+      return `
+    <div class="live-agent-row${isTest ? ' live-agent-test' : ''}" style="grid-template-columns:auto 1fr 1fr auto">
+      <span style="font-size:11px;color:var(--muted)">${i+1}${isTest ? ' 🧪' : ''}</span>
+      <input value="${esc(a.realName)}" oninput="_liveAgents[${i}].realName=this.value" placeholder="Prénom"${isTest ? ' style="color:#b35c00"' : ''}>
+      <input value="${esc(a.agentName)}" oninput="_liveAgents[${i}].agentName=this.value" placeholder="Code"${isTest ? ' style="color:#b35c00;font-style:italic"' : ''}>
       <button class="live-team-toggle ${a.team||''}" onclick="toggleLiveTeam(${i})">${a.team ? a.team.toUpperCase() : '—'}</button>
-    </div>`).join('')}
+    </div>${isTest ? '<div class="live-test-hint">⚠ Agent de test — remplacé par les vrais agents au lancement</div>' : ''}`;
+    }).join('')}
     <div style="margin-top:.75rem">
       <button class="btn btn-primary btn-sm" onclick="applyLiveAgents()">▶ Appliquer sur l'iPad</button>
     </div>`;
