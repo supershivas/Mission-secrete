@@ -377,14 +377,17 @@ function showReveal(arrayIdx) {
     isLast ? 'Mémorisez ce code. Prêts à désamorcer ?' : `Plus que ${remainingReal} épreuve${remainingReal > 1 ? 's' : ''}.`;
   const btn = document.getElementById('reveal-next-btn');
   btn.textContent = isLast ? '▶ Désamorcer maintenant' : '▶ Épreuve suivante';
-  btn.disabled = false;
-  btn.style.opacity = '';
+  btn.disabled = true;
+  btn.style.opacity = '0';
   syncRevealTimer();
   showPhase('phase-reveal');
   matrixReveal(digitEl, revealedDigits[ri], () => {
     const slot = document.getElementById('rslot-' + ri);
     if (slot) slot.textContent = revealedDigits[ri];
     playRevealSound();
+    btn.disabled = false;
+    btn.style.transition = 'opacity .4s ease';
+    btn.style.opacity = '';
   });
 }
 
