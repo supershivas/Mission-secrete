@@ -22,23 +22,35 @@ function applyCfgToSplash() {
   }
 }
 
-// Poll remote toutes les 3s (hors mission active)
+// Poll remote toutes les 3s
 let _lastRemoteCfgHash = '';
+
+function _cfgHash(data) {
+  // Hash stable : exclure runtimeAgents (injection admin interne), normaliser l'ordre des clés
+  const { runtimeAgents: _, ...rest } = data;
+  rest.challenges = (rest.challenges || []).map(c => {
+    const { runtimeAgents: __, ...ch } = c;
+    return ch;
+  });
+  return JSON.stringify(rest, Object.keys(rest).sort());
+}
+
 setInterval(async () => {
   if (currentPhase === 'phase-success' || currentPhase === 'phase-explosion') return;
   try {
     const res = await fetch('/api/config');
     if (!res.ok) return;
-    const text = await res.text();
-    if (text === _lastRemoteCfgHash) return;
-    _lastRemoteCfgHash = text;
-    const data = JSON.parse(text);
+    const data = await res.json();
     if (!data?.challenges) return;
+    const hash = _cfgHash(data);
+    const isFirst = _lastRemoteCfgHash === '';
+    if (hash === _lastRemoteCfgHash) return;
+    _lastRemoteCfgHash = hash;
     localStorage.setItem('agent_config', JSON.stringify(data));
     reloadCfg();
     applyCfgToSplash();
     onCfgSync();
-    showAdminSyncBanner();
+    if (!isFirst) showAdminSyncBanner();
   } catch(e) {}
 }, 3000);
 
