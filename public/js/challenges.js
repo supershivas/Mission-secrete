@@ -17,30 +17,6 @@ function buildStepDots(arrayIdx) {
   ).join('');
 }
 
-// ── Synthèse vocale (iOS-safe) ───────────────────────────
-function _speak(text, opts = {}) {
-  if (!window.speechSynthesis) return;
-  // iOS : cancel() puis speak() immédiat est silencieux — on laisse finir
-  const doSpeak = () => {
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang    = opts.lang  || 'fr-FR';
-    u.rate    = opts.rate  || 0.78;
-    u.pitch   = opts.pitch || 0.6;
-    u.volume  = 1;
-    // Cherche une voix FR explicitement (iOS en a toujours une)
-    const voices = window.speechSynthesis.getVoices();
-    const frVoice = voices.find(v => v.lang.startsWith('fr'));
-    if (frVoice) u.voice = frVoice;
-    window.speechSynthesis.speak(u);
-  };
-  if (window.speechSynthesis.speaking) {
-    window.speechSynthesis.cancel();
-    setTimeout(doSpeak, 150);
-  } else {
-    doSpeak();
-  }
-}
-
 // ── Rôles agents ────────────────────────────────────────
 let _challengeRoles = [];
 
@@ -89,9 +65,6 @@ function showPause(idx) {
   document.getElementById('phase-pause').classList.add('active');
   document.body.style.background = '#00090f';
 
-  const pauseSpeech = (cfg.challenges[idx]?.speechText || "AAAAAh, j'ai soif !").trim();
-  if (pauseSpeech) _speak(pauseSpeech, { rate: 0.72, pitch: 1.3 });
-
   const roles = _challengeRoles[idx];
   const badge = document.getElementById('pause-agent-badge');
   if (badge) {
@@ -128,14 +101,6 @@ function resumeFromPause() {
 
 // ── Intro overlay ───────────────────────────────────────
 let _introAnimTmr = null;
-
-const _ORDINALS_FR = ['UN','DEUX','TROIS','QUATRE','CINQ','SIX','SEPT','HUIT','NEUF','DIX'];
-function _speakChallenge(idx) {
-  const ch = cfg.challenges[idx];
-  const text = ch?.speechText?.trim();
-  if (!text) return;
-  _speak(text, { rate: 0.82, pitch: 0.1 });
-}
 
 function _dismissIntroOverlay(idx) {
   const ov = document.getElementById('challenge-intro-overlay');
@@ -207,7 +172,6 @@ function showChallengeWithIntro(idx) {
   const displayTitle = (raw[1] || ch.title).trim().toUpperCase();
   setTimeout(() => {
     matrixName(titleEl, displayTitle, null);
-    _speakChallenge(idx);
   }, 1100);
 
   // Afficher les rôles + bouton après que le titre est lisible
