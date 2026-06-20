@@ -27,6 +27,10 @@ function startFinalCountdown() {
     pinDotsEl.innerHTML = Array.from({length: _realCount()}, (_, i) =>
       `<div class="pin-dot" id="d${i}"></div>`).join('');
   }
+  pinAttempts = 0;
+  const sosBtn = document.getElementById('pin-sos');
+  if (sosBtn) sosBtn.style.display = 'none';
+  _updatePinSubmitBtn();
   showPhase('phase-countdown');
   updateBigTimer();
   countdownTimer = setInterval(finalTick, 1000);

@@ -1,16 +1,36 @@
 // ══ PIN — saisie du code + score + explosion ════════════
 
+let pinAttempts = 0;
+
 function pressPin(n) {
-  const pinLen = cfg.challenges.length;
+  const pinLen = cfg.challenges.filter(c => c.type !== 'pause').length;
   if (pinInput.length >= pinLen) return;
   pinInput += n;
   if (navigator.vibrate) navigator.vibrate(28);
   updatePinDots();
-  if (pinInput.length === pinLen) setTimeout(checkPin, 150);
+  _updatePinSubmitBtn();
 }
 function delPin() {
   pinInput = pinInput.slice(0, -1); updatePinDots();
   document.getElementById('pin-error').textContent = '';
+  _updatePinSubmitBtn();
+}
+function _updatePinSubmitBtn() {
+  const pinLen = cfg.challenges.filter(c => c.type !== 'pause').length;
+  const btn = document.getElementById('pin-submit');
+  if (!btn) return;
+  const ready = pinInput.length === pinLen;
+  btn.style.opacity = ready ? '1' : '.35';
+  btn.style.pointerEvents = ready ? 'auto' : 'none';
+}
+function sosPin() {
+  const pw = prompt('Code d\'accès QG :');
+  if (pw !== 'admin007') {
+    alert('Accès refusé.');
+    return;
+  }
+  const correct = revealedDigits.join('');
+  alert('Code PIN : ' + correct);
 }
 function updatePinDots() {
   const pinLen = cfg.challenges.length;
@@ -21,12 +41,14 @@ function updatePinDots() {
 }
 function checkPin() {
   const correct = revealedDigits.join('');
-  const pinLen  = cfg.challenges.length;
+  const realChallenges = cfg.challenges.filter(c => c.type !== 'pause');
+  const pinLen  = realChallenges.length;
   if (pinInput === correct) {
     if (navigator.vibrate) navigator.vibrate([80, 40, 80, 40, 200]);
     clearInterval(countdownTimer); stopAmbientMusic();
     clearSession(); showScore(); playFanfare();
   } else {
+    pinAttempts++;
     if (navigator.vibrate) navigator.vibrate(600);
     document.getElementById('pin-error').textContent = '✗ Code incorrect — accès refusé';
     for (let i = 0; i < pinLen; i++) {
@@ -34,7 +56,15 @@ function checkPin() {
       if (d) d.className = 'pin-dot error';
     }
     playErrorSound();
-    setTimeout(() => { pinInput = ''; updatePinDots(); document.getElementById('pin-error').textContent = ''; }, 900);
+    if (pinAttempts >= 5) {
+      const sos = document.getElementById('pin-sos');
+      if (sos) sos.style.display = '';
+    }
+    setTimeout(() => {
+      pinInput = ''; updatePinDots();
+      document.getElementById('pin-error').textContent = '';
+      _updatePinSubmitBtn();
+    }, 900);
   }
 }
 
