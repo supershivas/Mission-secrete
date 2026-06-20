@@ -377,11 +377,10 @@ function showReveal(arrayIdx) {
     isLast ? 'Mémorisez ce code. Prêts à désamorcer ?' : `Plus que ${remainingReal} épreuve${remainingReal > 1 ? 's' : ''}.`;
   const btn = document.getElementById('reveal-next-btn');
   btn.textContent = isLast ? '▶ Désamorcer maintenant' : '▶ Épreuve suivante';
+  btn.disabled = false;
+  btn.style.opacity = '';
   syncRevealTimer();
-  btn.disabled = true;
-  btn.style.opacity = '0.35';
   showPhase('phase-reveal');
-  setTimeout(() => { btn.disabled = false; btn.style.opacity = ''; }, 1200);
   matrixReveal(digitEl, revealedDigits[ri], () => {
     const slot = document.getElementById('rslot-' + ri);
     if (slot) slot.textContent = revealedDigits[ri];
