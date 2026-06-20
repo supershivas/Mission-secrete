@@ -24,32 +24,28 @@ Bonne chance. Ce message s'autodétruira.`,
       brief: `Un agent a été éliminé. Son corps est marqué au sol.\n\nExaminez la scène à la lampe UV.\nUn message invisible a été laissé sur le scotch.\n\nDéchiffrez-le et entrez le code découvert.`,
       code: "TRAHISON", digit: "3", cipher: "polybe",
       hint: "Le message est écrit directement sur le scotch. Éclairez de près avec la lampe UV en inclinant l'angle.",
-      animation: 'skull', type: 'libre', teamPlay: false,
-      speechText: "Épreuve un. Un agent a été trahi. La scène de crime vous attend. Bonne chance."
+      animation: 'skull', type: 'libre', teamPlay: false
     },
     {
       title: "ÉPREUVE 2 — Le couloir laser",
       brief: `Un couloir est protégé par un système laser.\n\nTraversez sans déclencher l'alarme.\nUne enveloppe vous attend de l'autre côté.\n\nRécupérez le code et entrez-le ici.`,
       code: "COBRA", digit: "7", cipher: "morse",
       hint: "Commencez par observer tous les fils avant de bouger. Passez le plus grand d'abord, puis enjambez les autres.",
-      animation: 'laser', type: 'libre', teamPlay: false,
-      speechText: "Épreuve deux. Le couloir est piégé. Un seul faux mouvement et c'est fini."
+      animation: 'laser', type: 'libre', teamPlay: false
     },
     {
       title: "ÉPREUVE 3 — L'agent de liaison",
       brief: `Un contact vous attend dans le jardin.\n\nIl a caché un message quelque part dehors.\nTrouvez-le, déchiffrez-le avec votre carnet.\n\nEntrez le code obtenu pour continuer.`,
       code: "JARDIN", digit: "1", cipher: "symboles",
       hint: "Le message est caché près d'un endroit où les agents se cachent naturellement. Regardez sous les pots et derrière les plantes.",
-      animation: 'garden', type: 'libre', teamPlay: false,
-      speechText: "Épreuve trois. Votre contact vous attend dehors. Trouvez le message avant qu'il soit trop tard."
+      animation: 'garden', type: 'libre', teamPlay: false
     },
     {
       title: "ÉPREUVE 4 — Le poison",
       brief: `L'ennemi a élaboré un poison pour neutraliser nos agents.\n\nVous devez créer l'antidote en mélangeant les ingrédients dans le bon ordre.\n\nLa recette secrète est dans votre sachet.\nMélangez, goûtez, et entrez le code de validation.`,
       code: "ANTIDOTE", digit: "9", cipher: "atbash",
       hint: "Relisez bien la recette dans l'ordre. Le code de validation est écrit en bas de la fiche recette.",
-      animation: 'poison', type: 'libre', teamPlay: false,
-      speechText: "Épreuve quatre. Le poison est actif. Créez l'antidote ou tout est perdu."
+      animation: 'poison', type: 'libre', teamPlay: false
     }
   ]
 };
@@ -66,10 +62,6 @@ function getCfg() {
       if (!merged.type) merged.type = 'libre';
       if (!merged.cipher) merged.cipher = 'polybe';
       if (merged.theme === undefined) merged.theme = '';
-      if (!merged.speechText) {
-        const def = DEFAULT_CFG.challenges[i];
-        merged.speechText = def?.speechText || (merged.type === 'pause' ? "AAAAAh, j'ai soif !" : '');
-      }
       return merged;
     });
     return {
