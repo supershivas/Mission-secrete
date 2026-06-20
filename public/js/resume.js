@@ -6,11 +6,15 @@ function tryResume() {
   agents           = s.agents || [];
   currentChallenge = s.currentChallenge || 0;
   revealedDigits   = s.revealedDigits || [];
+  _challengeRoles  = s.challengeRoles || [];
   secondsLeft      = s.secondsLeft || cfg.duration;
   totalSeconds     = s.totalSeconds || cfg.duration;
   missionStart     = s.missionStart || Date.now();
+  const resumeLabel = s.phase === 'phase-pause'
+    ? 'Pause fraîcheur'
+    : `Épreuve ${_realIdx(currentChallenge) + 1}`;
   document.getElementById('resume-text').textContent =
-    `Mission en cours — Épreuve ${currentChallenge+1} — ${timerText(secondsLeft)} restant`;
+    `Mission en cours — ${resumeLabel} — ${timerText(secondsLeft)} restant`;
   document.getElementById('resume-banner').classList.add('visible');
 }
 
@@ -21,6 +25,7 @@ function resumeMission() {
   agents           = s.agents || [];
   currentChallenge = s.currentChallenge || 0;
   revealedDigits   = s.revealedDigits || [];
+  _challengeRoles  = s.challengeRoles || [];
   secondsLeft      = s.secondsLeft || cfg.duration;
   totalSeconds     = s.totalSeconds || cfg.duration;
   missionStart     = s.missionStart || Date.now();
@@ -30,6 +35,11 @@ function resumeMission() {
     const ch = cfg.challenges[currentChallenge];
     const themeIdx = (ch?.theme !== undefined && ch?.theme !== '') ? +ch.theme : currentChallenge;
     applyTheme(themeIdx);
+  }
+  if (s.phase === 'phase-pause') {
+    countdownTimer = setInterval(globalTick, 1000);
+    showPause(currentChallenge);
+    return;
   }
   if (s.phase === 'phase-challenge' || s.phase === 'phase-reveal') {
     countdownTimer = setInterval(globalTick, 1000);

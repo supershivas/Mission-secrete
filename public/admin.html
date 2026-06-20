@@ -188,6 +188,8 @@
     .ch-tab[draggable] { cursor: grab }
     .ch-tab.drag-over { outline: 2px solid var(--accent); outline-offset: -2px; background: #fff3e0 }
     .ch-tab.dragging { opacity: .35 }
+    .ch-tab.pause-tab { color: #1a6b9a; border-color: #8ec8f0; background: #f0f8ff }
+    .ch-tab.pause-tab.active { background: #1a6b9a; color: #fff; border-color: #1a6b9a }
 
     .ch-panels { border-top: 1px solid var(--border2); margin-top: -1px }
     .ch-panel { display: none; padding: 1.25rem; flex-direction: column; gap: 1.1rem }
@@ -374,7 +376,8 @@
       <div class="card-head">
         <div class="card-head-title">Configuration des épreuves</div>
         <div style="display:flex;gap:.5rem">
-          <button class="btn btn-secondary btn-sm" onclick="addChallenge()">+ Ajouter</button>
+          <button class="btn btn-secondary btn-sm" onclick="addChallenge()">+ Épreuve</button>
+          <button class="btn btn-secondary btn-sm" onclick="addPause()" style="color:#1a6b9a;border-color:#8ec8f0">☕ Pause</button>
           <button class="btn btn-danger btn-sm" onclick="removeLastChallenge()">− Supprimer</button>
         </div>
       </div>
@@ -558,20 +561,44 @@ function loadConfig() {
 }
 
 // ── TABS ──────────────────────────────────────
+function _adminRealIdx(i) {
+  return cfg.challenges.slice(0, i).filter(c => c.type !== 'pause').length;
+}
+
 function renderTabs() {
   const tabsEl = document.getElementById('ch-tabs');
-  tabsEl.innerHTML = cfg.challenges.map((ch,i) =>
-    `<button class="ch-tab${i===activeTab?' active':''}" draggable="true"
+  tabsEl.innerHTML = cfg.challenges.map((ch, i) => {
+    const isPause = ch.type === 'pause';
+    return `<button class="ch-tab${isPause ? ' pause-tab' : ''}${i===activeTab?' active':''}" draggable="true"
       onclick="switchTab(${i})"
       ondragstart="_tabDragStart(event,${i})"
       ondragover="_tabDragOver(event,${i})"
       ondragleave="_tabDragLeave(event)"
       ondrop="_tabDrop(event,${i})"
       ondragend="_tabDragEnd()"
-    >⠿ Épreuve ${i+1}</button>`
-  ).join('');
+    >${isPause ? '☕ Pause' : `⠿ Épreuve ${_adminRealIdx(i)+1}`}</button>`;
+  }).join('');
 
-  document.getElementById('ch-panels').innerHTML = cfg.challenges.map((ch,i) => `
+  document.getElementById('ch-panels').innerHTML = cfg.challenges.map((ch, i) => {
+    if (ch.type === 'pause') return `
+    <div class="ch-panel${i===activeTab?' active':''}" id="panel-${i}">
+      <div style="display:flex;align-items:center;gap:.75rem;padding:.5rem 0">
+        <span style="font-size:24px">☕</span>
+        <div>
+          <div style="font-weight:600;color:#1a6b9a">Pause fraîcheur</div>
+          <div style="font-size:12px;color:var(--muted)">Écran bleu · animation eau · agent ravitailleur assigné automatiquement</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Titre de la pause</label>
+        <input type="text" id="ch-title-${i}" value="${esc(ch.title||'Pause fraîcheur')}" oninput="syncCh(${i})">
+      </div>
+      <div style="margin-top:.25rem">
+        <button class="btn btn-danger btn-sm" onclick="removePause(${i})">✕ Supprimer cette pause</button>
+      </div>
+    </div>`;
+
+    return `
     <div class="ch-panel${i===activeTab?' active':''}" id="panel-${i}">
       <div class="field">
         <label>Titre affiché sur l'app</label>
@@ -661,8 +688,8 @@ function renderTabs() {
         <span class="summary-label" style="margin-left:auto">Révèle :</span>
         <div class="digit-tag${ch.digit?' set':''}" id="db-${i}">${ch.digit||'?'}</div>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
 function _tabDragStart(e, i) {
@@ -687,6 +714,11 @@ function _tabDrop(e, i) {
   activeTab = i;
   renderTabs();
   updatePinPreview();
+  const label = moved.type === 'pause' ? 'Pause' : `Épreuve "${moved.title}"`;
+  showToast(`↕ ${label} déplacé — sauvegarde en cours…`, 'info');
+  pushConfigRemote(cfg).then(ok => {
+    showToast(ok ? '✓ Ordre synchronisé' : '✓ Ordre enregistré (hors ligne)', ok ? 'ok' : 'info', 2500);
+  });
 }
 function _tabDragEnd() {
   _dragSrcIdx = -1;
@@ -708,23 +740,43 @@ function setChTheme(i, val) {
 }
 
 function syncCh(i) {
-  cfg.challenges[i].title  = document.getElementById(`ch-title-${i}`).value;
-  cfg.challenges[i].brief  = document.getElementById(`ch-brief-${i}`).value;
-  cfg.challenges[i].code   = document.getElementById(`ch-code-${i}`).value.toUpperCase();
-  cfg.challenges[i].digit  = document.getElementById(`ch-digit-${i}`).value.replace(/\D/g,'').slice(0,1);
-  cfg.challenges[i].hint      = (document.getElementById(`ch-hint-${i}`)?.value||'').trim();
-  cfg.challenges[i].type      = document.getElementById(`ch-type-${i}`)?.value||'libre';
-  cfg.challenges[i].animation = document.getElementById(`ch-anim-${i}`)?.value||'none';
-  cfg.challenges[i].teamPlay  = document.getElementById(`ch-team-${i}`)?.checked||false;
-  const cb=document.getElementById(`cb-${i}`); if(cb) cb.textContent=cfg.challenges[i].code||'—';
-  const db=document.getElementById(`db-${i}`); if(db){db.textContent=cfg.challenges[i].digit||'?';db.className='digit-tag'+(cfg.challenges[i].digit?' set':'');}
+  const ch = cfg.challenges[i];
+  if (ch.type === 'pause') {
+    ch.title = document.getElementById(`ch-title-${i}`)?.value || 'Pause fraîcheur';
+    markDirty(); return;
+  }
+  ch.title     = document.getElementById(`ch-title-${i}`).value;
+  ch.brief     = document.getElementById(`ch-brief-${i}`).value;
+  ch.code      = document.getElementById(`ch-code-${i}`).value.toUpperCase();
+  ch.digit     = document.getElementById(`ch-digit-${i}`).value.replace(/\D/g,'').slice(0,1);
+  ch.hint      = (document.getElementById(`ch-hint-${i}`)?.value||'').trim();
+  ch.type      = document.getElementById(`ch-type-${i}`)?.value||'libre';
+  ch.animation = document.getElementById(`ch-anim-${i}`)?.value||'none';
+  ch.teamPlay  = document.getElementById(`ch-team-${i}`)?.checked||false;
+  const cb=document.getElementById(`cb-${i}`); if(cb) cb.textContent=ch.code||'—';
+  const db=document.getElementById(`db-${i}`); if(db){db.textContent=ch.digit||'?';db.className='digit-tag'+(ch.digit?' set':'');}
   updatePinPreview();
 }
 
 function addChallenge() {
-  cfg.challenges.push({ title:`ÉPREUVE ${cfg.challenges.length+1} — Nouvelle épreuve`, brief:`Description…`, code:"CODE", digit:"0" });
+  const n = cfg.challenges.filter(c => c.type !== 'pause').length;
+  cfg.challenges.push({ title:`ÉPREUVE ${n+1} — Nouvelle épreuve`, brief:`Description…`, code:"CODE", digit:"0" });
   activeTab = cfg.challenges.length-1;
-  renderTabs(); updatePinPreview();
+  renderTabs(); updatePinPreview(); markDirty();
+}
+
+function addPause() {
+  cfg.challenges.push({ type: 'pause', title: 'Pause fraîcheur' });
+  activeTab = cfg.challenges.length-1;
+  renderTabs(); updatePinPreview(); markDirty();
+  showToast('☕ Pause ajoutée — glissez-la à la bonne position', 'info', 3500);
+}
+
+function removePause(i) {
+  if (!confirm('Supprimer cette pause fraîcheur ?')) return;
+  cfg.challenges.splice(i, 1);
+  activeTab = Math.min(activeTab, cfg.challenges.length-1);
+  renderTabs(); updatePinPreview(); markDirty();
 }
 
 function removeLastChallenge() {
@@ -736,7 +788,8 @@ function removeLastChallenge() {
 }
 
 function updatePinPreview() {
-  const digits = cfg.challenges.map(c => c.digit || '');
+  const realChallenges = cfg.challenges.filter(c => c.type !== 'pause');
+  const digits = realChallenges.map(c => c.digit || '');
   document.getElementById('pin-preview').innerHTML = digits.map((d,i)=>
     `<div class="pin-slot${d?' set':''}"><span>${d||'?'}</span></div>`
   ).join('');
@@ -790,19 +843,24 @@ function saveConfig() {
   const mins=parseInt(document.getElementById('f-dur').value,10);
   if(isNaN(mins)||mins<1||mins>180){showToast('Durée invalide (1–180 min)', 'err'); return;}
   const errors = [];
+  let realNum = 0;
   cfg.challenges.forEach((ch,i)=>{
+    if (ch.type === 'pause') {
+      ch.title = document.getElementById(`ch-title-${i}`)?.value || 'Pause fraîcheur';
+      return;
+    }
+    realNum++;
     ch.title  = document.getElementById(`ch-title-${i}`)?.value||ch.title;
     ch.brief  = document.getElementById(`ch-brief-${i}`)?.value||ch.brief;
     const rawCode = (document.getElementById(`ch-code-${i}`)?.value||'').trim();
-    if (!rawCode) errors.push(`Épreuve ${i+1} : code manquant`);
+    if (!rawCode) errors.push(`Épreuve ${realNum} : code manquant`);
     ch.code   = (rawCode || ch.code).toUpperCase();
     const rawDigit = (document.getElementById(`ch-digit-${i}`)?.value||'').replace(/\D/g,'').slice(0,1);
-    if (!rawDigit) errors.push(`Épreuve ${i+1} : chiffre PIN manquant`);
+    if (!rawDigit) errors.push(`Épreuve ${realNum} : chiffre PIN manquant`);
     ch.digit  = rawDigit || ch.digit;
     ch.hint      = (document.getElementById(`ch-hint-${i}`)?.value||ch.hint||'').trim();
     ch.type      = document.getElementById(`ch-type-${i}`)?.value||ch.type||'libre';
     ch.animation = document.getElementById(`ch-anim-${i}`)?.value||ch.animation||'none';
-    // theme persisted via setChTheme directly on cfg.challenges[i].theme
   });
   if (errors.length) { showToast(errors[0], 'err', 4000); return; }
   cfg.missionName = (document.getElementById('f-name').value.trim().toUpperCase()) || 'HELIE10';

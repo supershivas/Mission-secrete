@@ -1,31 +1,113 @@
 // ══ CHALLENGES — flow des épreuves ═════════════════════
 
-function buildStepDots(active) {
-  return Array.from({length: cfg.challenges.length}, (_, i) =>
-    `<div class="step-dot${i<active?' done':i===active?' active':''}"></div>`
+// ── Helpers pause/real ──────────────────────────────────
+function _realCount() {
+  return cfg.challenges.filter(c => c.type !== 'pause').length;
+}
+
+function _realIdx(arrayIdx) {
+  return cfg.challenges.slice(0, arrayIdx).filter(c => c.type !== 'pause').length;
+}
+
+function buildStepDots(arrayIdx) {
+  const n = _realCount();
+  const active = _realIdx(arrayIdx);
+  return Array.from({length: n}, (_, i) =>
+    `<div class="step-dot${i < active ? ' done' : i === active ? ' active' : ''}"></div>`
   ).join('');
 }
 
-let _challengeAgents = [];
+// ── Rôles agents ────────────────────────────────────────
+let _challengeRoles = [];
 
-function _assignChallengeAgents() {
+function _assignAllRoles() {
   const pool = agents.map(a => a.agentName || a.realName).filter(Boolean);
-  const n = cfg.challenges.length;
-  _challengeAgents = [];
-  if (pool.length === 0) return;
+  _challengeRoles = [];
+  if (!pool.length) return;
   const shuffled = [...pool].sort(() => Math.random() - 0.5);
-  for (let i = 0; i < n; i++) {
-    _challengeAgents.push(shuffled[i % shuffled.length]);
-  }
+  let si = 0;
+  const next = () => shuffled[si++ % shuffled.length];
+  _challengeRoles = cfg.challenges.map(item =>
+    item.type === 'pause'
+      ? { ravitailleur: next() }
+      : { lecteur: next(), desarmeur: next() }
+  );
 }
 
-function startChallenges() { currentChallenge = 0; revealedDigits = []; _assignChallengeAgents(); showChallengeWithIntro(0); }
+// ── Démarrage ───────────────────────────────────────────
+function startChallenges() {
+  currentChallenge = 0;
+  revealedDigits = [];
+  _assignAllRoles();
+  showNextItem(0);
+}
 
+function showNextItem(idx) {
+  const item = cfg.challenges[idx];
+  if (!item) { startFinalCountdown(); return; }
+  if (item.type === 'pause') showPause(idx);
+  else showChallengeWithIntro(idx);
+}
+
+// ── Pause fraîcheur ─────────────────────────────────────
+let _waterTmr = null;
+const WATER_FRAMES = [
+  '≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋\n ∿  ~~~  ∿  ~~~  ∿ \n≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈\n∿  ~~~  ∿  ~~~  ∿  \n≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋',
+  '≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈\n∿  ~~~  ∿  ~~~  ∿  \n≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋\n ∿  ~~~  ∿  ~~~  ∿ \n≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈',
+  '≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋\n∿∿ ~~~  ∿∿ ~~~  ∿∿ \n≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈\n  ∿  ~~~  ∿  ~~~  ∿\n≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋',
+  '≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈\n  ∿  ~~~  ∿  ~~~  ∿\n≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋≋\n∿∿ ~~~  ∿∿ ~~~  ∿∿ \n≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈≈',
+];
+
+function showPause(idx) {
+  currentChallenge = idx;
+  currentPhase = 'phase-pause';
+  document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
+  document.getElementById('phase-pause').classList.add('active');
+  document.body.style.background = '#00090f';
+
+  const roles = _challengeRoles[idx];
+  const badge = document.getElementById('pause-agent-badge');
+  if (badge) {
+    if (roles?.ravitailleur) {
+      badge.textContent = `⬛ RAVITAILLEUR : ${roles.ravitailleur}`;
+      badge.style.display = '';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  let fi = 0;
+  const waterEl = document.getElementById('pause-water');
+  if (waterEl) waterEl.textContent = WATER_FRAMES[0];
+  clearInterval(_waterTmr);
+  _waterTmr = setInterval(() => {
+    fi = (fi + 1) % WATER_FRAMES.length;
+    if (waterEl) waterEl.textContent = WATER_FRAMES[fi];
+  }, 550);
+
+  updateMiniTimer();
+  saveSession();
+  _pushMissionState();
+  _updateTeamsPeekBtn();
+}
+
+function resumeFromPause() {
+  clearInterval(_waterTmr); _waterTmr = null;
+  const nextIdx = currentChallenge + 1;
+  if (nextIdx >= cfg.challenges.length) { startFinalCountdown(); return; }
+  triggerPhaseFlash(() => {
+    currentChallenge = nextIdx;
+    showNextItem(nextIdx);
+  });
+}
+
+// ── Intro overlay ───────────────────────────────────────
 let _introAnimTmr = null;
 
 function showChallengeWithIntro(idx) {
   const ch = cfg.challenges[idx];
-  const n  = cfg.challenges.length;
+  const n  = _realCount();
+  const ri = _realIdx(idx);
 
   let ov = document.getElementById('challenge-intro-overlay');
   if (!ov) {
@@ -39,7 +121,7 @@ function showChallengeWithIntro(idx) {
   const numEl   = document.getElementById('ci-num');
   const asciiEl = document.getElementById('ci-ascii');
   const titleEl = document.getElementById('ci-title');
-  numEl.textContent   = `ÉPREUVE ${idx+1} / ${n}`;
+  numEl.textContent   = `ÉPREUVE ${ri + 1} / ${n}`;
   asciiEl.textContent = '';
   titleEl.textContent = '';
 
@@ -56,7 +138,7 @@ function showChallengeWithIntro(idx) {
       asciiEl.style.textShadow = `0 0 14px ${anim.color}88`;
       let f = 0; asciiEl.textContent = anim.frames[0];
       _introAnimTmr = setInterval(() => {
-        f = (f+1) % anim.frames.length; asciiEl.textContent = anim.frames[f];
+        f = (f + 1) % anim.frames.length; asciiEl.textContent = anim.frames[f];
       }, anim.interval);
     }, 500);
   }
@@ -68,41 +150,45 @@ function showChallengeWithIntro(idx) {
   setTimeout(() => {
     if (_introAnimTmr) { clearInterval(_introAnimTmr); _introAnimTmr = null; }
     ov.classList.add('ci-out');
-    setTimeout(() => { ov.classList.remove('show','ci-out'); showChallenge(idx); }, 380);
+    setTimeout(() => { ov.classList.remove('show', 'ci-out'); showChallenge(idx); }, 380);
   }, 3900);
 }
 
+// ── Affichage épreuve ───────────────────────────────────
 function showChallenge(idx) {
   const ch = cfg.challenges[idx];
-  document.getElementById('ch-num').textContent   = `ÉPREUVE ${idx+1} / ${cfg.challenges.length}`;
+  const ri = _realIdx(idx);
+  const n  = _realCount();
+
+  document.getElementById('ch-num').textContent   = `ÉPREUVE ${ri + 1} / ${n}`;
   document.getElementById('ch-title').textContent = ch.title;
   document.getElementById('ch-brief').textContent = ch.brief;
   document.getElementById('step-dots').innerHTML  = buildStepDots(idx);
 
+  // Badges rôles agents
+  const roles = _challengeRoles[idx];
+  let rolesHTML = '';
+  if (roles?.lecteur)  rolesHTML += `<div id="ch-agent-badge2">📖 LECTEUR : ${roles.lecteur}</div>`;
+  if (roles?.desarmeur) rolesHTML += `<div id="ch-agent-badge">⬛ DÉSARMEUR : ${roles.desarmeur}</div>`;
+  const rolesWrap = document.getElementById('ch-agent-roles');
+  if (rolesWrap) {
+    rolesWrap.innerHTML = rolesHTML;
+    rolesWrap.style.display = rolesHTML ? '' : 'none';
+  }
+
   const banner = document.getElementById('ch-team-banner');
   if (ch.teamPlay && agents.length >= 2) {
-    const team = idx % 2 === 0 ? 'ombre' : 'cobra';
+    const team = ri % 2 === 0 ? 'ombre' : 'cobra';
     banner.textContent = `▶ ${team === 'ombre' ? 'ÉQUIPE OMBRE' : 'ÉQUIPE COBRA'}`;
     banner.className = 'ch-team-banner ' + team;
     banner.style.display = '';
   } else {
     banner.style.display = 'none';
   }
-  const badge = document.getElementById('ch-agent-badge');
-  const assignedAgent = _challengeAgents[idx];
-  if (badge) {
-    if (assignedAgent) {
-      badge.textContent = `⬛ Agent chargé du désarmement : ${assignedAgent}`;
-      badge.style.display = '';
-    } else {
-      badge.style.display = 'none';
-    }
-  }
-
-  document.getElementById('code-input').value      = '';
+  document.getElementById('code-input').value       = '';
   document.getElementById('code-error').textContent = '';
 
-  // hint — wall-clock based for background resistance
+  // Hint timer
   clearInterval(hintTimer); hintSeconds = 0;
   const hz   = document.getElementById('hint-zone');
   const hb   = document.getElementById('hint-box');
@@ -133,7 +219,7 @@ function showChallenge(idx) {
     hz.classList.remove('visible');
   }
 
-  // Adapt code label to challenge type
+  // Label code
   const codeLabel = document.querySelector('.code-label');
   if (codeLabel) {
     if (ch.type === 'qr') codeLabel.textContent = 'Code détecté (ou saisie manuelle)';
@@ -146,7 +232,6 @@ function showChallenge(idx) {
   if (ch.animation && ch.animation !== 'none') startChallengeAnim(ch.animation);
   else stopChallengeAnim();
 
-  // thème : priorité à ch.theme si défini, sinon auto par index
   const themeIdx = (ch.theme !== undefined && ch.theme !== '') ? +ch.theme : idx;
   applyTheme(themeIdx);
   updateMiniTimer();
@@ -197,21 +282,24 @@ function flashAccessGranted(onDone) {
   setTimeout(() => { el.classList.remove('show'); if (onDone) onDone(); }, 740);
 }
 
-function showReveal(idx) {
-  const isLast = idx === cfg.challenges.length - 1;
-  const n = cfg.challenges.length;
+function showReveal(arrayIdx) {
+  const ri     = _realIdx(arrayIdx);
+  const n      = _realCount();
+  const remainingReal = cfg.challenges.slice(arrayIdx + 1).filter(c => c.type !== 'pause').length;
+  const isLast = remainingReal === 0;
+
   const digitEl = document.getElementById('reveal-digit-big');
   digitEl.textContent = '?';
   const slots = Array.from({length: n}, (_, i) => {
-    const prevRev = i < idx;
-    return `<div class="code-slot${(prevRev||i===idx)?' revealed':''}" id="rslot-${i}">${prevRev ? revealedDigits[i] : '?'}</div>`;
+    const prevRev = i < ri;
+    return `<div class="code-slot${(prevRev || i === ri) ? ' revealed' : ''}" id="rslot-${i}">${prevRev ? revealedDigits[i] : '?'}</div>`;
   }).join('');
   document.getElementById('partial-code').innerHTML =
     `<div class="partial-label">Code de désarmement</div><div class="partial-slots">${slots}</div>`;
   document.getElementById('reveal-label').textContent =
-    isLast ? '⬛ Code de désarmement — complet !' : `⬛ Chiffre ${idx+1} récupéré !`;
+    isLast ? '⬛ Code de désarmement — complet !' : `⬛ Chiffre ${ri + 1} récupéré !`;
   document.getElementById('reveal-status').textContent =
-    isLast ? 'Mémorisez ce code. Prêts à désamorcer ?' : `Plus que ${n-idx-1} épreuve${n-idx-1>1?'s':''}.`;
+    isLast ? 'Mémorisez ce code. Prêts à désamorcer ?' : `Plus que ${remainingReal} épreuve${remainingReal > 1 ? 's' : ''}.`;
   const btn = document.getElementById('reveal-next-btn');
   btn.textContent = isLast ? '▶ Désamorcer maintenant' : '▶ Épreuve suivante';
   syncRevealTimer();
@@ -219,9 +307,9 @@ function showReveal(idx) {
   btn.style.opacity = '0.35';
   showPhase('phase-reveal');
   setTimeout(() => { btn.disabled = false; btn.style.opacity = ''; }, 1200);
-  matrixReveal(digitEl, revealedDigits[idx], () => {
-    const slot = document.getElementById('rslot-'+idx);
-    if (slot) slot.textContent = revealedDigits[idx];
+  matrixReveal(digitEl, revealedDigits[ri], () => {
+    const slot = document.getElementById('rslot-' + ri);
+    if (slot) slot.textContent = revealedDigits[ri];
     playRevealSound();
   });
 }
@@ -247,10 +335,11 @@ function matrixReveal(el, finalChar, onDone) {
 }
 
 function advanceFromReveal() {
-  const isLast = currentChallenge === cfg.challenges.length - 1;
-  if (isLast) { startFinalCountdown(); return; }
+  const nextIdx = currentChallenge + 1;
+  if (nextIdx >= cfg.challenges.length) { startFinalCountdown(); return; }
   triggerPhaseFlash(() => {
     document.querySelectorAll('.phase').forEach(p => p.classList.remove('active'));
-    showChallengeWithIntro(++currentChallenge);
+    currentChallenge = nextIdx;
+    showNextItem(nextIdx);
   });
 }

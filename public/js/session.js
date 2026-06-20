@@ -9,6 +9,7 @@ function saveSession() {
       phase:            currentPhase,
       currentChallenge: currentChallenge,
       revealedDigits:   revealedDigits,
+      challengeRoles:   _challengeRoles,
       agents:           agents,
       secondsLeft:      secondsLeft,
       totalSeconds:     totalSeconds,
@@ -37,4 +38,4 @@ function clearSession() {
 }
 
 // Phases où la session a du sens (pas splash, pas names)
-const RESUMABLE_PHASES = ['phase-challenge', 'phase-reveal', 'phase-countdown', 'phase-message'];
+const RESUMABLE_PHASES = ['phase-challenge', 'phase-reveal', 'phase-countdown', 'phase-message', 'phase-pause'];
