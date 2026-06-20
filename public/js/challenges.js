@@ -17,6 +17,30 @@ function buildStepDots(arrayIdx) {
   ).join('');
 }
 
+// ── Synthèse vocale (iOS-safe) ───────────────────────────
+function _speak(text, opts = {}) {
+  if (!window.speechSynthesis) return;
+  // iOS : cancel() puis speak() immédiat est silencieux — on laisse finir
+  const doSpeak = () => {
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang    = opts.lang  || 'fr-FR';
+    u.rate    = opts.rate  || 0.78;
+    u.pitch   = opts.pitch || 0.6;
+    u.volume  = 1;
+    // Cherche une voix FR explicitement (iOS en a toujours une)
+    const voices = window.speechSynthesis.getVoices();
+    const frVoice = voices.find(v => v.lang.startsWith('fr'));
+    if (frVoice) u.voice = frVoice;
+    window.speechSynthesis.speak(u);
+  };
+  if (window.speechSynthesis.speaking) {
+    window.speechSynthesis.cancel();
+    setTimeout(doSpeak, 150);
+  } else {
+    doSpeak();
+  }
+}
+
 // ── Rôles agents ────────────────────────────────────────
 let _challengeRoles = [];
 
@@ -65,12 +89,7 @@ function showPause(idx) {
   document.getElementById('phase-pause').classList.add('active');
   document.body.style.background = '#00090f';
 
-  if (window.speechSynthesis) {
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance('AAAAAh, j\'ai soif !');
-    u.lang = 'fr-FR'; u.rate = 0.72; u.pitch = 1.3; u.volume = 1;
-    window.speechSynthesis.speak(u);
-  }
+  _speak('AAAAAh, j\'ai soif !', { rate: 0.72, pitch: 1.3 });
 
   const roles = _challengeRoles[idx];
   const badge = document.getElementById('pause-agent-badge');
@@ -111,8 +130,6 @@ let _introAnimTmr = null;
 
 const _ORDINALS_FR = ['UN','DEUX','TROIS','QUATRE','CINQ','SIX','SEPT','HUIT','NEUF','DIX'];
 function _speakChallenge(num) {
-  if (!window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
   const ord = _ORDINALS_FR[num - 1] || String(num);
   const phrases = [
     `Épreuve ${ord}. Agents, la menace est réelle. Bonne chance.`,
@@ -120,10 +137,7 @@ function _speakChallenge(num) {
     `Épreuve ${ord}. Le temps est compté. La mission commence maintenant.`,
     `Épreuve ${ord}. Concentrez-vous. L'organisation compte sur vous.`,
   ];
-  const text = phrases[(num - 1) % phrases.length];
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = 'fr-FR'; u.rate = 0.78; u.pitch = 0.6; u.volume = 1;
-  window.speechSynthesis.speak(u);
+  _speak(phrases[(num - 1) % phrases.length]);
 }
 
 function _dismissIntroOverlay(idx) {
