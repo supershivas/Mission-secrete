@@ -253,8 +253,10 @@ body.splash-tapped{animation:splash-tap .35s ease forwards}
 .code-field-row{display:flex;gap:.5rem;width:100%}
 #code-input{flex:1;background:#010d03;border:1px solid #003a0d;color:#00ff41;font-family:inherit;font-size:20px;letter-spacing:.2em;padding:.65rem .9rem;outline:none;text-transform:uppercase}
 #code-input:focus{border-color:#00ff41;box-shadow:0 0 0 1px rgba(0,255,65,.2)}
-#code-submit{background:transparent;border:1px solid #00ff41;color:#00ff41;font-family:inherit;font-size:13px;letter-spacing:.15em;padding:.65rem 1.4rem;cursor:pointer;text-transform:uppercase;white-space:nowrap}
+#code-submit{background:transparent;border:1px solid #00ff41;color:#00ff41;font-family:inherit;font-size:13px;letter-spacing:.15em;padding:.65rem 1.4rem;cursor:pointer;text-transform:uppercase;white-space:nowrap;transition:all .2s}
 #code-submit:hover{background:rgba(0,255,65,.08)}
+#code-submit.verifying{border-color:#00cc35;color:#00cc35;background:rgba(0,204,53,.07);cursor:default;letter-spacing:.08em;font-size:11px;animation:verifying-pulse .9s ease-in-out infinite}
+@keyframes verifying-pulse{0%,100%{opacity:.7}50%{opacity:1}}
 @media(max-width:480px){.code-field-row{flex-direction:column}#code-submit{width:100%;padding:.8rem;font-size:15px}}
 #code-error{font-size:13px;color:#ff0024;letter-spacing:.15em;min-height:18px;text-transform:uppercase}
 @keyframes shake-input{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(4px)}}

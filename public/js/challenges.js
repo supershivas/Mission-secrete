@@ -244,18 +244,23 @@ function showHint() {
 }
 
 function submitCode() {
-  const val = document.getElementById('code-input').value.trim().toUpperCase();
+  const inp = document.getElementById('code-input');
+  const val = inp.value.trim().toUpperCase();
   const ch  = cfg.challenges[currentChallenge];
   if (val === ch.code.toUpperCase()) {
+    // 1. Fermer le clavier immédiatement
+    inp.blur();
     revealedDigits.push(ch.digit);
     clearInterval(hintTimer);
     stopChallengeDisplay();
     stopChallengeAnim();
     if (navigator.vibrate) navigator.vibrate([50, 30, 50, 30, 120]);
-    flashAccessGranted(() => { playRevealSound(); showReveal(currentChallenge); });
+    // 2. Fake-loader pendant ~1.4s
+    _showVerifying(() => {
+      flashAccessGranted(() => { playRevealSound(); showReveal(currentChallenge); });
+    });
   } else {
     document.getElementById('code-error').textContent = '✗ Code incorrect — réessayez';
-    const inp = document.getElementById('code-input');
     inp.value = '';
     inp.classList.remove('shake'); void inp.offsetWidth; inp.classList.add('shake');
     setTimeout(() => inp.classList.remove('shake'), 500);
@@ -263,6 +268,31 @@ function submitCode() {
     if (navigator.vibrate) navigator.vibrate(400);
     setTimeout(() => { document.getElementById('code-error').textContent = ''; }, 2000);
   }
+}
+
+let _verifyTmr = null;
+function _showVerifying(onDone) {
+  const btn = document.getElementById('code-submit');
+  const err = document.getElementById('code-error');
+  const inp = document.getElementById('code-input');
+  if (btn) { btn.disabled = true; btn.textContent = 'VÉRIFICATION…'; btn.classList.add('verifying'); }
+  if (err) err.textContent = '';
+  if (inp) inp.disabled = true;
+
+  let dots = 0;
+  const frames = ['ANALYSE EN COURS·', 'ANALYSE EN COURS··', 'ANALYSE EN COURS···', 'DÉCHIFFREMENT·', 'DÉCHIFFREMENT··', 'DÉCHIFFREMENT···', 'ACCÈS SERVEUR···', 'VALIDATION···'];
+  let fi = 0;
+  _verifyTmr = setInterval(() => {
+    if (btn) btn.textContent = frames[fi % frames.length];
+    fi++;
+  }, 180);
+
+  setTimeout(() => {
+    clearInterval(_verifyTmr);
+    if (btn) { btn.disabled = false; btn.textContent = 'Valider ▶'; btn.classList.remove('verifying'); }
+    if (inp) inp.disabled = false;
+    onDone();
+  }, 1400);
 }
 
 function flashAccessGranted(onDone) {
