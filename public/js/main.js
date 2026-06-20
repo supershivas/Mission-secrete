@@ -1,12 +1,15 @@
 // ══ MAIN — init ════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', async () => {
+  const tapEl = document.getElementById('splash-tap');
+  if (tapEl) { tapEl.textContent = '· chargement ·'; tapEl.style.animation = 'blink2 .6s step-end infinite'; }
   await pullConfigRemote();
   applyCfgToSplash();
   initTestMode();
   startSplashRotation();
   initBgArtefacts();
+  if (tapEl) { tapEl.textContent = '▶ appuyer pour commencer'; tapEl.style.animation = ''; }
   tryResume();
-  document.getElementById('phase-splash')?.classList.add('hue-cycle');
+  document.body.classList.add('hue-cycle');
 });
 
 function applyCfgToSplash() {
