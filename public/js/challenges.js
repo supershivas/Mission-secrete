@@ -87,7 +87,7 @@ function showChallenge(idx) {
   hbtn.style.display = 'none';
   if (ch.hint) {
     hz.classList.add('visible');
-    const WAIT = 180;
+    const WAIT = 90;
     const hintStartedAt = Date.now();
     document.getElementById('hint-timer').textContent = '';
     hbtn.style.display = 'none';
@@ -148,7 +148,10 @@ function submitCode() {
     flashAccessGranted(() => { playRevealSound(); showReveal(currentChallenge); });
   } else {
     document.getElementById('code-error').textContent = '✗ Code incorrect — réessayez';
-    document.getElementById('code-input').value = '';
+    const inp = document.getElementById('code-input');
+    inp.value = '';
+    inp.classList.remove('shake'); void inp.offsetWidth; inp.classList.add('shake');
+    setTimeout(() => inp.classList.remove('shake'), 500);
     playErrorSound();
     if (navigator.vibrate) navigator.vibrate(400);
     setTimeout(() => { document.getElementById('code-error').textContent = ''; }, 2000);
@@ -175,11 +178,12 @@ function showReveal(idx) {
   const n = cfg.challenges.length;
   const digitEl = document.getElementById('reveal-digit-big');
   digitEl.textContent = '?';
+  const slots = Array.from({length: n}, (_, i) => {
+    const prevRev = i < idx;
+    return `<div class="code-slot${(prevRev||i===idx)?' revealed':''}" id="rslot-${i}">${prevRev ? revealedDigits[i] : '?'}</div>`;
+  }).join('');
   document.getElementById('partial-code').innerHTML =
-    Array.from({length: n}, (_, i) => {
-      const prevRev = i < idx;
-      return `<div class="code-slot${(prevRev||i===idx)?' revealed':''}" id="rslot-${i}">${prevRev ? revealedDigits[i] : '?'}</div>`;
-    }).join('');
+    `<div class="partial-label">Code de désarmement</div><div class="partial-slots">${slots}</div>`;
   document.getElementById('reveal-label').textContent =
     isLast ? '⬛ Code de désarmement — complet !' : `⬛ Chiffre ${idx+1} récupéré !`;
   document.getElementById('reveal-status').textContent =
@@ -190,7 +194,7 @@ function showReveal(idx) {
   btn.disabled = true;
   btn.style.opacity = '0.35';
   showPhase('phase-reveal');
-  setTimeout(() => { btn.disabled = false; btn.style.opacity = ''; }, 2500);
+  setTimeout(() => { btn.disabled = false; btn.style.opacity = ''; }, 1200);
   matrixReveal(digitEl, revealedDigits[idx], () => {
     const slot = document.getElementById('rslot-'+idx);
     if (slot) slot.textContent = revealedDigits[idx];

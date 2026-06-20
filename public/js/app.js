@@ -157,10 +157,9 @@ function toggleTeamsPeek() {
 // ── Splash ─────────────────────────────────────────────
 function onSplashTap() {
   getAudioCtx();
-  const splash = document.getElementById('phase-splash');
-  splash.classList.remove('tapped');
-  void splash.offsetWidth;
-  splash.classList.add('tapped');
+  document.body.classList.remove('splash-tapped', 'hue-cycle');
+  void document.body.offsetWidth;
+  document.body.classList.add('splash-tapped');
   stopSplashRotation();
   triggerPhaseFlash();
   playRevealSound();
@@ -444,6 +443,8 @@ function resetApp() {
   revealedDigits=[]; currentChallenge=0; pinInput='';
   secondsLeft=cfg.duration; totalSeconds=cfg.duration;
   resetTheme();
+  document.body.classList.remove('splash-tapped');
+  document.body.classList.add('hue-cycle');
   renderRecruitList(); resetRecruitForm(); showPhase('phase-splash');
   stopBgArtefacts(); initBgArtefacts(); startSplashRotation();
 }

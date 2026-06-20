@@ -47,7 +47,7 @@ function showScore() {
   if (ratio >= 0.6)       { stars='★★★'; rank='LÉGENDAIRE'; msg='Temps record. Le QG est stupéfait.\nVous êtes les meilleurs agents de l\'organisation.'; }
   else if (ratio >= 0.35) { stars='★★☆'; rank='EXCELLENCE'; msg='Mission accomplie avec brio.\nVos noms entreront dans les archives secrètes.'; }
   else if (ratio >= 0.15) { stars='★☆☆'; rank='ACCOMPLIE';  msg='Mission réussie de justesse.\nLa prochaine fois, faites plus vite.'; }
-  else                    { stars='☆☆☆'; rank='LIMITE';     msg='Le dispositif était sur le point d\'exploser.\nEntraînez-vous, agents.'; }
+  else                    { stars='★☆☆'; rank='ACCOMPLIE';  msg='Désarmé de justesse — mission réussie.\nVous avez sauvé la mise, agents.'; }
 
   ['score-stars','score-rank','score-time','score-msg'].forEach(id => {
     const el = document.getElementById(id);
