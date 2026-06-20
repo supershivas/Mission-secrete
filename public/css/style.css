@@ -178,6 +178,11 @@ body.splash-tapped{animation:splash-tap .35s ease forwards}
   display:block;font-size:.75em;letter-spacing:.45em;
   color:#006818;text-shadow:none;margin-top:.4em;
 }
+.bxl-meta{
+  display:block;font-size:.62em;letter-spacing:.22em;
+  color:#004010;text-shadow:none;margin-top:.25em;
+}
+.bxl-meta.dim{color:#002a08;font-size:.56em;margin-top:.35em;letter-spacing:.18em}
 #connect-terminal{font-size:clamp(11px,2.2vw,14px);line-height:2;color:#00ff41;text-shadow:0 0 8px rgba(0,255,65,.4);text-align:left;width:100%;max-width:520px;white-space:pre-wrap}
 .connect-ok{color:#00cc35}
 .connect-pending{color:#006818}
