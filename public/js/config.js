@@ -53,18 +53,25 @@ Bonne chance. Ce message s'autodétruira.`,
 function getCfg() {
   try {
     const s = localStorage.getItem('agent_config');
-    if (!s) return DEFAULT_CFG;
+    if (!s) return JSON.parse(JSON.stringify(DEFAULT_CFG));
     const stored = JSON.parse(s);
-    const chs = (stored.challenges || DEFAULT_CFG.challenges).map((c, i) => ({
-      ...(DEFAULT_CFG.challenges[i] || {}), ...c
-    }));
-    chs.forEach(c => {
-      if (!c.animation) c.animation = c.poison ? 'poison' : 'none';
-      if (!c.type) c.type = 'libre';
-      if (c.theme === undefined) c.theme = '';
+    const chs = (stored.challenges || DEFAULT_CFG.challenges).map((c, i) => {
+      const base = DEFAULT_CFG.challenges[i] || DEFAULT_CFG.challenges[0];
+      const merged = { ...base, ...c };
+      if (!merged.animation) merged.animation = merged.poison ? 'poison' : 'none';
+      if (!merged.type) merged.type = 'libre';
+      if (merged.theme === undefined) merged.theme = '';
+      return merged;
     });
-    return { missionName: stored.missionName || DEFAULT_CFG.missionName, duration: stored.duration || DEFAULT_CFG.duration, testMode: !!stored.testMode, message: stored.message || DEFAULT_CFG.message, challenges: chs };
-  } catch(e) { return DEFAULT_CFG; }
+    return {
+      missionName: stored.missionName || DEFAULT_CFG.missionName,
+      duration:    stored.duration    || DEFAULT_CFG.duration,
+      testMode:    !!stored.testMode,
+      message:     stored.message     || DEFAULT_CFG.message,
+      challenges:  chs,
+      ...(stored.runtimeAgents ? { runtimeAgents: stored.runtimeAgents } : {}),
+    };
+  } catch(e) { return JSON.parse(JSON.stringify(DEFAULT_CFG)); }
 }
 
 let cfg = getCfg();
