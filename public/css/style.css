@@ -147,6 +147,30 @@ body{font-family:'Share Tech Mono','Courier New',monospace;color:#00ff41;display
 .peek-real{color:#006818;font-size:11px}
 .peek-code{color:#00ff41}
 
+/* ── Ajout d'agent dans le modal équipes ───────────────── */
+.peek-add-wrap{margin-top:.9rem;padding-top:.7rem;border-top:1px solid #002a08;width:100%;text-align:center}
+.peek-add-btn{background:transparent;border:1px solid #003a0d;color:#005a18;font-family:inherit;font-size:11px;letter-spacing:.18em;text-transform:uppercase;padding:.45rem 1rem;cursor:pointer;width:100%;transition:border-color .15s,color .15s}
+.peek-add-btn:hover,.peek-add-btn:active{border-color:#00ff41;color:#00ff41}
+.peek-add-form{width:100%;display:flex;flex-direction:column;gap:.6rem}
+.peek-add-title{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:#006818;text-align:center}
+.peek-add-sub{font-size:11px;color:#004d12;text-align:center;letter-spacing:.1em}
+.peek-add-row{display:flex;gap:.4rem}
+.peek-input{flex:1;background:#010d03;border:1px solid #003a0d;color:#00ff41;font-family:inherit;font-size:15px;letter-spacing:.1em;padding:.5rem .7rem;outline:none;text-transform:capitalize;min-width:0}
+.peek-input:focus{border-color:#00ff41}
+.peek-btn{background:transparent;border:1px solid #00ff41;color:#00ff41;font-family:inherit;font-size:11px;letter-spacing:.15em;padding:.5rem .8rem;cursor:pointer;text-transform:uppercase;white-space:nowrap}
+.peek-props-label{font-size:10px;letter-spacing:.18em;color:#006818;text-transform:uppercase;margin-top:.2rem}
+.peek-prop-btn{width:100%;background:#010d03;border:1px solid #004d12;color:#00cc35;font-family:inherit;font-size:13px;letter-spacing:.12em;padding:.55rem .7rem;cursor:pointer;text-transform:uppercase;text-align:left;transition:border-color .12s,color .12s;margin-top:.3rem}
+.peek-prop-btn:hover,.peek-prop-btn:active{border-color:#00ff41;color:#00ff41}
+.peek-team-btns{display:flex;flex-direction:column;gap:.4rem;margin-top:.2rem}
+.peek-team-pick{width:100%;background:transparent;font-family:inherit;font-size:13px;letter-spacing:.2em;padding:.6rem;cursor:pointer;text-transform:uppercase;border:1px solid;transition:background .12s}
+.peek-team-pick.ombre{color:#00ff41;border-color:#00ff41}
+.peek-team-pick.ombre:hover{background:rgba(0,255,65,.1)}
+.peek-team-pick.cobra{color:#ff6b00;border-color:#ff6b00}
+.peek-team-pick.cobra:hover{background:rgba(255,107,0,.1)}
+.peek-team-pick.none{color:#555;border-color:#333}
+.peek-team-pick.none:hover{background:rgba(255,255,255,.05)}
+.peek-cancel{background:transparent;border:none;color:#004010;font-family:inherit;font-size:10px;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;padding:.3rem 0;text-align:center}
+
 /* ══ SPLASH — couleur ambiante ════════════════════════ */
 @keyframes splash-hue{
   0%   {background:#000}
