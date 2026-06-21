@@ -139,21 +139,66 @@
     function encodeCesar(word) { return word.toUpperCase().split('').filter(c=>/[A-Z]/.test(c)).map(c=>String.fromCharCode((c.charCodeAt(0)-65+3)%26+65)).join(''); }
     const POLYBE={A:'11',B:'12',C:'13',D:'14',E:'15',F:'21',G:'22',H:'23',I:'24',J:'25',K:'31',L:'32',M:'33',N:'34',O:'35',P:'41',Q:'42',R:'43',S:'44',T:'45',U:'51',V:'52',W:'53',X:'54',Y:'55',Z:'55'};
     function encodePolybe(word) { return word.toUpperCase().split('').filter(c=>/[A-Z]/.test(c)).map(c=>POLYBE[c]||'??').join('  '); }
+
+    // ── Symboles — SVG inline (même géométrie que le PDF Python) ──
+    function _symPath(letter, cx, cy, r) {
+      const p = (x,y) => `${+x.toFixed(2)},${+y.toFixed(2)}`;
+      switch(letter) {
+        case 'A': return `M${p(cx-r,cy-r*.5)}L${p(cx,cy+r*.8)}L${p(cx+r,cy-r*.5)}`;
+        case 'B': return `M${p(cx+r*.2,cy+r*.8)}L${p(cx+r*.2,cy-r*.3)}C${p(cx+r*.2,cy-r*.9)}${p(cx-r*.6,cy-r*.9)}${p(cx-r*.6,cy-r*.4)}`;
+        case 'C': return `M${p(cx+r*.3,cy+r*.8)}C${p(cx-r*.8,cy+r*.8)}${p(cx-r*.8,cy-r*.8)}${p(cx+r*.3,cy-r*.8)}`;
+        case 'D': return `M${p(cx-r*.3,cy+r*.8)}C${p(cx+r*.8,cy+r*.8)}${p(cx+r*.8,cy-r*.8)}${p(cx-r*.3,cy-r*.8)}`;
+        case 'E': return `M${p(cx+r*.5,cy+r*.7)}L${p(cx-r*.5,cy+r*.7)}L${p(cx-r*.5,cy-r*.7)}`;
+        case 'F': return `M${p(cx-r*.5,cy+r*.7)}L${p(cx+r*.5,cy+r*.7)}L${p(cx+r*.5,cy-r*.7)}`;
+        case 'G': return `M${p(cx+r*.5,cy+r*.7)}L${p(cx-r*.5,cy+r*.7)}L${p(cx-r*.5,cy-r*.1)}C${p(cx-r*.5,cy-r*.8)}${p(cx+r*.3,cy-r*.8)}${p(cx+r*.3,cy-r*.4)}`;
+        case 'H': return `M${p(cx-r*.35,cy+r*.8)}L${p(cx-r*.35,cy-r*.8)}M${p(cx+r*.35,cy+r*.8)}L${p(cx+r*.35,cy-r*.8)}`;
+        case 'I': return `M${p(cx,cy+r*.8)}L${p(cx,cy-r*.8)}`;
+        case 'J': return `M${p(cx+r*.3,cy+r*.8)}L${p(cx+r*.3,cy-r*.3)}C${p(cx+r*.3,cy-r*.9)}${p(cx-r*.5,cy-r*.9)}${p(cx-r*.5,cy-r*.4)}`;
+        case 'K': return `M${p(cx+r*.4,cy+r*.7)}L${p(cx-r*.4,cy)}L${p(cx+r*.4,cy-r*.7)}`;
+        case 'L': return `M${p(cx-r*.5,cy+r*.7)}L${p(cx-r*.5,cy-r*.7)}L${p(cx+r*.5,cy-r*.7)}`;
+        case 'M': return `M${p(cx-r*.5,cy+r*.7)}L${p(cx+r*.5,cy+r*.7)}L${p(cx+r*.5,cy-r*.7)}`;
+        case 'N': return `M${p(cx-r*.5,cy+r*.7)}L${p(cx+r*.5,cy+r*.1)}L${p(cx-r*.2,cy-r*.1)}L${p(cx+r*.4,cy-r*.7)}`;
+        case 'O': return `M${p(cx,cy+r*.75)}A${+( r*.75).toFixed(2)},${+(r*.75).toFixed(2)} 0 1,1 ${p(cx,cy-r*.75)}A${+(r*.75).toFixed(2)},${+(r*.75).toFixed(2)} 0 1,1 ${p(cx,cy+r*.75)}`;
+        case 'P': return `M${p(cx-r*.7,cy+r*.2)}C${p(cx-r*.7,cy-r*.9)}${p(cx+r*.7,cy-r*.9)}${p(cx+r*.7,cy+r*.2)}`;
+        case 'Q': return `M${p(cx-r*.6,cy-r*.3)}C${p(cx-r*.6,cy+r*.7)}${p(cx+r*.6,cy+r*.7)}${p(cx+r*.6,cy-r*.3)}`;
+        case 'R': return `M${p(cx-r*.5,cy+r*.7)}L${p(cx+r*.5,cy-r*.7)}`;
+        case 'S': return `M${p(cx+r*.5,cy+r*.7)}L${p(cx-r*.5,cy-r*.7)}`;
+        case 'T': return `M${p(cx-r*.7,cy)}L${p(cx+r*.7,cy)}`;
+        case 'U': return `M${p(cx-r*.6,cy+r*.7)}L${p(cx-r*.6,cy)}C${p(cx-r*.6,cy-r*.9)}${p(cx+r*.6,cy-r*.9)}${p(cx+r*.6,cy)}L${p(cx+r*.6,cy+r*.7)}`;
+        case 'V': return `M${p(cx-r*.6,cy+r*.5)}L${p(cx,cy-r*.7)}L${p(cx+r*.6,cy+r*.5)}`;
+        case 'W': return `M${p(cx-r*.6,cy-r*.7)}L${p(cx-r*.6,cy)}C${p(cx-r*.6,cy+r*.9)}${p(cx+r*.6,cy+r*.9)}${p(cx+r*.6,cy)}L${p(cx+r*.6,cy-r*.7)}`;
+        case 'X': return `M${p(cx-r*.4,cy+r*.7)}L${p(cx+r*.4,cy)}L${p(cx-r*.4,cy-r*.7)}`;
+        case 'Y': return `M${p(cx+r*.5,cy+r*.7)}L${p(cx+r*.5,cy-r*.7)}L${p(cx-r*.5,cy-r*.7)}`;
+        case 'Z': return `M${p(cx-r*.5,cy+r*.7)}L${p(cx+r*.5,cy+r*.7)}L${p(cx-r*.5,cy-r*.7)}L${p(cx+r*.5,cy-r*.7)}`;
+        default: return '';
+      }
+    }
+    function letterSVG(letter, size=26) {
+      const cx=size/2, cy=size/2, r=size/2*.45;
+      const d=_symPath(letter.toUpperCase(), cx, cy, r);
+      if (!d) return `<svg width="${size}" height="${size}"></svg>`;
+      return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="display:inline-block;vertical-align:middle" xmlns="http://www.w3.org/2000/svg"><path d="${d}" fill="none" stroke="#1a1a2e" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    }
+    function encodeSymboles(word, size=26) {
+      return word.toUpperCase().split('').filter(c=>/[A-Z]/.test(c))
+        .map(c=>letterSVG(c,size)).join('<span style="display:inline-block;width:4px"></span>');
+    }
+
     function encodeWord(word, cipher) {
-      if (!word) return '';
+      if (!word) return { text:'', isSvg:false };
       switch(cipher) {
-        case 'morse':    return encodeMorse(word);
-        case 'atbash':  return encodeAtbash(word);
-        case 'cesar':   return encodeCesar(word);
-        case 'polybe':  return encodePolybe(word);
-        case 'symboles':return word.toUpperCase() + '  [symboles — voir table]';
-        default:        return encodePolybe(word);
+        case 'morse':    return { text: encodeMorse(word),   isSvg:false };
+        case 'atbash':  return { text: encodeAtbash(word),  isSvg:false };
+        case 'cesar':   return { text: encodeCesar(word),   isSvg:false };
+        case 'polybe':  return { text: encodePolybe(word),  isSvg:false };
+        case 'symboles':return { text: encodeSymboles(word), isSvg:true };
+        default:        return { text: encodePolybe(word),  isSvg:false };
       }
     }
     const CIPHER_LABELS = {
       polybe:   'Polybe 5×5 — LIGNE puis COLONNE',
       morse:    'Morse — · point  /  — trait',
-      symboles: 'Alphabet symbolique — voir table',
+      symboles: 'Alphabet symbolique',
       atbash:   'Atbash — A=Z, B=Y, M=N…',
       cesar:    'César +3 — A=D, B=E, C=F…',
     };
@@ -202,8 +247,6 @@
         <div class="cover-meta">
           Durée : ${durMin} min &nbsp;·&nbsp; ${total} épreuve${total>1?'s':''} + ${cfg.challenges.length-total} pause${cfg.challenges.length-total>1?'s':''}
         </div>
-        <div class="cover-pin">${esc(pin)}</div>
-        <div class="cover-pin-label">CODE DE DÉSARMEMENT FINAL</div>
         <div class="cover-timeline">
           ${cfg.challenges.map((ch,i)=>{
             if (ch.type==='pause') return `<div class="tl-row">
@@ -211,13 +254,11 @@
               <span class="tl-spacer"></span>
               <span class="tl-cipher" style="color:#9ecde8">${esc(ch.title||'Pause fraîcheur')}</span>
             </div>`;
-            const n=nums[i]; const cipher=ch.cipher||'polybe';
+            const n=nums[i];
             return `<div class="tl-row">
               <span class="tl-num">${n}</span>
-              <span class="tl-code">${esc(ch.code||'?')}</span>
               <span class="tl-spacer"></span>
-              <span class="tl-cipher">${CIPHER_SHORT[cipher]||cipher.toUpperCase()}</span>
-              <span class="tl-digit">${esc(ch.digit||'?')}</span>
+              <span style="font-size:9px;color:#333">${esc(ch.title||`Épreuve ${n}`)}</span>
             </div>`;
           }).join('')}
         </div>
@@ -232,6 +273,9 @@
         const n = nums[i];
         const cipher = ch.cipher || 'polybe';
         const encoded = encodeWord(ch.code||'', cipher);
+        const encodedHtml = encoded.isSvg
+          ? `<div class="encoded-box" style="background:#f8f8f8;padding:.5rem .3rem;text-align:center;line-height:1">${encoded.text}</div>`
+          : `<div class="encoded-box">${esc(encoded.text)}</div>`;
         html += `<div class="page">
           <div class="pg-header">
             <div>
@@ -250,7 +294,7 @@
             <div class="section">
               <div class="section-label">Code à trouver</div>
               <div class="code-box">${esc(ch.code||'???')}</div>
-              <div class="encoded-box">${esc(encoded)}</div>
+              ${encodedHtml}
               <div class="cipher-label">${esc(CIPHER_LABELS[cipher]||cipher)}</div>
             </div>
             <div class="section">
