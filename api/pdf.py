@@ -398,6 +398,176 @@ def page_cesar(c):
     c.drawCentredString(W/2, tip_y, 'DÉCALAGE +3 : comptez 3 lettres vers l\'avant dans l\'alphabet')
 
 # ══════════════════════════════════════════════════════════════
+# PAGE ÉTIQUETTES ANTIDOTE
+# ══════════════════════════════════════════════════════════════
+ANTIDOTE_INGREDIENTS = [
+    ('SÉRUM  DELTA-7',     'STABILISANT NEURONAL',   'EXP: 12/2026', 'LOT: HX-01'),
+    ('ÉLIXIR  COBRA VERT', 'EXTRAIT VENIMEUX TYPE-C', 'EXP: 07/2026', 'LOT: HX-02'),
+    ('COMPOSÉ  NX-14',     'BASE NUCLÉOPROTÉIQUE',   'EXP: 03/2027', 'LOT: HX-03'),
+    ('BIOXYNE  PURE',      'CATALYSEUR OXYDANT',     'EXP: 09/2026', 'LOT: HX-04'),
+    ('TEINTURE  VIOLINE K','PIGMENT RÉVÉLATEUR',     'EXP: 11/2026', 'LOT: HX-05'),
+    ('FILTRAT  ALPHA-3',   'ENZYME DÉCONTAMINANTE',  'EXP: 05/2027', 'LOT: HX-06'),
+    ('ESSENCE  ZARKONIDE', 'VOLATIL CLASSE 4',       'EXP: 01/2027', 'LOT: HX-07'),
+    ('ACIDE  HELIX-2B',    'CORRECTEUR DE pH',       'EXP: 08/2026', 'LOT: HX-08'),
+    ('SOLUTION  ΩΩ-9',     'ANTIDOTE PRIMAIRE',      'EXP: 06/2027', 'LOT: HX-09'),
+    ('RÉACTIF  ZÉRO-X',    'NEUTRALISANT TOTAL',     'EXP: 04/2026', 'LOT: HX-10'),
+]
+
+def _draw_flask(c, cx, cy, size=10*mm):
+    """Fiole de laboratoire dessinée au trait."""
+    s = size
+    c.setStrokeColor(INK); c.setLineWidth(0.7); c.setLineCap(1)
+    # Corps de la fiole (trapèze arrondi en bas)
+    p = c.beginPath()
+    neck_w = s * 0.28
+    body_w = s * 0.72
+    neck_h = s * 0.38
+    body_h = s * 0.52
+    # Goulot
+    p.moveTo(cx - neck_w, cy + body_h/2 + neck_h)
+    p.lineTo(cx - neck_w, cy + body_h/2)
+    # Épaules
+    p.lineTo(cx - body_w, cy - body_h/2)
+    # Fond arrondi
+    p.curveTo(cx - body_w, cy - body_h/2 - s*0.28,
+              cx + body_w, cy - body_h/2 - s*0.28,
+              cx + body_w, cy - body_h/2)
+    # Épaule droite
+    p.lineTo(cx + neck_w, cy + body_h/2)
+    p.lineTo(cx + neck_w, cy + body_h/2 + neck_h)
+    c.drawPath(p, fill=0, stroke=1)
+    # Bouchon
+    c.setLineWidth(1.1)
+    c.line(cx - neck_w - 1.5*mm, cy + body_h/2 + neck_h,
+           cx + neck_w + 1.5*mm, cy + body_h/2 + neck_h)
+    # Niveau de liquide (ligne intérieure)
+    c.setLineWidth(0.35); c.setStrokeColor(LIGHT)
+    liq_y = cy - body_h/2 + body_h*0.35
+    c.line(cx - body_w*0.65, liq_y, cx + body_w*0.65, liq_y)
+    # Petites bulles
+    c.setStrokeColor(LIGHT); c.setLineWidth(0.25)
+    c.circle(cx - body_w*0.2, liq_y + body_h*0.12, 1.2*mm, fill=0, stroke=1)
+    c.circle(cx + body_w*0.25, liq_y + body_h*0.2,  0.9*mm, fill=0, stroke=1)
+    c.setStrokeColor(INK)
+
+def _draw_skull(c, cx, cy, size=8*mm):
+    """Crâne simplifié au trait."""
+    s = size
+    c.setStrokeColor(INK); c.setLineWidth(0.55); c.setLineCap(1)
+    # Crâne — ovale
+    p = c.beginPath()
+    p.ellipse(cx - s*0.5, cy - s*0.1, cx + s*0.5, cy + s*0.7)
+    c.drawPath(p, fill=0, stroke=1)
+    # Mâchoire
+    p2 = c.beginPath()
+    p2.moveTo(cx - s*0.35, cy - s*0.1)
+    p2.lineTo(cx - s*0.35, cy - s*0.55)
+    p2.lineTo(cx + s*0.35, cy - s*0.55)
+    p2.lineTo(cx + s*0.35, cy - s*0.1)
+    c.drawPath(p2, fill=0, stroke=1)
+    # Dents
+    tw = s * 0.7 / 3
+    for i in range(3):
+        tx = cx - s*0.35 + i*tw
+        c.line(tx + tw, cy - s*0.1, tx + tw, cy - s*0.32)
+    # Yeux
+    c.setLineWidth(0.4)
+    c.circle(cx - s*0.22, cy + s*0.3, s*0.13, fill=0, stroke=1)
+    c.circle(cx + s*0.22, cy + s*0.3, s*0.13, fill=0, stroke=1)
+
+def _label(c, x, y, w, h, name, subtitle, exp, lot, idx):
+    """Dessine une étiquette dans le rectangle (x,y,w,h) — y = bas gauche."""
+    pad = 3*mm
+
+    # Cadre double
+    c.setStrokeColor(INK); c.setLineWidth(0.8)
+    c.rect(x, y, w, h, fill=0, stroke=1)
+    c.setStrokeColor(INK); c.setLineWidth(0.25)
+    c.rect(x+1.5*mm, y+1.5*mm, w-3*mm, h-3*mm, fill=0, stroke=1)
+
+    # ── Bandeau supérieur ────────────────────────────────────
+    band = 0.65*cm
+    c.setStrokeColor(RULE); c.setLineWidth(0.3)
+    c.line(x+2*mm, y+h-band, x+w-2*mm, y+h-band)
+    _font(c, 'Courier', 5.5, LIGHT)
+    c.drawCentredString(x+w/2, y+h-band/2-2, 'BUREAU CLANDESTIN BXL  ·  ANTIDOTE')
+
+    # ── Pictogrammes ─────────────────────────────────────────
+    icon_y = y + h - band - 1.3*cm
+    _draw_flask(c, x + pad + 0.9*cm, icon_y, 9*mm)
+    _draw_skull(c, x + w - pad - 0.9*cm, icon_y - 1*mm, 7*mm)
+
+    # ── Nom principal ────────────────────────────────────────
+    name_y = icon_y - 1.05*cm
+    _font(c, 'Courier-Bold', 9.5, INK)
+    # Wrap si trop large
+    tw = c.stringWidth(name, 'Courier-Bold', 9.5)
+    if tw > w - 2*pad:
+        _font(c, 'Courier-Bold', 7.5, INK)
+    c.drawCentredString(x+w/2, name_y, name)
+
+    # ── Sous-titre ───────────────────────────────────────────
+    _font(c, 'Courier', 6, LIGHT)
+    c.drawCentredString(x+w/2, name_y - 0.5*cm, subtitle)
+
+    # ── Séparateur ───────────────────────────────────────────
+    sep_y = name_y - 0.9*cm
+    _rule(c, sep_y, x+pad, x+w-pad, w=0.3)
+
+    # ── Champ DOSE ───────────────────────────────────────────
+    dose_y = sep_y - 0.55*cm
+    _font(c, 'Courier', 6, LIGHT)
+    c.drawString(x+pad, dose_y, 'DOSE :')
+    c.setStrokeColor(RULE); c.setLineWidth(0.3)
+    c.line(x+pad+1.5*cm, dose_y+1*mm, x+w-pad, dose_y+1*mm)
+
+    # ── Lot + Exp ────────────────────────────────────────────
+    meta_y = dose_y - 0.5*cm
+    _font(c, 'Courier', 5.5, LIGHT)
+    c.drawString(x+pad, meta_y, lot)
+    c.drawRightString(x+w-pad, meta_y, exp)
+
+    # ── Tampon CLASSIFIÉ ─────────────────────────────────────
+    _stamp(c, x + w - pad - 0.5*cm, y + pad + 0.4*cm, 'CLASSIFIÉ', angle=10)
+
+def page_antidote_labels(c):
+    m = 1.0*cm
+    cols, rows = 2, 5
+    gap = 4*mm
+    lbl_w = (W - 2*m - gap) / cols
+    lbl_h = (H - 2*m - (rows-1)*gap) / rows
+
+    # En-tête de page hors cadres
+    _font(c, 'Courier-Bold', 8, INK)
+    c.drawCentredString(W/2, H - 0.6*cm, 'ÉTIQUETTES INGRÉDIENTS — ANTIDOTE  ·  DÉCOUPER ET COLLER SUR LES CONTENANTS')
+    c.setStrokeColor(RULE); c.setLineWidth(0.3)
+    c.line(m, H-0.8*cm, W-m, H-0.8*cm)
+
+    for i, (name, subtitle, exp, lot) in enumerate(ANTIDOTE_INGREDIENTS):
+        col = i % cols
+        row = rows - 1 - (i // cols)
+        x = m + col * (lbl_w + gap)
+        y = m + row * (lbl_h + gap)
+
+        # Marques de découpe (petits tirets aux coins)
+        tick = 3*mm
+        c.setStrokeColor(LIGHT); c.setLineWidth(0.3)
+        for dx, dy, tdx, tdy in [
+            (0,0,-tick,0),(0,0,0,-tick),
+            (lbl_w,0,tick,0),(lbl_w,0,0,-tick),
+            (0,lbl_h,-tick,0),(0,lbl_h,0,tick),
+            (lbl_w,lbl_h,tick,0),(lbl_w,lbl_h,0,tick),
+        ]:
+            c.line(x+dx, y+dy, x+dx+tdx, y+dy+tdy)
+
+        _label(c, x, y, lbl_w, lbl_h, name, subtitle, exp, lot, i)
+
+    # Pied de page
+    _font(c, 'Courier', 5.5, LIGHT)
+    c.drawCentredString(W/2, 0.35*cm, 'OPÉRATION HÊLIE  ·  NE PAS MONTRER AUX AGENTS AVANT L\'ÉPREUVE')
+
+
+# ══════════════════════════════════════════════════════════════
 # PAGE DE COUVERTURE
 # ══════════════════════════════════════════════════════════════
 def page_cover(c):
@@ -739,6 +909,8 @@ class handler(BaseHTTPRequestHandler):
                 c.showPage()
 
         page_codes(c, code_items)
+        page_antidote_labels(c)
+        c.showPage()
         c.save()
 
         pdf_bytes = buf.getvalue()
