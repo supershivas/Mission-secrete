@@ -428,7 +428,6 @@ _LASER_WORD_ART = [
 def page_laser_warning(c):
     from reportlab.lib.pagesizes import landscape
     PW, PH = landscape(A4)   # ~842 × 595 pt
-    c.setPageSize((PW, PH))
 
     cx = PW / 2
     m  = 1.0*cm
@@ -514,8 +513,7 @@ def page_laser_warning(c):
     c.drawCentredString(cx, bot_y+band_h/2-2,
         '⚠  NE PAS FRANCHIR LE FAISCEAU  ·  RESTER EN DESSOUS DES FILS  ·  OPÉRATION HÊLIE  ⚠')
 
-    # Remet la taille de page par défaut pour les pages suivantes
-    c.setPageSize(A4)
+    pass  # taille de page gérée par l'appelant
 
 
 # ══════════════════════════════════════════════════════════════
@@ -1020,11 +1018,14 @@ class handler(BaseHTTPRequestHandler):
         buf = io.BytesIO()
         c   = rl_canvas.Canvas(buf, pagesize=A4)
 
+        from reportlab.lib.pagesizes import landscape
         page_cover(c)
         c.showPage()
 
+        c.setPageSize(landscape(A4))
         page_laser_warning(c)
         c.showPage()
+        c.setPageSize(A4)
 
         for cipher in seen:
             fn = CIPHER_PAGE_FN.get(cipher)
