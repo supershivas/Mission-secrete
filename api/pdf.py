@@ -397,6 +397,122 @@ def page_cesar(c):
     _font(c, 'Courier', 8, LIGHT)
     c.drawCentredString(W/2, tip_y, 'DÉCALAGE +3 : comptez 3 lettres vers l\'avant dans l\'alphabet')
 
+# ══════════════════════════════════════════════════════════════
+# PAGE DE COUVERTURE
+# ══════════════════════════════════════════════════════════════
+def page_cover(c):
+    m = 1.2*cm
+
+    # Cadre extérieur double
+    c.setStrokeColor(INK); c.setLineWidth(1.2)
+    c.rect(m, m, W-2*m, H-2*m, fill=0, stroke=1)
+    c.setStrokeColor(INK); c.setLineWidth(0.3)
+    c.rect(m+3*mm, m+3*mm, W-2*m-6*mm, H-2*m-6*mm, fill=0, stroke=1)
+
+    cx = W / 2
+
+    # ── Bande supérieure ────────────────────────────────────────
+    top_y = H - m - 3*mm
+    band_h = 1.4*cm
+    # Filets encadrant le bandeau
+    c.setStrokeColor(INK); c.setLineWidth(0.5)
+    c.line(m+6*mm, top_y - band_h, W-m-6*mm, top_y - band_h)
+    c.line(m+6*mm, top_y,          W-m-6*mm, top_y)
+    _font(c, 'Courier', 6.5, LIGHT)
+    c.drawCentredString(cx, top_y - band_h/2 - 2.5, 'BUREAU CLANDESTIN BXL  ·  SECTION HÊLIE  ·  USAGE STRICTEMENT INTERNE')
+
+    # ── Accroche classification ──────────────────────────────────
+    class_y = top_y - band_h - 1.2*cm
+    _font(c, 'Courier', 7.5, LIGHT)
+    c.drawCentredString(cx, class_y, '─ ─ ─   DOCUMENT DE CHIFFREMENT   ─ ─ ─')
+
+    # ── Étoiles décoratives ──────────────────────────────────────
+    star_y = class_y - 1.1*cm
+    _font(c, 'Courier', 9, LIGHT)
+    c.drawCentredString(cx, star_y, '*   *   *   *   *   *   *   *   *')
+
+    # ── Titre principal ──────────────────────────────────────────
+    title_y = star_y - 2.0*cm
+    _font(c, 'Courier-Bold', 28, INK)
+    c.drawCentredString(cx, title_y, 'DOSSIER')
+    _font(c, 'Courier-Bold', 28, INK)
+    c.drawCentredString(cx, title_y - 1.1*cm, 'DE CHIFFREMENT')
+
+    # Trait sous le titre
+    _rule(c, title_y - 1.65*cm, m+1.5*cm, W-m-1.5*cm, w=1.0, color=INK)
+    _rule(c, title_y - 1.9*cm,  m+1.5*cm, W-m-1.5*cm, w=0.3, color=INK)
+
+    # ── Sous-titre opération ──────────────────────────────────────
+    op_y = title_y - 2.7*cm
+    _font(c, 'Courier', 9, LIGHT)
+    c.drawCentredString(cx, op_y, 'OPÉRATION  HÊLIE')
+
+    # ── Cadre central (zone emblème) ─────────────────────────────
+    emb_w, emb_h = 7.5*cm, 7.5*cm
+    emb_x = cx - emb_w/2
+    emb_y = op_y - 1.2*cm - emb_h
+    c.setStrokeColor(INK); c.setLineWidth(0.6)
+    c.rect(emb_x, emb_y, emb_w, emb_h, fill=0, stroke=1)
+    c.setStrokeColor(RULE); c.setLineWidth(0.25)
+    c.rect(emb_x+3*mm, emb_y+3*mm, emb_w-6*mm, emb_h-6*mm, fill=0, stroke=1)
+
+    # Contenu du cadre : croix de viseur
+    ecx = emb_x + emb_w/2
+    ecy = emb_y + emb_h/2
+    r1, r2 = 1.8*cm, 2.6*cm
+    # Cercles concentriques
+    c.setStrokeColor(INK); c.setLineWidth(0.5)
+    c.circle(ecx, ecy, r1, fill=0, stroke=1)
+    c.setLineWidth(0.3)
+    c.circle(ecx, ecy, r2, fill=0, stroke=1)
+    c.setLineWidth(0.2)
+    c.circle(ecx, ecy, 4*mm, fill=0, stroke=1)
+    # Lignes du viseur (crosshair)
+    gap = 5*mm
+    c.setLineWidth(0.5)
+    c.line(ecx, ecy+gap, ecx, ecy+r2)
+    c.line(ecx, ecy-gap, ecx, ecy-r2)
+    c.line(ecx+gap, ecy, ecx+r2, ecy)
+    c.line(ecx-gap, ecy, ecx-r2, ecy)
+    # Marques de graduation sur le grand cercle
+    import math
+    c.setLineWidth(0.35)
+    for angle_deg in range(0, 360, 15):
+        angle = math.radians(angle_deg)
+        tick_in  = r2 - 3*mm if angle_deg % 90 == 0 else r2 - 2*mm
+        tick_out = r2
+        c.line(ecx + tick_in*math.cos(angle), ecy + tick_in*math.sin(angle),
+               ecx + tick_out*math.cos(angle), ecy + tick_out*math.sin(angle))
+    # Texte CLASSIFIÉ en diagonale dans le cadre
+    c.saveState()
+    c.translate(ecx, ecy)
+    c.rotate(35)
+    c.setFillColor(RULE); c.setFont('Courier-Bold', 8)
+    c.drawCentredString(0, 0, 'C L A S S I F I É')
+    c.restoreState()
+
+    # ── Informations bas du cadre ─────────────────────────────────
+    info_y = emb_y - 1.0*cm
+    _font(c, 'Courier', 7.5, LIGHT)
+    c.drawCentredString(cx, info_y, 'Contient les tables de déchiffrement et les transmissions chiffrées')
+    c.drawCentredString(cx, info_y - 0.6*cm, 'Garder secret — ne pas montrer aux autres équipes')
+
+    # ── Tampon CONFIDENTIEL (grand, incliné) ──────────────────────
+    _stamp(c, W - m - 3.5*cm, emb_y + emb_h*0.3, 'CONFIDENTIEL', angle=-18)
+
+    # ── Numéro de dossier (bas gauche) ───────────────────────────
+    _font(c, 'Courier', 6.5, LIGHT)
+    c.drawString(m+6*mm, m+10*mm, 'RÉSERVÉ AUX AGENTS  ·  REF: HX-10')
+
+    # ── Bande inférieure ──────────────────────────────────────────
+    bot_band_y = m + 3*mm
+    c.setStrokeColor(INK); c.setLineWidth(0.5)
+    c.line(m+6*mm, bot_band_y,          W-m-6*mm, bot_band_y)
+    c.line(m+6*mm, bot_band_y+band_h,   W-m-6*mm, bot_band_y+band_h)
+    _font(c, 'Courier', 6.5, LIGHT)
+    c.drawCentredString(cx, bot_band_y + band_h/2 - 2.5, 'OPÉRATION HÊLIE  ·  NE PAS REPRODUIRE  ·  NE PAS COMMUNIQUER EN DEHORS DU GROUPE')
+
+
 CIPHER_PAGE_FN = {
     'symboles': page_symboles,
     'morse':    page_morse,
@@ -612,6 +728,9 @@ class handler(BaseHTTPRequestHandler):
 
         buf = io.BytesIO()
         c   = rl_canvas.Canvas(buf, pagesize=A4)
+
+        page_cover(c)
+        c.showPage()
 
         for cipher in seen:
             fn = CIPHER_PAGE_FN.get(cipher)
