@@ -391,40 +391,24 @@
       <div class="card-head">
         <div class="card-head-title">PDFs à imprimer avant la mission</div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;padding:1.25rem">
-        <a class="pdf-card" href="/api/pdf" target="_blank" style="border-color:#1a6b3a;background:#f2fff6">
-          <div class="pdf-icon">🖨️</div>
-          <div class="pdf-title">Props imprimables — LIVE</div>
-          <div class="pdf-desc">Grille secrète 5×5 · Table de chiffrement · Codes des épreuves — généré depuis votre config</div>
-          <div class="pdf-dl" style="color:#1a6b3a">Générer ↗</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;padding:1.25rem">
+        <a href="/livret" target="_blank" style="display:flex;flex-direction:column;gap:.4rem;padding:1.1rem 1.25rem;border:2px solid #e67e22;border-radius:8px;background:#fff8f3;text-decoration:none;color:inherit;transition:box-shadow .15s">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#e67e22">✨ Livret organisateur</div>
+          <div style="font-size:20px;font-weight:700;color:#1a1a18;line-height:1.1">LIVE <span style="background:#e67e22;color:#fff;font-size:10px;padding:.1rem .4rem;border-radius:3px;vertical-align:middle;font-weight:600">A5</span></div>
+          <div style="font-size:11px;color:var(--muted);line-height:1.4">Codes, chiffrements, PIN — généré depuis votre config</div>
+          <div style="font-size:12px;font-weight:700;color:#e67e22;margin-top:.25rem">Générer &amp; imprimer ↗</div>
         </a>
-        <a class="pdf-card" href="/carnet-mission.pdf" target="_blank">
-          <div class="pdf-icon">📓</div>
-          <div class="pdf-title">Carnet d'agent</div>
-          <div class="pdf-desc">5 pages · Couverture, fiche agent, tableau de bord, notes, tables de déchiffrement</div>
-          <div class="pdf-dl">Ouvrir ↗</div>
-        </a>
-        <a class="pdf-card" href="/operation-echo.pdf" target="_blank">
-          <div class="pdf-icon">📡</div>
-          <div class="pdf-title">Opération ÉCHO</div>
-          <div class="pdf-desc">3 pages · Épreuve talkie-walkie — Fiches Équipe OMBRE &amp; COBRA + solution organisateur</div>
-          <div class="pdf-dl">Ouvrir ↗</div>
-        </a>
-        <a class="pdf-card" href="/livret-organisateur.pdf" target="_blank">
-          <div class="pdf-icon">📋</div>
-          <div class="pdf-title">Livret organisateur (fixe)</div>
-          <div class="pdf-desc">7 pages · Version générique — épreuves par défaut, checklist, PIN</div>
-          <div class="pdf-dl">Ouvrir ↗</div>
-        </a>
-        <a class="pdf-card" href="/livret" target="_blank" style="border-color:#e67e22;background:#fff8f3">
-          <div class="pdf-icon">✨</div>
-          <div class="pdf-title">Livret organisateur <span style="background:#e67e22;color:#fff;font-size:10px;padding:.1rem .4rem;border-radius:3px;vertical-align:middle">LIVE</span></div>
-          <div class="pdf-desc">Généré à partir de votre config actuelle — codes, PIN et épreuves personnalisés</div>
-          <div class="pdf-dl">Générer &amp; imprimer ↗</div>
+        <a href="/api/pdf" target="_blank" style="display:flex;flex-direction:column;gap:.4rem;padding:1.1rem 1.25rem;border:2px solid var(--accent);border-radius:8px;background:#f2fff6;text-decoration:none;color:inherit;transition:box-shadow .15s">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)">🖨️ Props imprimables</div>
+          <div style="font-size:20px;font-weight:700;color:#1a1a18;line-height:1.1">LIVE <span style="background:var(--accent);color:#fff;font-size:10px;padding:.1rem .4rem;border-radius:3px;vertical-align:middle;font-weight:600">PDF</span></div>
+          <div style="font-size:11px;color:var(--muted);line-height:1.4">Couverture · Tables de chiffrement · Codes · Étiquettes antidote</div>
+          <div style="font-size:12px;font-weight:700;color:var(--accent);margin-top:.25rem">Générer ↗</div>
         </a>
       </div>
-      <div style="padding:0 1.25rem 1rem;font-size:11px;color:var(--muted)">
-        💡 Utilisez le livret <strong>LIVE</strong> après avoir configuré les épreuves — il reflète exactement votre config du jour J
+      <div style="padding:.25rem 1.25rem 1rem;display:flex;gap:2rem;flex-wrap:wrap;border-top:1px solid var(--border)">
+        <a href="/livret-organisateur.pdf" target="_blank" style="font-size:11px;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:.35rem;padding:.6rem 0">📋 Livret organisateur fixe</a>
+        <a href="/carnet-mission.pdf" target="_blank" style="font-size:11px;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:.35rem;padding:.6rem 0">📓 Carnet d'agent</a>
+        <a href="/operation-echo.pdf" target="_blank" style="font-size:11px;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:.35rem;padding:.6rem 0">📡 Opération ÉCHO</a>
       </div>
     </div>
 

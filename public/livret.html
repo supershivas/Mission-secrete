@@ -6,7 +6,6 @@
   <title>Livret Organisateur</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
@@ -17,84 +16,83 @@
     }
 
     #toolbar {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
+      display: flex; align-items: center; gap: 1rem;
       margin-bottom: 1.5rem;
-      background: #0a2010;
-      border: 1px solid #003a0d;
-      border-radius: 6px;
-      padding: .8rem 1rem;
+      background: #0a2010; border: 1px solid #003a0d;
+      border-radius: 6px; padding: .8rem 1rem;
     }
-    #toolbar h1 { font-size: 14px; letter-spacing: .2em; flex: 1; }
+    #toolbar h1 { font-size: 13px; letter-spacing: .15em; flex: 1; }
     .btn-print {
-      background: #00cc44;
-      color: #000;
-      border: none;
-      border-radius: 4px;
-      padding: .5rem 1.2rem;
-      font-family: inherit;
-      font-size: 13px;
-      letter-spacing: .1em;
-      cursor: pointer;
+      background: #00cc44; color: #000; border: none;
+      border-radius: 4px; padding: .5rem 1.2rem;
+      font-family: inherit; font-size: 13px; letter-spacing: .1em; cursor: pointer;
     }
-    .btn-print:active { opacity: .8; }
     .status { font-size: 11px; color: #006818; letter-spacing: .1em; }
 
-    /* ── Pages ─────────────────────────────────────────── */
+    /* ── Pages A5 ─────────────────────────────────────── */
     .page {
-      background: #fff;
-      color: #000;
-      width: 210mm;
-      min-height: 297mm;
-      margin: 0 auto 2rem;
-      padding: 15mm 18mm;
+      background: #fff; color: #1a1a1a;
+      width: 148mm; min-height: 210mm;
+      margin: 0 auto 1.5rem;
+      padding: 10mm 12mm 14mm;
       font-family: 'Share Tech Mono', monospace;
-      position: relative;
+      position: relative; overflow: hidden;
     }
 
     /* Cover */
-    .cover { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
-    .cover-badge { border: 3px solid #000; display: inline-block; padding: .4rem 1.2rem; letter-spacing: .3em; font-size: 11px; margin-bottom: 2rem; }
-    .cover-title { font-size: 28px; font-weight: bold; letter-spacing: .15em; line-height: 1.2; margin-bottom: .5rem; }
-    .cover-sub { font-size: 13px; letter-spacing: .2em; color: #333; margin-bottom: 3rem; }
-    .cover-mission { font-size: 18px; letter-spacing: .3em; border-top: 2px solid #000; border-bottom: 2px solid #000; padding: .5rem 0; margin-bottom: 2rem; width: 100%; }
-    .cover-meta { font-size: 11px; letter-spacing: .1em; color: #555; }
-    .cover-warning { margin-top: 3rem; font-size: 11px; color: #333; border: 1px solid #333; padding: .5rem 1rem; letter-spacing: .05em; }
+    .cover { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: .8rem; }
+    .cover-badge { border: 2px solid #000; display: inline-block; padding: .3rem 1rem; letter-spacing: .25em; font-size: 8px; }
+    .cover-title { font-size: 22px; font-weight: bold; letter-spacing: .12em; line-height: 1.2; margin-top: .5rem; }
+    .cover-sub { font-size: 10px; letter-spacing: .15em; color: #444; }
+    .cover-mission { font-size: 16px; letter-spacing: .3em; border-top: 2px solid #000; border-bottom: 2px solid #000; padding: .5rem 0; width: 100%; margin: .5rem 0; }
+    .cover-meta { font-size: 10px; letter-spacing: .08em; color: #555; line-height: 1.8; }
+    .cover-warning { margin-top: 1rem; font-size: 9px; color: #333; border: 1px solid #333; padding: .4rem .8rem; letter-spacing: .04em; line-height: 1.5; }
+    .cover-pin { margin-top: 1rem; font-size: 28px; letter-spacing: .4em; border: 2px solid #000; padding: .4rem 1rem; }
+    .cover-pin-label { font-size: 8px; letter-spacing: .2em; color: #666; margin-top: .2rem; }
+
+    /* Timeline sur la couverture */
+    .cover-timeline { width: 100%; margin-top: .8rem; }
+    .tl-row { display: flex; align-items: center; gap: .5rem; font-size: 9px; padding: .2rem 0; border-bottom: 1px solid #eee; }
+    .tl-row:last-child { border-bottom: none; }
+    .tl-num { background: #000; color: #fff; padding: .1rem .35rem; font-size: 8px; min-width: 1.6rem; text-align: center; }
+    .tl-pause-tag { background: #e8f4fc; color: #1a6b9a; padding: .1rem .4rem; font-size: 8px; border: 1px solid #9ecde8; }
+    .tl-code { font-family: inherit; color: #000; font-weight: bold; font-size: 9px; }
+    .tl-digit { background: #000; color: #ffcc00; padding: .1rem .3rem; font-size: 8px; }
+    .tl-cipher { color: #888; font-size: 8px; }
+    .tl-spacer { flex: 1; }
 
     /* Challenge pages */
-    .page-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #000; padding-bottom: .6rem; margin-bottom: 1.2rem; }
-    .page-label { font-size: 10px; letter-spacing: .2em; color: #555; }
-    .ch-number { font-size: 11px; letter-spacing: .2em; background: #000; color: #fff; padding: .2rem .6rem; }
-    .ch-title { font-size: 18px; letter-spacing: .1em; font-weight: bold; margin-bottom: .5rem; }
-    .section { margin-bottom: 1.2rem; }
-    .section-label { font-size: 10px; letter-spacing: .25em; color: #555; text-transform: uppercase; border-bottom: 1px solid #ddd; padding-bottom: .2rem; margin-bottom: .5rem; }
-    .section-body { font-size: 12px; line-height: 1.6; white-space: pre-wrap; }
-    .code-box { background: #000; color: #00cc44; font-size: 20px; letter-spacing: .4em; text-align: center; padding: .6rem; margin: .3rem 0; border-radius: 3px; }
-    .digit-box { background: #000; color: #ffcc00; font-size: 32px; text-align: center; padding: .4rem; margin: .3rem 0; border-radius: 3px; }
-    .hint-box { background: #fffbe6; border-left: 3px solid #ffcc00; padding: .5rem .8rem; font-size: 11px; line-height: 1.5; }
-    .type-tag { display: inline-block; font-size: 10px; letter-spacing: .15em; border: 1px solid #333; padding: .1rem .4rem; margin-bottom: .8rem; }
-    .no-hint { font-size: 11px; color: #aaa; font-style: italic; }
+    .pg-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #000; padding-bottom: .5rem; margin-bottom: .9rem; }
+    .pg-meta { font-size: 8px; letter-spacing: .15em; color: #666; }
+    .ch-num-badge { font-size: 9px; letter-spacing: .15em; background: #000; color: #fff; padding: .2rem .5rem; white-space: nowrap; }
+    .ch-title { font-size: 14px; letter-spacing: .08em; font-weight: bold; margin-top: .2rem; line-height: 1.2; }
 
-    /* PIN recap */
-    .pin-recap { display: flex; gap: 1rem; justify-content: center; margin: 1.5rem 0; }
-    .pin-slot { border: 2px solid #000; width: 60px; height: 60px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-    .pin-slot-num { font-size: 24px; font-weight: bold; }
-    .pin-slot-label { font-size: 8px; color: #666; letter-spacing: .1em; }
-    .pin-full { font-size: 36px; letter-spacing: .4em; text-align: center; border: 3px solid #000; padding: .5rem; margin-top: .5rem; }
+    .section { margin-bottom: .75rem; }
+    .section-label { font-size: 8px; letter-spacing: .2em; color: #666; text-transform: uppercase; border-bottom: 1px solid #e0e0e0; padding-bottom: .15rem; margin-bottom: .3rem; }
+    .section-body { font-size: 10px; line-height: 1.55; white-space: pre-wrap; }
+
+    .code-box { background: #000; color: #00cc44; font-size: 16px; letter-spacing: .35em; text-align: center; padding: .4rem; border-radius: 2px; }
+    .encoded-box { background: #1a1a2e; color: #aac4ff; font-size: 11px; letter-spacing: .2em; text-align: center; padding: .35rem; border-radius: 2px; margin-top: 2px; word-break: break-all; line-height: 1.4; }
+    .cipher-label { font-size: 8px; color: #888; text-align: center; margin-top: 2px; letter-spacing: .1em; }
+    .digit-box { background: #000; color: #ffcc00; font-size: 28px; text-align: center; padding: .3rem; border-radius: 2px; }
+    .hint-box { background: #fffbe6; border-left: 3px solid #ffcc00; padding: .4rem .6rem; font-size: 9px; line-height: 1.5; }
+    .no-hint { font-size: 9px; color: #bbb; font-style: italic; }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+
+    /* Récap PIN */
+    .pin-row { display: flex; gap: .5rem; justify-content: center; flex-wrap: wrap; margin: .5rem 0; }
+    .pin-slot { border: 2px solid #000; width: 44px; height: 50px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; }
+    .pin-slot-num { font-size: 20px; font-weight: bold; }
+    .pin-slot-label { font-size: 7px; color: #666; letter-spacing: .06em; }
+    .pin-full-box { font-size: 30px; letter-spacing: .4em; text-align: center; border: 3px solid #000; padding: .35rem; margin-top: .4rem; }
 
     /* Footer */
-    .page-footer { position: absolute; bottom: 10mm; left: 18mm; right: 18mm; display: flex; justify-content: space-between; font-size: 9px; color: #aaa; border-top: 1px solid #eee; padding-top: .3rem; }
+    .pg-footer { position: absolute; bottom: 7mm; left: 12mm; right: 12mm; display: flex; justify-content: space-between; font-size: 7px; color: #bbb; border-top: 1px solid #eee; padding-top: .25rem; }
 
     /* Loader */
-    #loader {
-      display: flex; align-items: center; justify-content: center;
-      min-height: 60vh;
-    }
-    .loader-box {
-      background: #0a2010; border: 1px solid #003a0d; border-radius: 8px;
-      padding: 2rem 2.5rem; text-align: center; min-width: 280px;
-    }
+    #loader { display: flex; align-items: center; justify-content: center; min-height: 60vh; }
+    .loader-box { background: #0a2010; border: 1px solid #003a0d; border-radius: 8px; padding: 2rem 2.5rem; text-align: center; min-width: 280px; }
     .loader-title { font-size: 13px; letter-spacing: .25em; margin-bottom: 1.2rem; }
     .loader-bar-track { background: #011a06; border: 1px solid #003a0d; border-radius: 3px; height: 8px; overflow: hidden; margin-bottom: .8rem; }
     .loader-bar-fill { height: 100%; background: #00cc44; width: 0; transition: width .4s ease; border-radius: 3px; }
@@ -102,9 +100,10 @@
 
     /* Print */
     @media print {
+      @page { size: A5; margin: 0; }
       #toolbar, #loader { display: none !important; }
       body { background: #fff; padding: 0; }
-      .page { margin: 0; box-shadow: none; page-break-after: always; display: block !important; }
+      .page { margin: 0; box-shadow: none; page-break-after: always; }
       .page:last-child { page-break-after: avoid; }
       #livret { display: block !important; }
     }
@@ -112,9 +111,9 @@
 </head>
 <body>
   <div id="toolbar">
-    <h1>⬛ LIVRET ORGANISATEUR — aperçu avant impression</h1>
+    <h1>⬛ LIVRET ORGANISATEUR — format A5 (2 par A4)</h1>
     <span class="status" id="status">Chargement…</span>
-    <button class="btn-print" id="print-btn" onclick="doPrint()" style="display:none">🖨 Imprimer / Enregistrer PDF</button>
+    <button class="btn-print" id="print-btn" onclick="window.print()" style="display:none">🖨 Imprimer / PDF</button>
   </div>
   <div id="loader">
     <div class="loader-box">
@@ -126,86 +125,120 @@
   <div id="livret" style="display:none"></div>
 
   <script>
-    function esc(s) {
-      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    }
-
+    function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
     function setLoader(pct, step) {
-      const fill = document.getElementById('loader-fill');
-      const stepEl = document.getElementById('loader-step');
-      if (fill) fill.style.width = pct + '%';
-      if (stepEl) stepEl.textContent = step;
+      const f=document.getElementById('loader-fill'), s=document.getElementById('loader-step');
+      if(f) f.style.width=pct+'%'; if(s) s.textContent=step;
     }
 
-    function doPrint() {
-      window.print();
+    // ── Encodeurs JS (miroir du Python) ──────────────────
+    const MORSE = {A:'.-',B:'-...',C:'-.-.',D:'-..',E:'.',F:'..-.',G:'--.',H:'....',I:'..',J:'.---',K:'-.-',L:'.-..',M:'--',N:'-.',O:'---',P:'.--.',Q:'--.-',R:'.-.',S:'...',T:'-',U:'..-',V:'...-',W:'.--',X:'-..-',Y:'-.--',Z:'--..'};
+    function morseDisplay(code) { return code.replace(/\./g,'·').replace(/-/g,'—'); }
+    function encodeMorse(word) { return word.toUpperCase().split('').filter(c=>/[A-Z]/.test(c)).map(c=>morseDisplay(MORSE[c]||'?')).join('  /  '); }
+    function encodeAtbash(word) { return word.toUpperCase().split('').filter(c=>/[A-Z]/.test(c)).map(c=>String.fromCharCode(90-(c.charCodeAt(0)-65))).join(''); }
+    function encodeCesar(word) { return word.toUpperCase().split('').filter(c=>/[A-Z]/.test(c)).map(c=>String.fromCharCode((c.charCodeAt(0)-65+3)%26+65)).join(''); }
+    const POLYBE={A:'11',B:'12',C:'13',D:'14',E:'15',F:'21',G:'22',H:'23',I:'24',J:'25',K:'31',L:'32',M:'33',N:'34',O:'35',P:'41',Q:'42',R:'43',S:'44',T:'45',U:'51',V:'52',W:'53',X:'54',Y:'55',Z:'55'};
+    function encodePolybe(word) { return word.toUpperCase().split('').filter(c=>/[A-Z]/.test(c)).map(c=>POLYBE[c]||'??').join('  '); }
+    function encodeWord(word, cipher) {
+      if (!word) return '';
+      switch(cipher) {
+        case 'morse':    return encodeMorse(word);
+        case 'atbash':  return encodeAtbash(word);
+        case 'cesar':   return encodeCesar(word);
+        case 'polybe':  return encodePolybe(word);
+        case 'symboles':return word.toUpperCase() + '  [symboles — voir table]';
+        default:        return encodePolybe(word);
+      }
     }
+    const CIPHER_LABELS = {
+      polybe:   'Polybe 5×5 — LIGNE puis COLONNE',
+      morse:    'Morse — · point  /  — trait',
+      symboles: 'Alphabet symbolique — voir table',
+      atbash:   'Atbash — A=Z, B=Y, M=N…',
+      cesar:    'César +3 — A=D, B=E, C=F…',
+    };
+    const CIPHER_SHORT = {polybe:'POLYBE',morse:'MORSE',symboles:'SYMB.',atbash:'ATBASH',cesar:'CÉSAR'};
 
     async function loadCfg() {
-      // Priorité : localStorage, sinon API
-      try {
-        const local = localStorage.getItem('agent_config');
-        if (local) return JSON.parse(local);
-      } catch(e) {}
-      try {
-        const r = await fetch('/api/config');
-        if (r.ok) return await r.json();
-      } catch(e) {}
+      try { const s=localStorage.getItem('agent_config'); if(s) return JSON.parse(s); } catch(e) {}
+      try { const r=await fetch('/api/config'); if(r.ok) return await r.json(); } catch(e) {}
       return null;
     }
 
-    const TYPE_LABELS = { libre: 'Texte libre', morse: 'Décodage Morse', talkie: 'Talkie-walkie' };
-
     async function render() {
-      setLoader(10, 'Lecture de la configuration…');
-      await new Promise(r => setTimeout(r, 120));
-
+      setLoader(10,'Lecture de la configuration…');
+      await new Promise(r=>setTimeout(r,100));
       const cfg = await loadCfg();
-      setLoader(40, 'Configuration chargée…');
-      await new Promise(r => setTimeout(r, 100));
+      setLoader(40,'Configuration chargée…');
+      await new Promise(r=>setTimeout(r,80));
 
       if (!cfg) {
-        document.getElementById('loader').style.display = 'none';
-        document.getElementById('status').textContent = '⚠ Config introuvable';
-        document.getElementById('livret').innerHTML = '<p style="color:#f00;padding:2rem;font-family:monospace">Aucune config trouvée. Ouvrez d\'abord le backoffice sur cet appareil.</p>';
-        document.getElementById('livret').style.display = '';
+        document.getElementById('loader').style.display='none';
+        document.getElementById('livret').innerHTML='<p style="color:#f00;padding:2rem;font-family:monospace">Config introuvable — ouvrez d\'abord le backoffice sur cet appareil.</p>';
+        document.getElementById('livret').style.display='';
         return;
       }
 
-      const n = cfg.challenges.length;
-      const durMin = Math.round((cfg.duration || 3600) / 60);
-      const now = new Date().toLocaleDateString('fr-FR');
+      const real  = cfg.challenges.filter(c => c.type !== 'pause');
+      const total = real.length;
+      const durMin = Math.round((cfg.duration||3600)/60);
+      const now   = new Date().toLocaleDateString('fr-FR');
+      const pin   = real.map(c=>c.digit||'?').join('');
+
+      // Compter numéros d'épreuve par index dans cfg.challenges
+      let realCount = 0;
+      const nums = cfg.challenges.map(ch => ch.type==='pause' ? null : ++realCount);
 
       let html = '';
+      let pageNum = 1;
+      const totalPages = 1 + total + 1;  // cover + challenges + recap
 
-      // ── Page couverture ──────────────────────────────
+      // ── PAGE COUVERTURE ──────────────────────────────────
       html += `<div class="page cover">
         <div class="cover-badge">DOCUMENT CONFIDENTIEL — ORGANISATEUR UNIQUEMENT</div>
         <div class="cover-title">MISSION AGENT SECRET</div>
         <div class="cover-sub">Livret organisateur — généré le ${esc(now)}</div>
-        <div class="cover-mission">${esc(cfg.missionName || 'MISSION')}</div>
+        <div class="cover-mission">${esc(cfg.missionName||'MISSION')}</div>
         <div class="cover-meta">
-          Durée : ${durMin} minutes &nbsp;|&nbsp; ${n} épreuve${n>1?'s':''}<br>
-          PIN de désarmement : ${cfg.challenges.map(c => c.digit||'?').join('')}
+          Durée : ${durMin} min &nbsp;·&nbsp; ${total} épreuve${total>1?'s':''} + ${cfg.challenges.length-total} pause${cfg.challenges.length-total>1?'s':''}
         </div>
-        <div class="cover-warning">
-          ⚠ Ce document contient les codes secrets et réponses à toutes les épreuves.<br>
-          Ne pas laisser à la portée des participants.
+        <div class="cover-pin">${esc(pin)}</div>
+        <div class="cover-pin-label">CODE DE DÉSARMEMENT FINAL</div>
+        <div class="cover-timeline">
+          ${cfg.challenges.map((ch,i)=>{
+            if (ch.type==='pause') return `<div class="tl-row">
+              <span class="tl-pause-tag">☕ PAUSE FRAÎCHEUR</span>
+              <span class="tl-spacer"></span>
+              <span class="tl-cipher" style="color:#9ecde8">${esc(ch.title||'Pause fraîcheur')}</span>
+            </div>`;
+            const n=nums[i]; const cipher=ch.cipher||'polybe';
+            return `<div class="tl-row">
+              <span class="tl-num">${n}</span>
+              <span class="tl-code">${esc(ch.code||'?')}</span>
+              <span class="tl-spacer"></span>
+              <span class="tl-cipher">${CIPHER_SHORT[cipher]||cipher.toUpperCase()}</span>
+              <span class="tl-digit">${esc(ch.digit||'?')}</span>
+            </div>`;
+          }).join('')}
         </div>
-        <div class="page-footer"><span>${esc(cfg.missionName||'MISSION')}</span><span>Page 1 / ${n+2}</span></div>
+        <div class="cover-warning">⚠ Codes secrets et réponses — ne pas montrer aux participants</div>
+        <div class="pg-footer"><span>${esc(cfg.missionName||'MISSION')}</span><span>${pageNum} / ${totalPages}</span></div>
       </div>`;
 
-      // ── Une page par épreuve ─────────────────────────
+      // ── UNE PAGE PAR ÉPREUVE RÉELLE ──────────────────────
       cfg.challenges.forEach((ch, i) => {
-        const typeLabel = TYPE_LABELS[ch.type || 'libre'] || 'Texte libre';
+        if (ch.type === 'pause') return;
+        pageNum++;
+        const n = nums[i];
+        const cipher = ch.cipher || 'polybe';
+        const encoded = encodeWord(ch.code||'', cipher);
         html += `<div class="page">
-          <div class="page-header">
+          <div class="pg-header">
             <div>
-              <div class="page-label">${esc(cfg.missionName||'MISSION')} — FICHE ÉPREUVE</div>
-              <div class="ch-title">${esc(ch.title || `ÉPREUVE ${i+1}`)}</div>
-              <span class="type-tag">${esc(typeLabel)}</span>
+              <div class="pg-meta">${esc(cfg.missionName||'MISSION')} — FICHE ÉPREUVE</div>
+              <div class="ch-title">${esc(ch.title||`Épreuve ${n}`)}</div>
             </div>
-            <div class="ch-number">ÉPREUVE ${i+1} / ${n}</div>
+            <div class="ch-num-badge">ÉPREUVE ${n} / ${total}</div>
           </div>
 
           <div class="section">
@@ -213,90 +246,87 @@
             <div class="section-body">${esc(ch.brief||'').replace(/\\n/g,'\n')}</div>
           </div>
 
-          <div class="section">
-            <div class="section-label">Code à trouver</div>
-            <div class="code-box">${esc(ch.code||'???')}</div>
+          <div class="two-col">
+            <div class="section">
+              <div class="section-label">Code à trouver</div>
+              <div class="code-box">${esc(ch.code||'???')}</div>
+              <div class="encoded-box">${esc(encoded)}</div>
+              <div class="cipher-label">${esc(CIPHER_LABELS[cipher]||cipher)}</div>
+            </div>
+            <div class="section">
+              <div class="section-label">Chiffre révélé</div>
+              <div class="digit-box">${esc(ch.digit||'?')}</div>
+              <div class="cipher-label">Position ${n} du PIN final</div>
+            </div>
           </div>
 
           <div class="section">
-            <div class="section-label">Chiffre révélé (position ${i+1} du PIN)</div>
-            <div class="digit-box">${esc(ch.digit||'?')}</div>
-          </div>
-
-          <div class="section">
-            <div class="section-label">Indice (affiché après 3 min de blocage)</div>
+            <div class="section-label">Indice (après 3 min de blocage)</div>
             ${ch.hint
               ? `<div class="hint-box">${esc(ch.hint)}</div>`
-              : `<div class="no-hint">Pas d'indice configuré pour cette épreuve</div>`}
+              : `<div class="no-hint">Aucun indice configuré</div>`}
           </div>
 
-          <div class="page-footer">
+          <div class="pg-footer">
             <span>${esc(cfg.missionName||'MISSION')} — Confidentiel organisateur</span>
-            <span>Page ${i+2} / ${n+2}</span>
+            <span>${pageNum} / ${totalPages}</span>
           </div>
         </div>`;
       });
 
-      // ── Page récapitulatif PIN ───────────────────────
-      const digits = cfg.challenges.map(c => c.digit||'?');
-      const pin = digits.join('');
+      // ── PAGE RÉCAP PIN ────────────────────────────────────
+      pageNum++;
       html += `<div class="page">
-        <div class="page-header">
+        <div class="pg-header">
           <div>
-            <div class="page-label">${esc(cfg.missionName||'MISSION')} — RÉCAPITULATIF</div>
+            <div class="pg-meta">${esc(cfg.missionName||'MISSION')} — RÉCAPITULATIF</div>
             <div class="ch-title">Code de désarmement final</div>
           </div>
         </div>
 
         <div class="section">
           <div class="section-label">Chiffres dans l'ordre</div>
-          <div class="pin-recap">
-            ${digits.map((d,i) => `<div class="pin-slot">
-              <div class="pin-slot-num">${esc(d)}</div>
-              <div class="pin-slot-label">ÉPREUVE ${i+1}</div>
+          <div class="pin-row">
+            ${real.map((ch,i)=>`<div class="pin-slot">
+              <div class="pin-slot-num">${esc(ch.digit||'?')}</div>
+              <div class="pin-slot-label">ÉPR. ${i+1}</div>
             </div>`).join('')}
           </div>
+          <div class="pin-full-box">${esc(pin)}</div>
         </div>
 
-        <div class="section">
-          <div class="section-label">PIN complet à entrer sur le pavé numérique</div>
-          <div class="pin-full">${esc(pin)}</div>
+        <div class="section" style="margin-top:.75rem">
+          <div class="section-label">Déroulement</div>
+          <div class="section-body" style="font-size:9px;line-height:1.9">
+${cfg.challenges.map((ch,i)=>{
+  if (ch.type==='pause') return `  ☕ ${esc(ch.title||'Pause fraîcheur')}`;
+  const n=nums[i]; const cipher=ch.cipher||'polybe';
+  return `  ${n}. ${esc(ch.title||`Épreuve ${n}`)}
+     Code : ${esc(ch.code||'?')}  →  ${esc(CIPHER_SHORT[cipher]||'')}  →  chiffre : ${esc(ch.digit||'?')}`;
+}).join('\n')}
+  ★  PIN final → ${esc(pin)}</div>
         </div>
 
-        <div class="section" style="margin-top:2rem">
-          <div class="section-label">Déroulement chronologique</div>
-          <div class="section-body" style="font-size:11px;line-height:2">
-${cfg.challenges.map((ch,i) => `  ${i+1}. ${esc(ch.title||`Épreuve ${i+1}`)} → code : ${esc(ch.code||'?')} → chiffre : ${esc(ch.digit||'?')}`).join('\n')}
-  ${n+1}. Pavé PIN → saisir ${esc(pin)} pour désamorcer</div>
+        <div class="section" style="margin-top:.75rem">
+          <div class="section-label">Infos mission</div>
+          <div class="section-body" style="font-size:9px;color:#666">Durée : ${durMin} min  ·  Mode test : ${cfg.testMode?'OUI':'non'}  ·  Généré le : ${esc(now)}</div>
         </div>
 
-        <div class="section" style="margin-top:2rem">
-          <div class="section-label">Configuration mission</div>
-          <div class="section-body" style="font-size:11px;color:#555">
-  Mission : ${esc(cfg.missionName||'MISSION')}
-  Durée : ${durMin} minutes
-  Mode test : ${cfg.testMode ? 'Activé' : 'Désactivé'}
-  Généré le : ${esc(now)}</div>
-        </div>
-
-        <div class="page-footer">
+        <div class="pg-footer">
           <span>${esc(cfg.missionName||'MISSION')} — Confidentiel organisateur</span>
-          <span>Page ${n+2} / ${n+2}</span>
+          <span>${pageNum} / ${totalPages}</span>
         </div>
       </div>`;
 
-      setLoader(80, 'Mise en page…');
-      await new Promise(r => setTimeout(r, 80));
-
+      setLoader(90,'Mise en page…');
+      await new Promise(r=>setTimeout(r,80));
       document.getElementById('livret').innerHTML = html;
-
-      setLoader(100, 'Prêt !');
-      await new Promise(r => setTimeout(r, 300));
-
-      document.getElementById('loader').style.display = 'none';
-      document.getElementById('livret').style.display = '';
-      document.getElementById('print-btn').style.display = '';
-      document.getElementById('status').textContent = `✓ ${n} épreuve${n>1?'s':''} — ${durMin} min`;
+      setLoader(100,'Prêt !');
+      await new Promise(r=>setTimeout(r,200));
+      document.getElementById('loader').style.display='none';
+      document.getElementById('livret').style.display='';
+      document.getElementById('print-btn').style.display='';
+      document.getElementById('status').textContent=`✓ ${total} épreuve${total>1?'s':''} — ${durMin} min`;
     }
 
     render();
