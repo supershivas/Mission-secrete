@@ -640,6 +640,169 @@ def _label(c, x, y, w, h, name, subtitle, exp, lot, idx):
     # ── Tampon CLASSIFIÉ ─────────────────────────────────────
     _stamp(c, x + w - pad - 0.5*cm, y + pad + 0.4*cm, 'CLASSIFIÉ', angle=10)
 
+def _draw_water_bomb(c, cx, cy, r):
+    """Bombe à eau : ballon rond avec nœud en haut et reflet."""
+    import math
+    c.setStrokeColor(INK); c.setLineWidth(1.2); c.setLineCap(1)
+    # Corps du ballon
+    c.circle(cx, cy, r, fill=0, stroke=1)
+    # Nœud (petit cercle en haut)
+    knot_r = r * 0.13
+    knot_y = cy + r
+    c.setLineWidth(0.7)
+    c.circle(cx, knot_y + knot_r, knot_r, fill=0, stroke=1)
+    # Petit reflet (arc en haut à gauche)
+    c.setLineWidth(0.5); c.setStrokeColor(LIGHT)
+    p = c.beginPath()
+    p.moveTo(cx - r*0.45, cy + r*0.35)
+    p.curveTo(cx - r*0.55, cy + r*0.6, cx - r*0.2, cy + r*0.65, cx - r*0.1, cy + r*0.5)
+    c.drawPath(p, fill=0, stroke=1)
+    # Goutte qui tombe
+    c.setStrokeColor(LIGHT); c.setLineWidth(0.4)
+    p2 = c.beginPath()
+    drop_y = cy - r - 4*mm
+    p2.moveTo(cx, drop_y + 2.5*mm)
+    p2.curveTo(cx - 1.5*mm, drop_y, cx + 1.5*mm, drop_y, cx, drop_y + 2.5*mm)
+    c.drawPath(p2, fill=0, stroke=1)
+    c.setStrokeColor(INK)
+
+def _draw_candy(c, cx, cy, r):
+    """Bonbon rond avec emballage tordu et rayures."""
+    import math
+    c.setStrokeColor(INK); c.setLineWidth(0.8)
+    # Cercle principal
+    c.circle(cx, cy, r, fill=0, stroke=1)
+    # Rayures diagonales (3 lignes)
+    c.setLineWidth(0.4); c.setStrokeColor(LIGHT)
+    c.saveState()
+    # Clip au cercle pour les rayures
+    p = c.beginPath(); p.circle(cx, cy, r); c.clipPath(p, fill=0, stroke=0)
+    for i in range(-2, 4):
+        off = i * r * 0.65
+        c.line(cx - r + off, cy + r, cx + off, cy - r)
+    c.restoreState()
+    # Recerclage par-dessus
+    c.setStrokeColor(INK); c.setLineWidth(0.8)
+    c.circle(cx, cy, r, fill=0, stroke=1)
+    # Tortillons de l'emballage (gauche et droite)
+    c.setLineWidth(0.6)
+    for sx, twist in [(-1, 1), (1, -1)]:
+        p2 = c.beginPath()
+        ox = cx + sx * (r + 0.5*mm)
+        p2.moveTo(ox, cy + r*0.5)
+        p2.curveTo(ox + sx*3*mm, cy + r*0.2, ox + sx*twist*2*mm, cy - r*0.2, ox, cy - r*0.5)
+        c.drawPath(p2, fill=0, stroke=1)
+
+def page_water_shop(c):
+    import math
+    m  = 1.2*cm
+    cx = W / 2
+
+    # ── Cadre double ─────────────────────────────────────
+    c.setStrokeColor(INK); c.setLineWidth(1.6)
+    c.rect(m, m, W-2*m, H-2*m, fill=0, stroke=1)
+    c.setStrokeColor(INK); c.setLineWidth(0.35)
+    c.rect(m+4*mm, m+4*mm, W-2*m-8*mm, H-2*m-8*mm, fill=0, stroke=1)
+
+    # ── Confettis décoratifs (petits cercles aux coins) ──
+    c.setStrokeColor(RULE); c.setLineWidth(0.3)
+    for (px, py) in [(m+1.5*cm, m+1.5*cm), (W-m-1.5*cm, m+1.5*cm),
+                     (m+1.5*cm, H-m-1.5*cm), (W-m-1.5*cm, H-m-1.5*cm)]:
+        c.circle(px, py, 4*mm, fill=0, stroke=1)
+        c.circle(px, py, 2*mm, fill=0, stroke=1)
+
+    # ── Accroche haut ────────────────────────────────────
+    _font(c, 'Courier', 7, LIGHT)
+    c.drawCentredString(cx, H-m-8*mm, 'OPÉRATION HÊLIE  ·  RAVITAILLEMENT OFFICIEL')
+    _rule(c, H-m-1.3*cm, m+1*cm, W-m-1*cm, w=0.4, color=RULE)
+
+    # ── Nom du magasin ───────────────────────────────────
+    shop_y = H - m - 3.2*cm
+    _font(c, 'Courier-Bold', 9, LIGHT)
+    c.drawCentredString(cx, shop_y + 1.1*cm, '★  BIENVENUE À LA  ★')
+    _font(c, 'Courier-Bold', 34, INK)
+    c.drawCentredString(cx, shop_y, 'BOMBE')
+    _font(c, 'Courier-Bold', 34, INK)
+    c.drawCentredString(cx, shop_y - 1.25*cm, 'À GOGO')
+    # Soulignement double
+    _rule(c, shop_y - 1.75*cm, m+1.5*cm, W-m-1.5*cm, w=1.0, color=INK)
+    _rule(c, shop_y - 1.95*cm, m+1.5*cm, W-m-1.5*cm, w=0.3, color=INK)
+
+    # ── Slogan ───────────────────────────────────────────
+    _font(c, 'Courier', 9, LIGHT)
+    c.drawCentredString(cx, shop_y - 2.5*cm, '« L\'armurerie aquatique des agents d\'élite »')
+
+    # ── Illustration centrale : bonbon ⟷ bombe ──────────
+    illus_y = H/2 + 0.5*cm
+    bomb_r  = 2.2*cm
+    candy_r = 1.6*cm
+    gutter  = 3.0*cm
+
+    _draw_water_bomb(c, cx + gutter, illus_y, bomb_r)
+    _draw_candy(c,     cx - gutter, illus_y, candy_r)
+
+    # Flèches ↔ entre les deux
+    arr_y = illus_y
+    ax1 = cx - gutter + candy_r + 3*mm
+    ax2 = cx + gutter - bomb_r  - 3*mm
+    amid = (ax1 + ax2) / 2
+    c.setStrokeColor(INK); c.setLineWidth(1.0)
+    c.line(ax1, arr_y, ax2, arr_y)
+    # Têtes de flèche
+    hs = 3*mm
+    for (tip, sign) in [(ax2, 1), (ax1, -1)]:
+        p = c.beginPath()
+        p.moveTo(tip, arr_y)
+        p.lineTo(tip - sign*hs, arr_y + hs*0.6)
+        p.moveTo(tip, arr_y)
+        p.lineTo(tip - sign*hs, arr_y - hs*0.6)
+        c.drawPath(p, fill=0, stroke=1)
+
+    # Labels sous les illustrations
+    _font(c, 'Courier', 7.5, LIGHT)
+    c.drawCentredString(cx - gutter, illus_y - candy_r - 5*mm, 'BONBON')
+    c.drawCentredString(cx + gutter, illus_y - bomb_r  - 5*mm, 'BOMBE À EAU')
+
+    # ── Grande équation tarifaire ─────────────────────────
+    rate_y = illus_y - bomb_r - 2.2*cm
+    # Cadre autour du tarif
+    rate_h = 2.0*cm; rate_w = 10*cm
+    c.setStrokeColor(INK); c.setLineWidth(1.2)
+    c.rect(cx - rate_w/2, rate_y - rate_h, rate_w, rate_h, fill=0, stroke=1)
+    c.setStrokeColor(INK); c.setLineWidth(0.3)
+    c.rect(cx - rate_w/2 + 2*mm, rate_y - rate_h + 2*mm, rate_w - 4*mm, rate_h - 4*mm, fill=0, stroke=1)
+    _font(c, 'Courier-Bold', 26, INK)
+    c.drawCentredString(cx, rate_y - rate_h/2 - 5, '1 BONBON  =  1 BOMBE')
+
+    # ── Règles du jeu ────────────────────────────────────
+    rules_y = rate_y - rate_h - 1.0*cm
+    _rule(c, rules_y + 0.3*cm, m+2*cm, W-m-2*cm, w=0.4, color=RULE)
+    rules = [
+        '▸  Déposez votre bonbon au comptoir',
+        '▸  Recevez une bombe à eau en échange',
+        '▸  Aucun crédit — paiement en bonbons uniquement',
+        '▸  Stocks limités — premier arrivé, premier servi',
+    ]
+    _font(c, 'Courier', 9, INK)
+    for i, rule in enumerate(rules):
+        c.drawCentredString(cx, rules_y - 0.05*cm - i*0.58*cm, rule)
+
+    # ── Bannière STOCKS LIMITÉS ───────────────────────────
+    banner_y = rules_y - len(rules)*0.58*cm - 0.9*cm
+    _rule(c, banner_y + 0.4*cm, m+2*cm, W-m-2*cm, w=0.4, color=RULE)
+    _font(c, 'Courier-Bold', 11, STAMP)
+    c.setStrokeColor(STAMP); c.setLineWidth(0.8)
+    bw, bh = 8*cm, 0.7*cm
+    c.rect(cx - bw/2, banner_y - bh, bw, bh, fill=0, stroke=1)
+    c.drawCentredString(cx, banner_y - bh*0.65, '⚠  STOCKS LIMITÉS — DÉPÊCHEZ-VOUS  ⚠')
+
+    # ── Pied de page ─────────────────────────────────────
+    _stamp(c, W - m - 4*cm, m + 2*cm, 'CONFIDENTIEL', angle=-15)
+    _rule(c, m + 1.2*cm, m+6*mm, W-m-6*mm, w=0.3, color=RULE)
+    _font(c, 'Courier', 6.5, LIGHT)
+    c.drawCentredString(cx, m + 7*mm, 'OPÉRATION HÊLIE  ·  BOMBE À GOGO  ·  TARIF NON NÉGOCIABLE')
+
+
 def page_antidote_labels(c):
     m = 1.0*cm
     cols, rows = 2, 5
@@ -1026,6 +1189,8 @@ class handler(BaseHTTPRequestHandler):
 
         page_codes(c, code_items)
         page_antidote_labels(c)
+        c.showPage()
+        page_water_shop(c)
         c.showPage()
         c.save()
 
