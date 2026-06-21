@@ -398,6 +398,127 @@ def page_cesar(c):
     c.drawCentredString(W/2, tip_y, 'DÉCALAGE +3 : comptez 3 lettres vers l\'avant dans l\'alphabet')
 
 # ══════════════════════════════════════════════════════════════
+# PAGE ATTENTION LASER — A4 PAYSAGE
+# ══════════════════════════════════════════════════════════════
+_LASER_ART = [
+    r"  /\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\  ",
+    r" /                                                          \ ",
+    r"/    >>>=======================================>>>>>>>>>      \ ",
+    r"\    >>>=======================================>>>>>>>>>      / ",
+    r" \                                                          / ",
+    r"  \/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/  ",
+]
+
+_ATTENTION_ART = [
+    " ###  ####### ####### ####### ####### ####### ### #####  ##  ##",
+    "  #      #       #    #       #    #    #     ###  #    # #  # ",
+    "  #      #       #    #####   #    #    #    # ##  #    ####   ",
+    "  #      #       #    #       #    #    #    ####  #    # ##   ",
+    " ###     #    ####### ####### ####### ####### #  # ##### # ## ##",
+]
+
+_LASER_WORD_ART = [
+    "##     ###   ####  ###### ####  ",
+    "##    #   #  #       ##   #   # ",
+    "##    #####  ####    ##   ####  ",
+    "##    #   #  #       ##   #   # ",
+    "#####  #   #  ####  ######  #   # ",
+]
+
+def page_laser_warning(c):
+    from reportlab.lib.pagesizes import landscape
+    PW, PH = landscape(A4)   # ~842 × 595 pt
+    c.setPageSize((PW, PH))
+
+    cx = PW / 2
+    m  = 1.0*cm
+
+    # ── Bordure extérieure double ───────────────────────────
+    c.setStrokeColor(INK); c.setLineWidth(1.4)
+    c.rect(m, m, PW-2*m, PH-2*m, fill=0, stroke=1)
+    c.setStrokeColor(INK); c.setLineWidth(0.3)
+    c.rect(m+3*mm, m+3*mm, PW-2*m-6*mm, PH-2*m-6*mm, fill=0, stroke=1)
+
+    # ── Hachures diagonales décoratives (coins) ────────────
+    c.setStrokeColor(RULE); c.setLineWidth(0.4)
+    stripe_w = 2.8*cm
+    stripe_gap = 5*mm
+    # Coin bas-gauche
+    for i in range(8):
+        off = i * stripe_gap
+        x1 = m+3*mm; y1 = m+3*mm + off
+        x2 = m+3*mm + off; y2 = m+3*mm
+        if x2 > m+stripe_w: x2 = m+stripe_w; y2 = m+3*mm + (off - (stripe_w - 3*mm))
+        if y1 > m+stripe_w: y1 = m+stripe_w; x1 = m+3*mm + (off - (stripe_w - 3*mm))
+        c.line(x1, y1, x2, y2)
+    # Coin bas-droit
+    for i in range(8):
+        off = i * stripe_gap
+        x1 = PW-m-3*mm; y1 = m+3*mm + off
+        x2 = PW-m-3*mm - off; y2 = m+3*mm
+        if x2 < PW-m-stripe_w: x2 = PW-m-stripe_w; y2 = m+3*mm + (off - (stripe_w - 3*mm))
+        if y1 > m+stripe_w: y1 = m+stripe_w; x1 = PW-m-3*mm - (off - (stripe_w - 3*mm))
+        c.line(x1, y1, x2, y2)
+
+    # ── Bandeau supérieur BXL ────────────────────────────────
+    top_y = PH - m - 3*mm
+    band_h = 1.1*cm
+    c.setStrokeColor(INK); c.setLineWidth(0.5)
+    c.line(m+6*mm, top_y-band_h, PW-m-6*mm, top_y-band_h)
+    c.line(m+6*mm, top_y,        PW-m-6*mm, top_y)
+    _font(c, 'Courier', 6.5, LIGHT)
+    c.drawCentredString(cx, top_y-band_h/2-2,
+        'BUREAU CLANDESTIN BXL  ·  SECTION HÊLIE  ·  ZONE SÉCURISÉE  ·  ACCÈS RESTREINT')
+
+    # ── ASCII art "ATTENTION" en Courier ────────────────────
+    att_y = top_y - band_h - 1.5*cm
+    _font(c, 'Courier', 7.2, INK)
+    line_h = 0.38*cm
+    for i, line in enumerate(_ATTENTION_ART):
+        c.drawCentredString(cx, att_y - i*line_h, line)
+
+    sep_y = att_y - len(_ATTENTION_ART)*line_h - 0.3*cm
+    _rule(c, sep_y, m+2*cm, PW-m-2*cm, w=0.6, color=INK)
+
+    # ── Grand mot "LASER" en Courier-Bold géant ──────────────
+    laser_y = sep_y - 0.5*cm
+    _font(c, 'Courier-Bold', 96, INK)
+    c.drawCentredString(cx, laser_y - 3.4*cm, 'LASER')
+
+    # ── Rayon ASCII sous le mot ──────────────────────────────
+    ray_y = laser_y - 3.9*cm
+    _font(c, 'Courier', 8, LIGHT)
+    for i, line in enumerate(_LASER_ART):
+        c.drawCentredString(cx, ray_y - i*0.36*cm, line)
+
+    # ── Symbole danger encadré (gauche et droite) ────────────
+    sym_y = laser_y - 1.8*cm
+    for sx in [m + 2.8*cm, PW - m - 2.8*cm]:
+        c.setStrokeColor(INK); c.setLineWidth(0.6)
+        c.rect(sx-1.1*cm, sym_y-1.1*cm, 2.2*cm, 2.2*cm, fill=0, stroke=1)
+        _font(c, 'Courier-Bold', 22, INK)
+        c.drawCentredString(sx, sym_y-0.4*cm, '!')
+        _font(c, 'Courier', 5, LIGHT)
+        c.drawCentredString(sx, sym_y-1.0*cm, 'DANGER')
+
+    # ── Tampons ───────────────────────────────────────────────
+    _stamp(c, PW-m-4*cm, m+2.2*cm, 'CONFIDENTIEL', angle=-14)
+    _stamp(c, m+3.5*cm,  m+2.2*cm, 'ZONE LASER',   angle=12)
+
+    # ── Bandeau inférieur ────────────────────────────────────
+    bot_y = m+3*mm
+    c.setStrokeColor(INK); c.setLineWidth(0.5)
+    c.line(m+6*mm, bot_y,          PW-m-6*mm, bot_y)
+    c.line(m+6*mm, bot_y+band_h,   PW-m-6*mm, bot_y+band_h)
+    _font(c, 'Courier', 6, LIGHT)
+    c.drawCentredString(cx, bot_y+band_h/2-2,
+        '⚠  NE PAS FRANCHIR LE FAISCEAU  ·  RESTER EN DESSOUS DES FILS  ·  OPÉRATION HÊLIE  ⚠')
+
+    # Remet la taille de page par défaut pour les pages suivantes
+    c.setPageSize(A4)
+
+
+# ══════════════════════════════════════════════════════════════
 # PAGE ÉTIQUETTES ANTIDOTE
 # ══════════════════════════════════════════════════════════════
 ANTIDOTE_INGREDIENTS = [
@@ -900,6 +1021,9 @@ class handler(BaseHTTPRequestHandler):
         c   = rl_canvas.Canvas(buf, pagesize=A4)
 
         page_cover(c)
+        c.showPage()
+
+        page_laser_warning(c)
         c.showPage()
 
         for cipher in seen:
