@@ -694,113 +694,129 @@ def _draw_candy(c, cx, cy, r):
         c.drawPath(p2, fill=0, stroke=1)
 
 def page_water_shop(c):
-    import math
+    from reportlab.lib.pagesizes import landscape
+    PW, PH = landscape(A4)   # ~842 × 595 pt
     m  = 1.2*cm
-    cx = W / 2
+    cx = PW / 2
+    band_h = 1.0*cm
 
     # ── Cadre double ─────────────────────────────────────
     c.setStrokeColor(INK); c.setLineWidth(1.6)
-    c.rect(m, m, W-2*m, H-2*m, fill=0, stroke=1)
+    c.rect(m, m, PW-2*m, PH-2*m, fill=0, stroke=1)
     c.setStrokeColor(INK); c.setLineWidth(0.35)
-    c.rect(m+4*mm, m+4*mm, W-2*m-8*mm, H-2*m-8*mm, fill=0, stroke=1)
+    c.rect(m+4*mm, m+4*mm, PW-2*m-8*mm, PH-2*m-8*mm, fill=0, stroke=1)
 
-    # ── Confettis décoratifs (petits cercles aux coins) ──
+    # ── Confettis décoratifs aux coins ───────────────────
     c.setStrokeColor(RULE); c.setLineWidth(0.3)
-    for (px, py) in [(m+1.5*cm, m+1.5*cm), (W-m-1.5*cm, m+1.5*cm),
-                     (m+1.5*cm, H-m-1.5*cm), (W-m-1.5*cm, H-m-1.5*cm)]:
+    for (px, py) in [(m+1.5*cm, m+1.5*cm), (PW-m-1.5*cm, m+1.5*cm),
+                     (m+1.5*cm, PH-m-1.5*cm), (PW-m-1.5*cm, PH-m-1.5*cm)]:
         c.circle(px, py, 4*mm, fill=0, stroke=1)
         c.circle(px, py, 2*mm, fill=0, stroke=1)
 
-    # ── Accroche haut ────────────────────────────────────
+    # ── Bandeau supérieur ────────────────────────────────
+    top_y = PH - m - 3*mm
+    c.setStrokeColor(INK); c.setLineWidth(0.5)
+    c.line(m+6*mm, top_y-band_h, PW-m-6*mm, top_y-band_h)
+    c.line(m+6*mm, top_y,        PW-m-6*mm, top_y)
     _font(c, 'Courier', 7, LIGHT)
-    c.drawCentredString(cx, H-m-8*mm, 'OPÉRATION HÊLIE  ·  RAVITAILLEMENT OFFICIEL')
-    _rule(c, H-m-1.3*cm, m+1*cm, W-m-1*cm, w=0.4, color=RULE)
+    c.drawCentredString(cx, top_y-band_h/2-2.5,
+        'OPÉRATION HÊLIE  ·  RAVITAILLEMENT OFFICIEL  ·  ZONE AQUATIQUE')
 
     # ── Nom du magasin ───────────────────────────────────
-    shop_y = H - m - 3.2*cm
-    _font(c, 'Courier-Bold', 9, LIGHT)
-    c.drawCentredString(cx, shop_y + 1.1*cm, '★  BIENVENUE À LA  ★')
-    _font(c, 'Courier-Bold', 34, INK)
-    c.drawCentredString(cx, shop_y, 'BOMBE')
-    _font(c, 'Courier-Bold', 34, INK)
-    c.drawCentredString(cx, shop_y - 1.25*cm, 'À GOGO')
-    # Soulignement double
-    _rule(c, shop_y - 1.75*cm, m+1.5*cm, W-m-1.5*cm, w=1.0, color=INK)
-    _rule(c, shop_y - 1.95*cm, m+1.5*cm, W-m-1.5*cm, w=0.3, color=INK)
-
-    # ── Slogan ───────────────────────────────────────────
+    shop_y = top_y - band_h - 0.8*cm
     _font(c, 'Courier', 9, LIGHT)
-    c.drawCentredString(cx, shop_y - 2.5*cm, '« L\'armurerie aquatique des agents d\'élite »')
+    c.drawCentredString(cx, shop_y, '★   BIENVENUE À LA   ★')
+    _font(c, 'Courier-Bold', 52, INK)
+    c.drawCentredString(cx, shop_y - 2.3*cm, 'BOMBE À GOGO')
+    # Soulignements
+    _rule(c, shop_y - 2.9*cm, m+2*cm, PW-m-2*cm, w=1.2, color=INK)
+    _rule(c, shop_y - 3.1*cm, m+2*cm, PW-m-2*cm, w=0.3, color=INK)
+    _font(c, 'Courier', 9.5, LIGHT)
+    c.drawCentredString(cx, shop_y - 3.6*cm, '« L\'armurerie aquatique des agents d\'élite »')
 
-    # ── Illustration centrale : bonbon ⟷ bombe ──────────
-    illus_y = H/2 + 0.5*cm
-    bomb_r  = 2.2*cm
-    candy_r = 1.6*cm
-    gutter  = 3.0*cm
+    # ── Illustrations bonbon ↔ bombe ─────────────────────
+    illus_y  = shop_y - 5.5*cm
+    bomb_r   = 1.9*cm
+    candy_r  = 1.4*cm
+    gutter   = 4.5*cm
 
     _draw_water_bomb(c, cx + gutter, illus_y, bomb_r)
     _draw_candy(c,     cx - gutter, illus_y, candy_r)
 
-    # Flèches ↔ entre les deux
-    arr_y = illus_y
-    ax1 = cx - gutter + candy_r + 3*mm
-    ax2 = cx + gutter - bomb_r  - 3*mm
-    amid = (ax1 + ax2) / 2
+    # Flèche double ↔
+    ax1 = cx - gutter + candy_r + 4*mm
+    ax2 = cx + gutter - bomb_r  - 4*mm
     c.setStrokeColor(INK); c.setLineWidth(1.0)
-    c.line(ax1, arr_y, ax2, arr_y)
-    # Têtes de flèche
+    c.line(ax1, illus_y, ax2, illus_y)
     hs = 3*mm
     for (tip, sign) in [(ax2, 1), (ax1, -1)]:
         p = c.beginPath()
-        p.moveTo(tip, arr_y)
-        p.lineTo(tip - sign*hs, arr_y + hs*0.6)
-        p.moveTo(tip, arr_y)
-        p.lineTo(tip - sign*hs, arr_y - hs*0.6)
+        p.moveTo(tip, illus_y)
+        p.lineTo(tip - sign*hs, illus_y + hs*0.6)
+        p.moveTo(tip, illus_y)
+        p.lineTo(tip - sign*hs, illus_y - hs*0.6)
         c.drawPath(p, fill=0, stroke=1)
 
-    # Labels sous les illustrations
-    _font(c, 'Courier', 7.5, LIGHT)
-    c.drawCentredString(cx - gutter, illus_y - candy_r - 5*mm, 'BONBON')
-    c.drawCentredString(cx + gutter, illus_y - bomb_r  - 5*mm, 'BOMBE À EAU')
+    _font(c, 'Courier', 8, LIGHT)
+    c.drawCentredString(cx - gutter, illus_y - candy_r - 4*mm, 'BONBON')
+    c.drawCentredString(cx + gutter, illus_y - bomb_r  - 4*mm, 'BOMBE À EAU')
 
-    # ── Grande équation tarifaire ─────────────────────────
-    rate_y = illus_y - bomb_r - 2.2*cm
-    # Cadre autour du tarif
-    rate_h = 2.0*cm; rate_w = 10*cm
-    c.setStrokeColor(INK); c.setLineWidth(1.2)
+    # ── Cadre tarifaire — texte auto-ajusté ──────────────
+    rate_y = illus_y - max(bomb_r, candy_r) - 1.4*cm
+    rate_w = 14*cm
+    rate_h = 1.9*cm
+    tarif_text = '1 BONBON  =  1 BOMBE'
+    # Réduire la taille jusqu'à ce que le texte tienne dans rate_w - 2*pad
+    pad_x = 6*mm
+    fs = 28
+    while fs > 10:
+        tw = c.stringWidth(tarif_text, 'Courier-Bold', fs)
+        if tw <= rate_w - 2*pad_x:
+            break
+        fs -= 1
+    c.setStrokeColor(INK); c.setLineWidth(1.4)
     c.rect(cx - rate_w/2, rate_y - rate_h, rate_w, rate_h, fill=0, stroke=1)
-    c.setStrokeColor(INK); c.setLineWidth(0.3)
+    c.setStrokeColor(INK); c.setLineWidth(0.35)
     c.rect(cx - rate_w/2 + 2*mm, rate_y - rate_h + 2*mm, rate_w - 4*mm, rate_h - 4*mm, fill=0, stroke=1)
-    _font(c, 'Courier-Bold', 26, INK)
-    c.drawCentredString(cx, rate_y - rate_h/2 - 5, '1 BONBON  =  1 BOMBE')
+    _font(c, 'Courier-Bold', fs, INK)
+    c.drawCentredString(cx, rate_y - rate_h/2 - fs*0.18, tarif_text)
 
-    # ── Règles du jeu ────────────────────────────────────
-    rules_y = rate_y - rate_h - 1.0*cm
-    _rule(c, rules_y + 0.3*cm, m+2*cm, W-m-2*cm, w=0.4, color=RULE)
+    # ── Règles (2 colonnes en paysage) ───────────────────
+    rules_y = rate_y - rate_h - 0.7*cm
+    _rule(c, rules_y + 0.25*cm, m+2*cm, PW-m-2*cm, w=0.35, color=RULE)
     rules = [
         '▸  Déposez votre bonbon au comptoir',
         '▸  Recevez une bombe à eau en échange',
-        '▸  Aucun crédit — paiement en bonbons uniquement',
+        '▸  Aucun crédit — paiement bonbons uniquement',
         '▸  Stocks limités — premier arrivé, premier servi',
     ]
+    col_w = (PW - 2*m - 2*cm) / 2
     _font(c, 'Courier', 9, INK)
     for i, rule in enumerate(rules):
-        c.drawCentredString(cx, rules_y - 0.05*cm - i*0.58*cm, rule)
+        col = i % 2
+        row = i // 2
+        rx = m + 1*cm + col * col_w
+        ry = rules_y - 0.1*cm - row * 0.55*cm
+        c.drawString(rx, ry, rule)
 
     # ── Bannière STOCKS LIMITÉS ───────────────────────────
-    banner_y = rules_y - len(rules)*0.58*cm - 0.9*cm
-    _rule(c, banner_y + 0.4*cm, m+2*cm, W-m-2*cm, w=0.4, color=RULE)
+    banner_y = rules_y - 1.4*cm
+    _rule(c, banner_y + 0.3*cm, m+2*cm, PW-m-2*cm, w=0.35, color=RULE)
     _font(c, 'Courier-Bold', 11, STAMP)
     c.setStrokeColor(STAMP); c.setLineWidth(0.8)
-    bw, bh = 8*cm, 0.7*cm
+    bw = 11*cm; bh = 0.65*cm
     c.rect(cx - bw/2, banner_y - bh, bw, bh, fill=0, stroke=1)
-    c.drawCentredString(cx, banner_y - bh*0.65, '⚠  STOCKS LIMITÉS — DÉPÊCHEZ-VOUS  ⚠')
+    c.drawCentredString(cx, banner_y - bh*0.7, '⚠   STOCKS LIMITÉS — DÉPÊCHEZ-VOUS   ⚠')
 
     # ── Pied de page ─────────────────────────────────────
-    _stamp(c, W - m - 4*cm, m + 2*cm, 'CONFIDENTIEL', angle=-15)
-    _rule(c, m + 1.2*cm, m+6*mm, W-m-6*mm, w=0.3, color=RULE)
+    bot_y = m + 3*mm
+    c.setStrokeColor(INK); c.setLineWidth(0.5)
+    c.line(m+6*mm, bot_y,          PW-m-6*mm, bot_y)
+    c.line(m+6*mm, bot_y+band_h,   PW-m-6*mm, bot_y+band_h)
     _font(c, 'Courier', 6.5, LIGHT)
-    c.drawCentredString(cx, m + 7*mm, 'OPÉRATION HÊLIE  ·  BOMBE À GOGO  ·  TARIF NON NÉGOCIABLE')
+    c.drawCentredString(cx, bot_y+band_h/2-2.5,
+        'OPÉRATION HÊLIE  ·  BOMBE À GOGO  ·  TARIF NON NÉGOCIABLE')
+    _stamp(c, PW-m-4.5*cm, m+2.2*cm, 'CONFIDENTIEL', angle=-14)
 
 
 def page_antidote_labels(c):
@@ -1190,8 +1206,11 @@ class handler(BaseHTTPRequestHandler):
         page_codes(c, code_items)
         page_antidote_labels(c)
         c.showPage()
+        from reportlab.lib.pagesizes import landscape
+        c.setPageSize(landscape(A4))
         page_water_shop(c)
         c.showPage()
+        c.setPageSize(A4)
         c.save()
 
         pdf_bytes = buf.getvalue()
